@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "esii-2025-d1", "esii-2025-d1\esii-2025-d1.csproj", "{3D0BAA1E-69E6-43C0-ABA7-29655620829E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3D0BAA1E-69E6-43C0-ABA7-29655620829E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D0BAA1E-69E6-43C0-ABA7-29655620829E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D0BAA1E-69E6-43C0-ABA7-29655620829E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D0BAA1E-69E6-43C0-ABA7-29655620829E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
