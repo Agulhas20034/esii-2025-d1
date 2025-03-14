@@ -22,4 +22,3 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "esii-2025-d1.dll"]
 #oiiiiii
-s
