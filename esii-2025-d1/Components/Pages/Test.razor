@@ -1,0 +1,247 @@
+@page "/test"
+@using esii_2025_d1.Dtos.JomDtos
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+<link href="_content/Blazor.Bootstrap/blazor.bootstrap.css" rel="stylesheet" />
+
+@inject HttpClient Http
+
+<PageTitle>Jom</PageTitle>
+
+<div class="container mt-4">
+    @if (joms == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <div class="d-flex justify-content-between mb-3">
+            <h1>Listar Joms</h1>
+            <Button Color="ButtonColor.Primary" @onclick="OnShowAddModalClick">
+                 <i class="bi bi-plus-circle"></i> Adicionar Jom
+            </Button>
+        </div>
+
+        <table class="table table-striped table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Label</th>
+                    <th>Date</th>
+                    <th>JomNumber</th>
+                    <th>IsDone</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var Jom in joms)
+                {
+                    <tr>
+                        <td>@Jom.Id</td>
+                        <td>@Jom.Label</td>
+                        <td>@Jom.Date</td>
+                        <td>@Jom.TestNumber</td>
+                        <td>@Jom.IsDone</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" @onclick="() => OpenEditModal(Jom)">
+                                <i class="bi bi-pencil-square"></i> Editar
+                            </button>
+                            <button class="btn btn-danger btn-sm" @onclick="() => OpenDeleteModal(Jom.Id)">
+                                <i class="bi bi-trash"></i> Remover
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+<!-- Modal de Edição -->
+<Modal @ref="editModal" Title="Editar Jom">
+    <BodyTemplate>
+        <!-- Campo Label -->
+        <div class="form-group">
+            <label for="label">Label</label>
+            <input type="text" class="form-control" id="label" @bind="editingJom.Label" />
+        </div>
+
+        <!-- Campo Date 
+        <div class="form-group mt-2">
+            <label for="date">Date</label>
+            <DateInput TValue="DateTime" @bind-Value="editingJom.Date" Placeholder="Enter Date" />
+        </div>  -->
+
+        <!-- Campo IsDone (Checkbox) -->
+        <div class="form-group mt-2">
+            <label for="isDone">Is Done</label>
+            <CheckboxInput Label="is done" Id="isDone"  @bind-Value="editingJom.IsDone" />
+        </div>
+
+        <!-- Campo TestNumber (Select) -->
+        <div class="form-group mt-2">
+            <label for="testNumber">Test Number</label>
+            <select class="form-control" id="testNumber" @bind="editingJom.TestNumber">
+                <option value="">Selecione o número</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+            </select>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideEditModalClick">Fechar</Button>
+        <Button Color="ButtonColor.Primary" @onclick="SaveEdit">Salvar alterações</Button>
+    </FooterTemplate>
+</Modal>
+
+
+<!-- Modal de Exclusão -->
+<Modal @ref="deleteModal" Title="Confirmar Exclusão">
+    <BodyTemplate>
+        <p>Você tem certeza que deseja excluir este Jom?</p>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideDeleteModalClick">Cancelar</Button>
+        <Button Color="ButtonColor.Danger" @onclick="DeleteJom">Excluir</Button>
+    </FooterTemplate>
+</Modal>
+
+<!-- Modal de Adicionar Jom -->
+<Modal @ref="addModal" Title="Adicionar Jom">
+    <BodyTemplate>
+        <div class="form-group">
+            <label for="newLabel">Label</label>
+            <input type="text" class="form-control" id="newLabel" @bind="newJom.Label" />
+        </div>
+
+        <!-- Campo Date  
+        <div class="form-group mt-2">
+            <label for="newDate">Date</label>
+            <input type="date" class="form-control" id="newDate" @bind="newJom.Date" />
+        </div> -->
+
+        <!-- Campo IsDone (Checkbox) -->
+        <div class="form-group mt-2">
+            <label for="isDone">Is Done</label>
+            <CheckboxInput Label="is done" Id="isDone" @bind-Value="newJom.IsDone" />
+        </div>
+
+        <!-- Campo TestNumber (Select) -->
+        <div class="form-group mt-2">
+            <label for="testNumber">Test Number</label>
+            <select class="form-control" id="testNumber" @bind="newJom.TestNumber">
+                <option value="">Selecione o número</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+            </select>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideAddModalClick">Fechar</Button>
+        <Button Color="ButtonColor.Primary" @onclick="SaveAdd">Salvar</Button>
+    </FooterTemplate>
+</Modal>
+
+
+@code {
+    private Modal editModal = default!;
+    private Modal deleteModal = default!;
+    private Modal addModal = default!;
+    
+    private Jom[]? joms;
+    private Jom? editingJom;
+    private Jom newJom = new Jom();
+    private int? deletingJomId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        joms = await Http.GetFromJsonAsync<Jom[]>("api/Jom");
+    }
+
+    private async Task OnShowAddModalClick()
+    {
+        newJom = new Jom(); 
+        await addModal.ShowAsync();  
+    }
+
+    private async Task OnHideAddModalClick()
+    {
+        await addModal.HideAsync();  
+    }
+
+    private async Task SaveAdd()
+    {
+        var jomCreateDto = new JomCreateDto
+        {
+            Label = newJom.Label,
+            IsDone = newJom.IsDone,
+            TestNumber = newJom.TestNumber
+        };
+
+        var response = await Http.PostAsJsonAsync("api/Jom", jomCreateDto);
+
+        if (response.IsSuccessStatusCode)
+        {
+            joms = await Http.GetFromJsonAsync<Jom[]>("api/Jom");
+            await addModal.HideAsync();
+        }
+    }
+
+    private void OpenEditModal(Jom jom)
+    {
+        editingJom = jom;
+        editModal.ShowAsync();  
+    }
+
+    private async Task OnHideEditModalClick()
+    {
+        await editModal.HideAsync();  
+    }
+
+    private async Task SaveEdit()
+    {
+        if (editingJom == null)
+            return;
+
+        var response = await Http.PutAsJsonAsync($"api/Jom/{editingJom.Id}", editingJom);
+
+        if (response.IsSuccessStatusCode)
+        {
+            joms = await Http.GetFromJsonAsync<Jom[]>("api/Jom");
+            await editModal.HideAsync();
+        }
+    }
+
+    private void OpenDeleteModal(int id)
+    {
+        deletingJomId = id;
+        deleteModal.ShowAsync();  
+    }
+
+    private async Task OnHideDeleteModalClick()
+    {
+        await deleteModal.HideAsync();  
+    }
+
+    private async Task DeleteJom()
+    {
+        if (deletingJomId == null)
+            return;
+
+        var response = await Http.DeleteAsync($"api/Jom/{deletingJomId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            joms = await Http.GetFromJsonAsync<Jom[]>("api/Jom");
+            await deleteModal.HideAsync();
+        }
+    }
+}
+
