@@ -63,7 +63,7 @@ public class JomController : ControllerBase
         return Ok(jomResponse);
     }
 
-    
+    // POST: api/Jom
     [HttpPost]
     public async Task<ActionResult<JomCreateDto>> PostJom(JomCreateDto jomRequest)
     {
