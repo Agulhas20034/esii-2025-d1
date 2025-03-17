@@ -12,7 +12,7 @@ using esii_2025_d1.Data;
 namespace esii2025d1.Entities
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250315195709_Initial")]
+    [Migration("20250317160019_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -42,7 +42,7 @@ namespace esii2025d1.Entities
                     b.Property<string>("Label")
                         .HasColumnType("text");
 
-                    b.Property<float?>("TestNumber")
+                    b.Property<float>("TestNumber")
                         .HasColumnType("real");
 
                     b.Property<DateTime>("created_at")
@@ -62,22 +62,42 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            Date = new DateTime(2025, 3, 15, 19, 57, 8, 809, DateTimeKind.Utc).AddTicks(1754),
+                            Date = new DateTime(2025, 3, 17, 16, 0, 19, 298, DateTimeKind.Utc).AddTicks(9785),
                             IsDone = false,
                             Label = "Joms",
                             TestNumber = 2.5f,
-                            created_at = new DateTime(2025, 3, 15, 19, 57, 8, 809, DateTimeKind.Utc).AddTicks(2512),
-                            updated_at = new DateTime(2025, 3, 15, 19, 57, 8, 809, DateTimeKind.Utc).AddTicks(2672)
+                            created_at = new DateTime(2025, 3, 17, 16, 0, 19, 299, DateTimeKind.Utc).AddTicks(371),
+                            updated_at = new DateTime(2025, 3, 17, 16, 0, 19, 299, DateTimeKind.Utc).AddTicks(543)
                         },
                         new
                         {
                             Id = 2,
-                            Date = new DateTime(2025, 3, 15, 19, 57, 8, 809, DateTimeKind.Utc).AddTicks(3006),
+                            Date = new DateTime(2025, 3, 17, 16, 0, 19, 299, DateTimeKind.Utc).AddTicks(1002),
                             IsDone = true,
                             Label = "Joms2",
                             TestNumber = 7.5f,
-                            created_at = new DateTime(2025, 3, 15, 19, 57, 8, 809, DateTimeKind.Utc).AddTicks(3007),
-                            updated_at = new DateTime(2025, 3, 15, 19, 57, 8, 809, DateTimeKind.Utc).AddTicks(3008)
+                            created_at = new DateTime(2025, 3, 17, 16, 0, 19, 299, DateTimeKind.Utc).AddTicks(1002),
+                            updated_at = new DateTime(2025, 3, 17, 16, 0, 19, 299, DateTimeKind.Utc).AddTicks(1003)
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Date = new DateTime(2025, 3, 17, 16, 0, 19, 299, DateTimeKind.Utc).AddTicks(1008),
+                            IsDone = true,
+                            Label = "Joms3",
+                            TestNumber = 10f,
+                            created_at = new DateTime(2025, 3, 17, 16, 0, 19, 299, DateTimeKind.Utc).AddTicks(1009),
+                            updated_at = new DateTime(2025, 3, 17, 16, 0, 19, 299, DateTimeKind.Utc).AddTicks(1009)
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Date = new DateTime(2025, 3, 17, 16, 0, 19, 299, DateTimeKind.Utc).AddTicks(1013),
+                            IsDone = false,
+                            Label = "Joms4",
+                            TestNumber = 62f,
+                            created_at = new DateTime(2025, 3, 17, 16, 0, 19, 299, DateTimeKind.Utc).AddTicks(1014),
+                            updated_at = new DateTime(2025, 3, 17, 16, 0, 19, 299, DateTimeKind.Utc).AddTicks(1014)
                         });
                 });
 #pragma warning restore 612, 618

@@ -56,6 +56,28 @@ public class ApplicationDbContext : DbContext
                 created_at = DateTime.UtcNow, 
                 updated_at = DateTime.UtcNow,
                 deleted_at = null
+            },
+            new Jom 
+            { 
+                Id = 3,
+                Label = "Joms3", 
+                Date = DateTime.UtcNow, 
+                IsDone = true, 
+                TestNumber = 10, 
+                created_at = DateTime.UtcNow, 
+                updated_at = DateTime.UtcNow,
+                deleted_at = null
+            },
+            new Jom 
+            { 
+                Id = 4,
+                Label = "Joms4", 
+                Date = DateTime.UtcNow, 
+                IsDone = false, 
+                TestNumber = 62, 
+                created_at = DateTime.UtcNow, 
+                updated_at = DateTime.UtcNow,
+                deleted_at = null
             }
         );
     }

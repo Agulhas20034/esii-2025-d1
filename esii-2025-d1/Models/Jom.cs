@@ -15,8 +15,7 @@ public class Jom
     
     public bool IsDone { get; set; } = false;
     
-    [Range(0.0,10.5,ErrorMessage = "the number must not be higher than 10.5")] 
-    public float? TestNumber { get; set; }
+    public float TestNumber { get; set; } = 0.0f;
     
     public DateTime created_at { get; set; } = DateTime.Now;
     

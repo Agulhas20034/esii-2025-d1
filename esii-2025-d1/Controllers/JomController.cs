@@ -98,9 +98,9 @@ public class JomController : ControllerBase
         existingJom.Label = jom.Label ?? existingJom.Label;
         existingJom.Date = jom.Date != default ? jom.Date : existingJom.Date;
         existingJom.IsDone = jom.IsDone;
-        existingJom.TestNumber = jom.TestNumber ?? existingJom.TestNumber;
+        existingJom.TestNumber = existingJom.TestNumber != jom.TestNumber ? jom.TestNumber : existingJom.TestNumber;
         existingJom.updated_at = DateTime.UtcNow;
-
+        
         try
         {
             await _context.SaveChangesAsync();
