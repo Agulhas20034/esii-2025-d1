@@ -187,7 +187,9 @@ correr no terminal:
 docker run --name es2-db -p 5432:5432 -e POSTGRES_PASSWORD=es2 -e POSTGRES_USER=es2 -e POSTGRES_DB=es2 -d postgres
 ```
 
-![[Pasted image 20250317163634.png]]
+![Captura de ecrã 2025-03-17 163626](https://github.com/user-attachments/assets/06d1d4f7-15f7-42c7-a277-53a35638c4c6)
+
+
 ## Configurar a String de Ligação da Base de Dados
 
 Config the 'DefaultConnection',  string que configura o acesso à base de dados localizada em `appsettings.json`
@@ -231,16 +233,18 @@ dotnet ef database update
 
 ```
 
-  ou usar o IDE:
-  ![[Pasted image 20250317163902.png]]
+ou usar o IDE:
+
+![Captura de ecrã 2025-03-17 163855](https://github.com/user-attachments/assets/eb10573a-ee5c-49c6-a745-1c210ddabdd3)
 
 Ao realizar migration usar nomenclatura decente no seu nome 
 
-![[Pasted image 20250317164018.png]]
+![Captura de ecrã 2025-03-17 163954](https://github.com/user-attachments/assets/0c84d546-c524-473f-bd26-f0b3f659f288)
+
 
 Para realizar update a db selecionar a migration e dar update:
 
-![[Pasted image 20250317164337.png]]
+![Captura de ecrã 2025-03-17 164321](https://github.com/user-attachments/assets/27371bd8-7de3-4fc6-90d2-fe3ed243dab3)
 
 Nota: E muito fácil perder o controlo das migration em .net porque se realizarem alguma alteração na db a frame work não vai saber dessa alteração portanto devemos trabalhar sempre pelo codigo e se possivel não fazer nenhuma alteração na DB manual.  
 ## Controllers
