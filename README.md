@@ -25,6 +25,8 @@ Para criar um novo projeto Blazor no Rider:
 
 Nota: Em princípio isto é o mesmo que fazer `dotnet new blazor --interactivity Server`
 
+![Captura de ecrã 2025-03-17 161509](https://github.com/user-attachments/assets/1579c450-12c2-4fd2-b4cb-c103ba30acd0)
+
   (...) fazer em VS
 ## Configurar gitignore
 
