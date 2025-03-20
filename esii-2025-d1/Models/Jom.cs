@@ -11,15 +11,15 @@ public class Jom
     
     public string? Label { get; set; } = string.Empty;
     
-    public DateTime Date { get; set; } = DateTime.Now;
+    public DateTime Date { get; set; } = DateTime.UtcNow;
     
     public bool IsDone { get; set; } = false;
     
     public float TestNumber { get; set; } = 0.0f;
     
-    public DateTime created_at { get; set; } = DateTime.Now;
+    public DateTime created_at { get; set; } = DateTime.UtcNow;
     
-    public DateTime updated_at { get; set; } = DateTime.Now;
+    public DateTime updated_at { get; set; } = DateTime.UtcNow;
     
     public DateTime? deleted_at { get; set; }
     

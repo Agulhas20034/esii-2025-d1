@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using esii_2025_d1.Data;
@@ -11,9 +12,11 @@ using esii_2025_d1.Data;
 namespace esii2025d1.Entities
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250320202635_Logini")]
+    partial class Logini
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,42 +62,42 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            Date = new DateTime(2025, 3, 20, 20, 33, 47, 186, DateTimeKind.Utc).AddTicks(9106),
+                            Date = new DateTime(2025, 3, 20, 20, 26, 34, 698, DateTimeKind.Utc).AddTicks(1537),
                             IsDone = false,
                             Label = "Joms",
                             TestNumber = 2.5f,
-                            created_at = new DateTime(2025, 3, 20, 20, 33, 47, 186, DateTimeKind.Utc).AddTicks(9631),
-                            updated_at = new DateTime(2025, 3, 20, 20, 33, 47, 186, DateTimeKind.Utc).AddTicks(9809)
+                            created_at = new DateTime(2025, 3, 20, 20, 26, 34, 698, DateTimeKind.Utc).AddTicks(2601),
+                            updated_at = new DateTime(2025, 3, 20, 20, 26, 34, 698, DateTimeKind.Utc).AddTicks(2947)
                         },
                         new
                         {
                             Id = 2,
-                            Date = new DateTime(2025, 3, 20, 20, 33, 47, 187, DateTimeKind.Utc).AddTicks(140),
+                            Date = new DateTime(2025, 3, 20, 20, 26, 34, 698, DateTimeKind.Utc).AddTicks(3636),
                             IsDone = true,
                             Label = "Joms2",
                             TestNumber = 7.5f,
-                            created_at = new DateTime(2025, 3, 20, 20, 33, 47, 187, DateTimeKind.Utc).AddTicks(141),
-                            updated_at = new DateTime(2025, 3, 20, 20, 33, 47, 187, DateTimeKind.Utc).AddTicks(141)
+                            created_at = new DateTime(2025, 3, 20, 20, 26, 34, 698, DateTimeKind.Utc).AddTicks(3637),
+                            updated_at = new DateTime(2025, 3, 20, 20, 26, 34, 698, DateTimeKind.Utc).AddTicks(3638)
                         },
                         new
                         {
                             Id = 3,
-                            Date = new DateTime(2025, 3, 20, 20, 33, 47, 187, DateTimeKind.Utc).AddTicks(143),
+                            Date = new DateTime(2025, 3, 20, 20, 26, 34, 698, DateTimeKind.Utc).AddTicks(3645),
                             IsDone = true,
                             Label = "Joms3",
                             TestNumber = 10f,
-                            created_at = new DateTime(2025, 3, 20, 20, 33, 47, 187, DateTimeKind.Utc).AddTicks(144),
-                            updated_at = new DateTime(2025, 3, 20, 20, 33, 47, 187, DateTimeKind.Utc).AddTicks(144)
+                            created_at = new DateTime(2025, 3, 20, 20, 26, 34, 698, DateTimeKind.Utc).AddTicks(3646),
+                            updated_at = new DateTime(2025, 3, 20, 20, 26, 34, 698, DateTimeKind.Utc).AddTicks(3647)
                         },
                         new
                         {
                             Id = 4,
-                            Date = new DateTime(2025, 3, 20, 20, 33, 47, 187, DateTimeKind.Utc).AddTicks(146),
+                            Date = new DateTime(2025, 3, 20, 20, 26, 34, 698, DateTimeKind.Utc).AddTicks(3654),
                             IsDone = false,
                             Label = "Joms4",
                             TestNumber = 62f,
-                            created_at = new DateTime(2025, 3, 20, 20, 33, 47, 187, DateTimeKind.Utc).AddTicks(147),
-                            updated_at = new DateTime(2025, 3, 20, 20, 33, 47, 187, DateTimeKind.Utc).AddTicks(147)
+                            created_at = new DateTime(2025, 3, 20, 20, 26, 34, 698, DateTimeKind.Utc).AddTicks(3655),
+                            updated_at = new DateTime(2025, 3, 20, 20, 26, 34, 698, DateTimeKind.Utc).AddTicks(3656)
                         });
                 });
 

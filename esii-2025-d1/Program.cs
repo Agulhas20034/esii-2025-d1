@@ -1,7 +1,9 @@
 using esii_2025_d1.Components;
 using esii_2025_d1.Data;
+using esii_2025_d1.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +24,9 @@ builder.Services.AddRazorComponents()
 
 // Adicionar controllers de API
 builder.Services.AddControllers();
+
+// Adicionar serviços
+builder.Services.AddScoped<ILogService, LogService>();
 
 // Adicionar HttpClient
 builder.Services.AddHttpClient();

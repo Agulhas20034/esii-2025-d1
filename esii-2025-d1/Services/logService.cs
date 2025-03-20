@@ -1,6 +1,32 @@
-namespace esii-2025-d1.Services;
+using esii_2025_d1.Data;
+using esii_2025_d1.Models;
 
-public class logService
+namespace esii_2025_d1.Services;
+
+public interface ILogService
 {
-    
+    Task CreateLog(Log log);
+}
+
+public class LogService : ILogService
+{
+    private readonly ApplicationDbContext _context;
+
+    public LogService(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task CreateLog(Log log)
+    {
+        try
+        {
+            _context.logs.Add(log);
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error creating log: {e.Message}");
+        }
+    }
 }

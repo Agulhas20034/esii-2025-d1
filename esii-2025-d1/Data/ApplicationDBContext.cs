@@ -13,6 +13,7 @@ public class ApplicationDbContext : DbContext
     }
     
     public DbSet<Jom> Joms { get; set; } = null!;
+    public DbSet<Log> logs { get; set; } = null!;
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
