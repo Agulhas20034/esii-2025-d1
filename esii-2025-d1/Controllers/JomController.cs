@@ -1,6 +1,7 @@
 using esii_2025_d1.Data;
 using esii_2025_d1.Dtos.JomDtos;
 using esii_2025_d1.Models;
+using esii_2025_d1.Services;
 
 namespace esii_2025_d1.Controllers;
 
@@ -12,30 +13,54 @@ using Microsoft.EntityFrameworkCore;
 public class JomController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly ILogService _logService;
+    protected string entity = "Jom";
     
-    public JomController(ApplicationDbContext context)
+    public JomController(
+        ApplicationDbContext context,
+        ILogService logService
+        )
     {
         _context = context;
+        _logService = logService;
     }
     
     // GET: api/Jom
     [HttpGet]
     public async Task<ActionResult<IEnumerable<JomResponseDto>>> GetJoms()
     {
-        var joms = await _context.Joms
-            .Select(jom => new JomResponseDto
-            {
-                Id = jom.Id,
-                Label = jom.Label,
-                Date = jom.Date,
-                IsDone = jom.IsDone,
-                TestNumber = jom.TestNumber,
-                created_at = jom.created_at,
-                updated_at = jom.updated_at
-            })
-            .ToListAsync();
-
-        return Ok(joms);
+        try
+        {
+            var joms = await _context.Joms
+                .Select(jom => new JomResponseDto
+                {
+                    Id = jom.Id,
+                    Label = jom.Label,
+                    Date = jom.Date,
+                    IsDone = jom.IsDone,
+                    TestNumber = jom.TestNumber,
+                    created_at = jom.created_at,
+                    updated_at = jom.updated_at
+                })
+                .ToListAsync();
+            
+             var log = new Log
+             {
+                 entity_id = null,
+                 entity_name = entity,
+                 user_id = 1, // Replace with actual user ID
+                 action = "GetList",
+             };
+            
+             await _logService.CreateLog(log);
+            
+            return Ok(joms);
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error fetching Joms: {e.Message}");
+            throw;
+        }
     }
     
     // GET: api/Jom/"id"
@@ -59,6 +84,16 @@ public class JomController : ControllerBase
             created_at = jom.created_at,
             updated_at = jom.updated_at
         };
+        
+        var log = new Log
+        {
+            entity_id = null,
+            entity_name = entity,
+            user_id = 1, // Replace with actual user ID
+            action = "GetID",
+        };
+            
+        await _logService.CreateLog(log);
 
         return Ok(jomResponse);
     }
@@ -76,6 +111,16 @@ public class JomController : ControllerBase
             created_at = DateTime.UtcNow,
             updated_at = DateTime.UtcNow,
         };
+        
+        var log = new Log
+        {
+            entity_id = null,
+            entity_name = entity,
+            user_id = 1, // Replace with actual user ID
+            action = "Post",
+        };
+            
+        await _logService.CreateLog(log);
         
         _context.Joms.Add(jom);
         await _context.SaveChangesAsync();
@@ -103,6 +148,15 @@ public class JomController : ControllerBase
         
         try
         {
+            var log = new Log
+            {
+                entity_id = null,
+                entity_name = entity,
+                user_id = 1, // Replace with actual user ID
+                action = "Update",
+            };
+            
+            await _logService.CreateLog(log);
             await _context.SaveChangesAsync();
         }
         catch (DbUpdateConcurrencyException)
@@ -131,6 +185,16 @@ public class JomController : ControllerBase
         
         jom.updated_at = DateTime.UtcNow;
         jom.deleted_at = DateTime.UtcNow;
+        
+        var log = new Log
+        {
+            entity_id = null,
+            entity_name = entity,
+            user_id = 1, // Replace with actual user ID
+            action = "Delete",
+        };
+            
+        await _logService.CreateLog(log);
         
         await _context.SaveChangesAsync();
         return NoContent();
