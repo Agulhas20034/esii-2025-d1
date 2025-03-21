@@ -615,3 +615,230 @@ private async Task LoadJoms()
 }
 
 ````
+
+
+---
+
+### Relações entre Models em C# com .NET 8 e EF Core
+
+Models podem ter relações entre si, como:
+
+    Relação Um-para-Um (1:1)
+    Relação Um-para-Muitos (1:N)
+    Relação Muitos-para-Muitos (N:N)
+
+1. **Relação Um-para-Um (1:1)**
+
+Uma relação um-para-um ocorre quando uma entidade está relacionada a exatamente uma outra entidade.
+
+Exemplo de Models
+```csharp
+public class User
+
+{
+
+    public int UserId { get; set; }
+    public string Username { get; set; }
+    
+    // Propriedade de navegação para o Profile
+    public Profile Profile { get; set; }
+
+}
+
+public class Profile
+{
+
+    public int ProfileId { get; set; }
+    public string FullName { get; set; }
+    // Chave estrangeira para User
+    public int UserId { get; set; }
+    // Propriedade de navegação para User
+    public User User { get; set; }
+
+}
+
+```
+
+*Configuração no DbContext*
+
+```csharp
+public class AppDbContext : DbContext
+
+{
+
+    public DbSet<User> Users { get; set; }
+    public DbSet<Profile> Profiles { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.Profile)
+            .WithOne(p => p.User)
+            .HasForeignKey<Profile>(p => p.UserId);
+    }
+}
+```
+
+2. **Relação Um-para-Muitos (1:N)**
+
+Uma relação um-para-muitos ocorre quando uma entidade está relacionada a várias outras entidades.
+
+Exemplo de Models
+
+```csharp
+public class Blog
+{
+
+    public int BlogId { get; set; }
+    public string Url { get; set; }
+    // Propriedade de navegação para Posts
+    public List<Post> Posts { get; set; }
+
+}
+
+public class Post
+{
+
+    public int PostId { get; set; }
+    public string Title { get; set; }
+    public string Content { get; set; }
+    // Chave estrangeira para Blog
+    public int BlogId { get; set; }
+    // Propriedade de navegação para Blog
+    public Blog Blog { get; set; }
+
+}
+```
+
+*Configuração no DbContext*
+
+```csharp
+public class AppDbContext : DbContext
+
+{
+    public DbSet<Blog> Blogs { get; set; }
+    public DbSet<Post> Posts { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Blog>()
+            .HasMany(b => b.Posts)
+            .WithOne(p => p.Blog)
+            .HasForeignKey(p => p.BlogId);
+
+    }
+}
+```
+
+3. **Relação Muitos-para-Muitos (N:N)**
+
+Uma relação muitos-para-muitos ocorre quando várias entidades de um tipo estão relacionadas a várias entidades de outro tipo. No EF Core, isso é implementado usando uma tabela de junção.
+
+```csharp
+
+public class Student
+
+{
+
+    public int StudentId { get; set; }
+    public string Name { get; set; }
+    // Propriedade de navegação para Courses
+    public List<Course> Courses { get; set; }
+
+}
+
+public class Course
+
+{
+    public int CourseId { get; set; }
+    public string CourseName { get; set; }
+    // Propriedade de navegação para Students
+    public List<Student> Students { get; set; }
+
+}
+```
+
+*Configuração no DbContext*
+
+```csharp
+public class AppDbContext : DbContext
+{
+    public DbSet<Student> Students { get; set; }
+    public DbSet<Course> Courses { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Student>()
+            .HasMany(s => s.Courses)
+            .WithMany(c => c.Students)
+            .UsingEntity(j => j.ToTable("StudentCourses"));
+    }
+}
+```
+
+4. **Relações com Dados Adicionais na Tabela de Junção**
+
+Em alguns casos, Temos de armazenar dados adicionais na tabela de junção de uma relação muitos-para-muitos. Para isso, usamos uma entidade explícita para a tabela de junção.
+
+```csharp
+public class Student
+{
+
+    public int StudentId { get; set; }
+    public string Name { get; set; }
+    // Propriedade de navegação para Enrollment
+    public List<Enrollment> Enrollments { get; set; }
+}
+
+public class Course
+{
+
+    public int CourseId { get; set; }
+    public string CourseName { get; set; }
+    // Propriedade de navegação para Enrollment
+    public List<Enrollment> Enrollments { get; set; }
+
+}
+
+public class Enrollment
+
+{
+    public int StudentId { get; set; }
+    public int CourseId { get; set; }
+    public DateTime EnrollmentDate { get; set; }
+    // Propriedades de navegação
+    public Student Student { get; set; }
+    public Course Course { get; set; }
+
+}
+```
+
+*Configuração no DbContext*
+
+```csharp
+public class AppDbContext : DbContext
+{
+
+    public DbSet<Student> Students { get; set; }
+    public DbSet<Course> Courses { get; set; }
+    public DbSet<Enrollment> Enrollments { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+    
+        modelBuilder.Entity<Enrollment>()
+            .HasKey(e => new { e.StudentId, e.CourseId });
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.Student)
+            .WithMany(s => s.Enrollments)
+            .HasForeignKey(e => e.StudentId);
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.Course)
+            .WithMany(c => c.Enrollments)
+            .HasForeignKey(e => e.CourseId);
+    }
+}
+```
