@@ -24,18 +24,6 @@ namespace esii_2025_d1.Controllers
             return await _context.logs.ToListAsync();
         }
         
-        public async Task CreateLog(Log log)
-        {
-            try
-            {
-                _context.logs.Add(log);
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine($"Error creating log: {e.Message}");
-            }
-        }
     }
 }
 

@@ -8,8 +8,8 @@ namespace esii_2025_d1.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-[Route("api/[controller]")]
 [ApiController]
+[Route("api/[controller]")]
 public class JomController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
