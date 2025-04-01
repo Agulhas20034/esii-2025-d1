@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
@@ -10,6 +10,71 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Compile Remove="Dtos\CustomerDtos\**" />
+      <Compile Remove="Dtos\MediaDtos\**" />
+      <Compile Remove="Dtos\PermissionDtos\**" />
+      <Compile Remove="Dtos\ProjectDtos\**" />
+      <Compile Remove="Dtos\ProjectUserDtos\**" />
+      <Compile Remove="Dtos\ReportDtos\**" />
+      <Compile Remove="Dtos\RoleDtos\**" />
+      <Compile Remove="Dtos\TaskDtos\**" />
+      <Compile Remove="Dtos\UserDtos\**" />
+      <Content Remove="Dtos\CustomerDtos\**" />
+      <Content Remove="Dtos\MediaDtos\**" />
+      <Content Remove="Dtos\PermissionDtos\**" />
+      <Content Remove="Dtos\ProjectDtos\**" />
+      <Content Remove="Dtos\ProjectUserDtos\**" />
+      <Content Remove="Dtos\ReportDtos\**" />
+      <Content Remove="Dtos\RoleDtos\**" />
+      <Content Remove="Dtos\TaskDtos\**" />
+      <Content Remove="Dtos\UserDtos\**" />
+      <EmbeddedResource Remove="Dtos\CustomerDtos\**" />
+      <EmbeddedResource Remove="Dtos\MediaDtos\**" />
+      <EmbeddedResource Remove="Dtos\PermissionDtos\**" />
+      <EmbeddedResource Remove="Dtos\ProjectDtos\**" />
+      <EmbeddedResource Remove="Dtos\ProjectUserDtos\**" />
+      <EmbeddedResource Remove="Dtos\ReportDtos\**" />
+      <EmbeddedResource Remove="Dtos\RoleDtos\**" />
+      <EmbeddedResource Remove="Dtos\TaskDtos\**" />
+      <EmbeddedResource Remove="Dtos\UserDtos\**" />
+      <None Remove="Dtos\CustomerDtos\**" />
+      <None Remove="Dtos\MediaDtos\**" />
+      <None Remove="Dtos\PermissionDtos\**" />
+      <None Remove="Dtos\ProjectDtos\**" />
+      <None Remove="Dtos\ProjectUserDtos\**" />
+      <None Remove="Dtos\ReportDtos\**" />
+      <None Remove="Dtos\RoleDtos\**" />
+      <None Remove="Dtos\TaskDtos\**" />
+      <None Remove="Dtos\UserDtos\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Controllers\CustomerController.cs" />
+      <Compile Remove="Controllers\MediaController.cs" />
+      <Compile Remove="Controllers\PermissionController.cs" />
+      <Compile Remove="Controllers\ProjectController.cs" />
+      <Compile Remove="Controllers\ProjectUserController.cs" />
+      <Compile Remove="Controllers\ReportController.cs" />
+      <Compile Remove="Controllers\RoleController.cs" />
+      <Compile Remove="Controllers\UserController.cs" />
+      <Compile Remove="Models\Customer.cs" />
+      <Compile Remove="Models\Login.cs" />
+      <Compile Remove="Models\Media.cs" />
+      <Compile Remove="Models\Permission.cs" />
+      <Compile Remove="Models\Project.cs" />
+      <Compile Remove="Models\ProjectUser.cs" />
+      <Compile Remove="Models\Report.cs" />
+      <Compile Remove="Models\Role.cs" />
+      <Compile Remove="Models\Task_m.cs" />
+      <Compile Remove="Models\User.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Remove="appsettings.Development.json" />
+      <Content Remove="appsettings.json" />
+    </ItemGroup>
+
+    <ItemGroup>
       <Content Include="..\.dockerignore">
         <Link>.dockerignore</Link>
       </Content>
@@ -17,21 +82,30 @@
 
     <ItemGroup>
       <PackageReference Include="Blazor.Bootstrap" Version="3.3.1" />
+      <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.11" />
+      <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.11" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.3">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
       <PackageReference Include="Swashbuckle.AspNetCore" Version="8.0.0" />
     </ItemGroup>
 
     <ItemGroup>
       <_ContentIncludedByDefault Remove="Components\Modal\Jom\Edit.razor" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="appsettings.Development.json" />
+      <None Include="appsettings.json" />
     </ItemGroup>
 
 </Project>
