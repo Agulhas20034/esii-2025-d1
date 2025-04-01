@@ -21,7 +21,7 @@ namespace esii_2025_d1.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Log>>> GetLogs()
         {
-            return await _context.logs.ToListAsync();
+            return await _context.Logs.ToListAsync();
         }
         
     }
