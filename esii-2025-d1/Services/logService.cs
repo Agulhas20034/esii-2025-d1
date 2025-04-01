@@ -21,7 +21,7 @@ public class LogService : ILogService
     {
         try
         {
-            _context.logs.Add(log);
+            _context.Logs.Add(log);
             await _context.SaveChangesAsync();
         }
         catch (Exception e)
