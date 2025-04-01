@@ -261,5 +261,3 @@ __pycache__/
 *.pyc
 esii-2025-d1/appsettings.Development.json
 esii-2025-d1/appsettings.json
-/esii-2025-d1/Migrations
-/esii-2025-d1/Dtos
