@@ -87,13 +87,30 @@
 
     public async Task LoginUser()
     {
-        // This doesn't count login failures towards account lockout
-        // To enable password failures to trigger account lockout, set lockoutOnFailure: true
         var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
         if (result.Succeeded)
         {
             Logger.LogInformation("User logged in.");
-            RedirectManager.RedirectTo(ReturnUrl);
+        
+            // Get the logged-in user
+            var user = await SignInManager.UserManager.FindByEmailAsync(Input.Email);
+        
+            // Get the user's roles
+            var roles = await SignInManager.UserManager.GetRolesAsync(user);
+        
+            // Redirect based on role
+            if (roles.Contains("Admin"))
+            {
+                RedirectManager.RedirectTo("/Admin/Dashboard");
+            }
+            else if (roles.Contains("Manager"))
+            {
+                RedirectManager.RedirectTo("/Manager/Overview");
+            }
+            else // Default role (e.g., "User")
+            {
+                RedirectManager.RedirectTo(ReturnUrl ?? "/User/Home");
+            }
         }
         else if (result.RequiresTwoFactor)
         {

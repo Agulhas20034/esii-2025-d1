@@ -1,0 +1,48 @@
+﻿@page "/Admin/Dashboard"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using esii_2025_d1.Data
+@using esii_2025_d1.Components.Account
+@attribute [Authorize(Roles = "Admin")]
+@inject NavigationManager Navigation
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityRedirectManager RedirectManager
+@rendermode InteractiveServer
+
+<div class="admin-container">
+    <!-- Main Content -->
+    <div class="admin-main">
+        <div class="admin-header">
+            <h2>Admin Dashboard</h2>
+            <div class="admin-actions">
+                <button @onclick="NavigateToLogs" class="btn btn-primary">
+                    <span class="oi oi-list-rich"></span> View System Logs
+                </button>
+            </div>
+        </div>
+
+        <!-- Button Grid -->
+        <div class="button-grid">
+            <!-- Your existing content -->
+        </div>
+    </div>
+</div>
+
+@code {
+    private void NavigateToLogs()
+    {
+        Navigation.NavigateTo("/Admin/Logs"); // Use the injected Navigation instance
+    }
+}
+
+<style>
+    .admin-actions {
+        margin-bottom: 20px;
+    }
+    
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+</style>

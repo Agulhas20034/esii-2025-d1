@@ -11,14 +11,16 @@ using Microsoft.AspNetCore.Components.Server; // tr
 
 var builder = WebApplication.CreateBuilder(args);
 
-//// Add services to the container.
-//builder.Services.AddRazorComponents()
-//    .AddInteractiveServerComponents();
+// Explicitly set Kestrel to listen on both HTTP and HTTPS
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(5049);  // HTTP
+    options.ListenAnyIP(7185, listenOptions =>
+    {
+        listenOptions.UseHttps(); // HTTPS
+    });
+});
 
-// Add db context
-//builder.Services.AddDbContext<ApplicationDbContext>(options =>
-//    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
-//);
 
 // Adicionar BlazorBootstrap
 builder.Services.AddBlazorBootstrap();
@@ -48,11 +50,6 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// tr .net authentication and authorization
-//builder.Services.AddDefaultIdentity<IdentityUser>(options =>
-//    options.SignIn.RequireConfirmedAccount = true)
-//    .AddEntityFrameworkStores<ApplicationDbContext>();
-
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
@@ -73,6 +70,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 //builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
@@ -107,6 +105,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
+
 // tr .net authentication and authorization
 app.UseAuthentication();
 app.UseAuthorization();
@@ -118,4 +117,46 @@ app.MapRazorComponents<App>()
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints(); // tr
 
+// Ensure database is created & seed roles
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+    
+    await SeedRolesAndAdmin(roleManager, userManager);
+}
+
 app.Run();
+
+// ====================================
+// Seed Roles and Admin
+// ====================================
+async Task SeedRolesAndAdmin(RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager)
+{
+    string[] roleNames = { "Admin", "UserManager", "User" };
+    
+    foreach (var role in roleNames)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+
+    // Create default Admin user if not exists
+    string adminEmail = "admin@example.com";
+    string adminPassword = "Aa1234_"; // Change this!
+
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    if (adminUser == null)
+    {
+        var newAdmin = new ApplicationUser { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
+        var createUserResult = await userManager.CreateAsync(newAdmin, adminPassword);
+
+        if (createUserResult.Succeeded)
+        {
+            await userManager.AddToRoleAsync(newAdmin, "Admin");
+        }
+    }
+}
