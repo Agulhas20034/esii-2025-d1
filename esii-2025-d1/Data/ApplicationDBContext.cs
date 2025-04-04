@@ -27,6 +27,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Report> Reports { get; set; } = null;
 
     public DbSet<Role> Roles { get; set; } = null;
+
+    public DbSet<Tasks> Tasks { get; set; } = null;
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {   

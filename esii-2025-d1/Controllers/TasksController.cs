@@ -6,26 +6,27 @@ using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using System.Linq;
 using esii_2025_d1.Dtos.ReportDtos;
+using esii_2025_d1.Dtos.TasksDtos;
 
 namespace esii_2025_d1.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class RoleController : ControllerBase
+    public class TasksController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
 
-        public RoleController(ApplicationDbContext context)
+        public TasksController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // GET: api/Role
+        // GET: api/Task
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<RolesResponseDto>>> GetRoles()
+        public async Task<ActionResult<IEnumerable<TasksResponseDto>>> GetTasks()
         {
-            var roles = await _context.Roles
-                .Select(role => new RolesResponseDto
+            var task = await _context.Tasks
+                .Select(role => new TasksResponseDto
                 {
                     Id = role.Id,
                     PermissionId = role.PermissionId,
@@ -36,75 +37,75 @@ namespace esii_2025_d1.Controllers
                 })
                 .ToListAsync();
 
-            return Ok(roles);
+            return Ok(task);
         }
 
-        // GET: api/Role/{id}
+        // GET: api/Task/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<RolesResponseDto>> GetRole(int id)
+        public async Task<ActionResult<TasksResponseDto>> GetTask(int id)
         {
-            var role = await _context.Roles.FindAsync(id);
+            var task = await _context.Roles.FindAsync(id);
 
-            if (role == null)
+            if (task == null)
             {
                 return NotFound();
             }
 
-            var roleResponse = new RolesResponseDto
+            var taskResponse = new TasksResponseDto
             {
-                Id = role.Id,
-                PermissionId = role.PermissionId,
-                Name = role.Name,
-                CreatedAt = role.CreatedAt,
-                UpdatedAt = role.UpdatedAt,
-                DeletedAt = role.DeletedAt
+                Id = task.Id,
+                PermissionId = task.PermissionId,
+                Name = task.Name,
+                CreatedAt = task.CreatedAt,
+                UpdatedAt = task.UpdatedAt,
+                DeletedAt = task.DeletedAt
             };
 
-            return Ok(roleResponse);
+            return Ok(taskResponse);
         }
 
-        // POST: api/Role
+        // POST: api/Task
         [HttpPost]
-        public async Task<ActionResult<RolesResponseDto>> PostRole(RolesCreateDto roleCreateDto)
+        public async Task<ActionResult<TasksResponseDto>> PostRole(TasksCreateDto taskCreateDto)
         {
-            var role = new Role
+            var task = new Tasks
             {
-                PermissionId = roleCreateDto.PermissionId,
-                Name = roleCreateDto.Name,
+                PermissionId = taskCreateDto.PermissionId,
+                Name = taskCreateDto.Name,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
             };
 
-            _context.Roles.Add(role);
+            _context.Tasks.Add(task);
             await _context.SaveChangesAsync();
 
-            var roleResponse = new RolesResponseDto
+            var taskResponse = new TasksResponseDto
             {
-                Id = role.Id,
-                PermissionId = role.PermissionId,
-                Name = role.Name,
-                CreatedAt = role.CreatedAt,
-                UpdatedAt = role.UpdatedAt,
-                DeletedAt = role.DeletedAt
+                Id = task.Id,
+                PermissionId = task.PermissionId,
+                Name = task.Name,
+                CreatedAt = task.CreatedAt,
+                UpdatedAt = task.UpdatedAt,
+                DeletedAt = task.DeletedAt
             };
 
-            return CreatedAtAction(nameof(GetRole), new { id = role.Id }, roleResponse);
+            return CreatedAtAction(nameof(GetTask), new { id = task.Id }, taskResponse);
         }
 
-        // PUT: api/Role/{id}
+        // PUT: api/Task/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutRole(int id, RolesUpdateDto roleUpdateDto)
+        public async Task<IActionResult> PutTask(int id, TasksUpdateDto taskUpdateDto)
         {
-            var role = await _context.Roles.FindAsync(id);
+            var task = await _context.Tasks.FindAsync(id);
 
-            if (role == null)
+            if (task == null)
             {
                 return NotFound();
             }
 
-            role.PermissionId = roleUpdateDto.PermissionId ?? role.PermissionId;
-            role.Name = roleUpdateDto.Name ?? role.Name;
-            role.UpdatedAt = DateTime.UtcNow;
+            task.PermissionId = taskUpdateDto.PermissionId ?? task.PermissionId;
+            task.Name = taskUpdateDto.Name ?? task.Name;
+            task.UpdatedAt = DateTime.UtcNow;
 
             try
             {
@@ -112,7 +113,7 @@ namespace esii_2025_d1.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Roles.Any(p => p.Id == id))
+                if (!_context.Tasks.Any(p => p.Id == id))
                 {
                     return NotFound();
                 }

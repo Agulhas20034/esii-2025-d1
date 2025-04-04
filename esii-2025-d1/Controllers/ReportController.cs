@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using System.Linq;
+using esii_2025_d1.Dtos.ProjectDtos;
 
 namespace esii_2025_d1.Controllers
 {
@@ -90,18 +91,40 @@ namespace esii_2025_d1.Controllers
             return CreatedAtAction(nameof(GetReport), new { id = report.Id }, reportResponse);
         }
 
-        /*
+        
         // PUT: api/Report/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> PutReport(int id, ReportsUpdateDto reportUpdateDto)
         {
             var report = await _context.Reports.FindAsync(id);
+
             if (report == null)
             {
                 return NotFound();
             }
-        } */
-        // Em construção
+
+            report.UserId = reportUpdateDto.UserId ?? report.UserId;
+            report.ProjectId = reportUpdateDto.ProjectId ?? report.ProjectId;
+            report.UpdatedAt = DateTime.UtcNow;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Reports.Any(p => p.Id == id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
 
         // DELETE: api/Report/{id}
         [HttpDelete("{id}")]

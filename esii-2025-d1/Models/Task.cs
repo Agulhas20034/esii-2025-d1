@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace esii_2025_d1.Models;
 
-public class Task
+public class Tasks
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -20,7 +20,7 @@ public class Task
 
     public DateTime? EndDate { get; set; }
     
-    public string Satus { get; set; } //TODO: IMPLEMENT ENUM
+    public string Status { get; set; } //TODO: IMPLEMENT ENUM
     
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     
