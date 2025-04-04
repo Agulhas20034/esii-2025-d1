@@ -30,7 +30,7 @@ builder.Services.AddScoped<ILogService, LogService>();
 
 // Adicionar HttpClient
 builder.Services.AddHttpClient();
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7185") });
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7185/") });
 
 // Adicionar serviços do Swagger
 builder.Services.AddEndpointsApiExplorer();

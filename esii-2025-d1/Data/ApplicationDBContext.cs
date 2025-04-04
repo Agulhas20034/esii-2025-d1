@@ -12,9 +12,21 @@ public class ApplicationDbContext : DbContext
     {
     }
     
-    public DbSet<Jom> Joms { get; set; } = null!;
+    public DbSet<Customer> Customers { get; set; } = null;
+
     public DbSet<Log> logs { get; set; } = null!;
-    
+
+    public DbSet<Media> Media { get; set; } = null;
+
+    public DbSet<Permission> Permissions { get; set; } = null;
+
+    public DbSet<Project> Projects { get; set; } = null;
+
+    public DbSet<ProjectUser> ProjectUsers { get; set; } = null;
+
+    public DbSet<Report> Reports { get; set; } = null;
+
+    public DbSet<Role> Roles { get; set; } = null;
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {   
@@ -35,55 +47,5 @@ public class ApplicationDbContext : DbContext
                 modelBuilder.Entity(entityType.ClrType).HasQueryFilter(filter);
             }
         }
-        
-        // Seed data
-        modelBuilder.Entity<Jom>().HasData(
-            new Jom 
-            { 
-                Id = 1,
-                Label = "Joms", 
-                Date = DateTime.UtcNow, 
-                IsDone = false, 
-                TestNumber = 2.5f, 
-                created_at = DateTime.UtcNow, 
-                updated_at = DateTime.UtcNow,
-                deleted_at = null
-            },
-            new Jom 
-            { 
-                Id = 2,
-                Label = "Joms2", 
-                Date = DateTime.UtcNow, 
-                IsDone = true, 
-                TestNumber = 7.5f, 
-                created_at = DateTime.UtcNow, 
-                updated_at = DateTime.UtcNow,
-                deleted_at = null
-            },
-            new Jom 
-            { 
-                Id = 3,
-                Label = "Joms3", 
-                Date = DateTime.UtcNow, 
-                IsDone = true, 
-                TestNumber = 10, 
-                created_at = DateTime.UtcNow, 
-                updated_at = DateTime.UtcNow,
-                deleted_at = null
-            },
-            new Jom 
-            { 
-                Id = 4,
-                Label = "Joms4", 
-                Date = DateTime.UtcNow, 
-                IsDone = false, 
-                TestNumber = 62, 
-                created_at = DateTime.UtcNow, 
-                updated_at = DateTime.UtcNow,
-                deleted_at = null
-            }
-        );
     }
-
-
 }

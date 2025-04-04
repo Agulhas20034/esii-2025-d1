@@ -1,6 +1,6 @@
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=es2;Username=es2;Password=es2"
+    "DefaultConnection": "Host=localhost;Database=postgres;Username=postgres;Password=0021"
   },
   "Logging": {
     "LogLevel": {
