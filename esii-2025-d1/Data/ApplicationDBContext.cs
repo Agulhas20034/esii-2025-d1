@@ -32,6 +32,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<User> Users { get; set; } = null;
 
+    public DbSet<Jom> Joms { get; set; } = null;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {   
         
