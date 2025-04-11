@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace esii_2025_d1.Models;
 
-public class Tasks
+public class Assignment
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

@@ -2,9 +2,13 @@ namespace esii_2025_d1.Dtos.UsersDtos;
 
 public class UsersCreateDto
 {
-    public string? Label { get; set; }
-    
-    public DateTime? Date { get; set; }
-    public bool IsDone { get; set; }
-    public float? TestNumber { get; set; }
+    public int RoleId { get; set; }
+    public string? Name { get; set; } = string.Empty;
+
+    public string? Email { get; set; } = string.Empty;
+
+    public required string Password { get; set; }
+
+    public int DailyWorkHours { get; set; } = 0;
+
 }

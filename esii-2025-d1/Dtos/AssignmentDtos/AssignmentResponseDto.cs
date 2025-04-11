@@ -1,6 +1,6 @@
-namespace esii_2025_d1.Dtos.TasksDtos;
+namespace esii_2025_d1.Dtos.AssignmentsDtos;
 
-public class TasksResponseDto
+public class AssignmentResponseDto
 {
     public int Id { get; set; }
 
@@ -15,7 +15,7 @@ public class TasksResponseDto
 
     public DateTime? EndDate { get; set; }
 
-    public string Status { get; set; } 
+    public string Status { get; set; } //TODO: IMPLEMENT ENUM
 
     public DateTime CreatedAt { get; set; }
 

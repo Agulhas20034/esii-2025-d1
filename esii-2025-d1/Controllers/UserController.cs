@@ -1,140 +1,130 @@
 using esii_2025_d1.Data;
-using esii_2025_d1.Dtos.JomDtos;
 using esii_2025_d1.Models;
-
-namespace esii_2025_d1.Controllers;
-
+using esii_2025_d1.Dtos.UsersDtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+namespace esii_2025_d1.Controllers;
+
 [Route("api/[controller]")]
 [ApiController]
-public class JomController : ControllerBase
+public class UserController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-    
-    public JomController(ApplicationDbContext context)
+
+    public UserController(ApplicationDbContext context)
     {
         _context = context;
     }
-    
-    // GET: api/Jom
+
+    // GET: api/User
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<MediaResponseDto>>> GetJoms()
+    public async Task<ActionResult<IEnumerable<UsersResponseDto>>> GetUsers()
     {
-        var joms = await _context.Joms
-            .Select(jom => new MediaResponseDto
+        var users = await _context.Users
+        .Where(u => u.DeletedAt == null)
+            .Select(user => new UsersResponseDto
             {
-                Id = jom.Id,
-                Label = jom.Label,
-                Date = jom.Date,
-                IsDone = jom.IsDone,
-                TestNumber = jom.TestNumber,
-                created_at = jom.created_at,
-                updated_at = jom.updated_at
+                Id = user.Id,
+                RoleId = user.RoleId,
+                Name = user.Name,
+                Email = user.Email,
+                Password = user.Password,
+                DailyWorkHours = user.DailyWorkHours,
+                CreatedAt = user.CreatedAt,
+                UpdatedAt = user.UpdatedAt
             })
             .ToListAsync();
 
-        return Ok(joms);
+        return Ok(users);
     }
-    
-    // GET: api/Jom/"id"
+
+    // GET: api/User/{id}
     [HttpGet("{id}")]
-    public async Task<ActionResult<MediaResponseDto>> GetJom(int id)
+    public async Task<ActionResult<UsersResponseDto>> GetUser(int id)
     {
-        var jom = await _context.Joms.FindAsync(id);
-    
-        if (jom == null)
+        var user = await _context.Users.FindAsync(id);
+
+        if (user == null || user.DeletedAt != null)
         {
             return NotFound();
         }
 
-        var jomResponse = new MediaResponseDto
+        var userDto = new UsersResponseDto
         {
-            Id = jom.Id,
-            Label = jom.Label,
-            Date = jom.Date,
-            IsDone = jom.IsDone,
-            TestNumber = jom.TestNumber,
-            created_at = jom.created_at,
-            updated_at = jom.updated_at
+            Id = user.Id,
+            RoleId = user.RoleId,
+            Name = user.Name,
+            Email = user.Email,
+            Password = user.Password,
+            DailyWorkHours = user.DailyWorkHours,
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt
         };
 
-        return Ok(jomResponse);
+        return Ok(userDto);
     }
 
-    
+    // POST: api/User
     [HttpPost]
-    public async Task<ActionResult<MediaCreateDto>> PostJom(MediaCreateDto jomRequest)
+    public async Task<ActionResult<UsersCreateDto>> PostUser(UsersCreateDto userDto)
     {
-        var jom = new Jom
+        var user = new User
         {
-            Label = jomRequest.Label,
-            Date = jomRequest.Date ?? DateTime.UtcNow,
-            IsDone = jomRequest.IsDone,
-            TestNumber = jomRequest.TestNumber,
-            created_at = DateTime.UtcNow,
-            updated_at = DateTime.UtcNow,
+            RoleId = userDto.RoleId,
+            Name = userDto.Name,
+            Email = userDto.Email,
+            Password = userDto.Password,
+            DailyWorkHours = userDto.DailyWorkHours,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
-        
-        _context.Joms.Add(jom);
+
+        _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetJom), new { id = jom.Id }, jom);
+        return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
     }
-        
-    // PUT: api/Jom/"id"
+
+    // PUT: api/User/{id}
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutJom(int id, MediaUpdateDto jom)
+    public async Task<IActionResult> PutUser(int id, UsersUpdateDto userDto)
     {
-        var existingJom = await _context.Joms.FindAsync(id);
-        
-        if (existingJom == null)
+        var user = await _context.Users.FindAsync(id);
+
+        if (user == null || user.DeletedAt != null)
         {
             return NotFound();
         }
-        
-        // Update only the modified properties
-        existingJom.Label = jom.Label ?? existingJom.Label;
-        existingJom.Date = jom.Date != default ? jom.Date : existingJom.Date;
-        existingJom.IsDone = jom.IsDone;
-        existingJom.TestNumber = jom.TestNumber ?? existingJom.TestNumber;
-        existingJom.updated_at = DateTime.UtcNow;
 
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!_context.Joms.Any(e => e.Id == id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
-        }
+        user.RoleId = userDto.RoleId; //?? user.RoleId;
+        user.Name = userDto.Name ?? user.Name;
+        user.Email = userDto.Email ?? user.Email;
+        user.Password = userDto.Password ?? user.Password;
+        user.DailyWorkHours = userDto.DailyWorkHours; //?? user.DailyWorkHours;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
         return NoContent();
     }
-    
-    // DELETE: api/Jom/"id"
+
+    // DELETE: api/User/{id}
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteJom(int id)
+    public async Task<IActionResult> DeleteUser(int id)
     {
-        var jom = await _context.Joms.FindAsync(id);
-        if (jom == null)
+        var user = await _context.Users.FindAsync(id);
+
+        if (user == null || user.DeletedAt != null)
         {
             return NotFound();
         }
-        
-        jom.updated_at = DateTime.UtcNow;
-        jom.deleted_at = DateTime.UtcNow;
-        
+
+        user.DeletedAt = DateTime.UtcNow;
+        user.UpdatedAt = DateTime.UtcNow;
+
         await _context.SaveChangesAsync();
+
         return NoContent();
     }
 }
-
-
