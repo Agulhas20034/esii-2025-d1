@@ -1,6 +1,8 @@
-﻿@implements IDisposable
-
-@inject NavigationManager NavigationManager﻿
+﻿@using Microsoft.AspNetCore.Antiforgery
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject IAntiforgery Antiforgery
+@inject IHttpContextAccessor HttpContextAccessor
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -43,16 +45,16 @@
         </div>
 
         <AuthorizeView>
-            <Authorized>
+            <Authorized Context="authContext">
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="Account/Manage">
-                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
+                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @authContext.User.Identity?.Name
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
-                    <form action="Account/Logout" method="post">
-                        <AntiforgeryToken />
-                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                    <form method="post" action="Account/Logout">
+                        <input type="hidden" name="__RequestVerificationToken" value="@GetFreshAntiforgeryToken()" />
+                        <input type="hidden" name="returnUrl" value="@currentUrl" />
                         <button type="submit" class="nav-link">
                             <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
                         </button>
@@ -75,7 +77,6 @@
     </nav>
 </div>
 
-
 @code {
     private string? currentUrl;
 
@@ -83,6 +84,11 @@
     {
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private string GetFreshAntiforgeryToken()
+    {
+        return Antiforgery.GetAndStoreTokens(HttpContextAccessor.HttpContext!).RequestToken!;
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)

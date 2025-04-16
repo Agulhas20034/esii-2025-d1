@@ -1,12 +1,14 @@
 using esii_2025_d1.Components;
 using esii_2025_d1.Data;
 using esii_2025_d1.Services;
-using esii_2025_d1.Components.Account; // tr
+using esii_2025_d1.Components.Account;
+using Microsoft.AspNetCore.Antiforgery; // tr
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Components.Authorization; // tr
-using Microsoft.AspNetCore.Components.Server; // tr
+using Microsoft.AspNetCore.Components.Server;
+using Microsoft.AspNetCore.Mvc; // tr
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -76,9 +78,20 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddDefaultTokenProviders();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
-
+builder.Services.AddHttpClient();
 
 builder.Services.AddAuthorizationCore();
+builder.Services.AddAntiforgery(options => {
+    options.HeaderName = "X-CSRF-TOKEN";
+    options.Cookie.Name = "__Host-CSRF";
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpClient();
+
+builder.Services.AddHttpContextAccessor();
+
 
 
 
@@ -105,6 +118,14 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
+app.MapPost("/Account/Logout", async (
+    HttpContext context,
+    [FromServices] SignInManager<ApplicationUser> signInManager) =>
+{
+    // Skip anti-forgery validation for logout
+    await signInManager.SignOutAsync();
+    return Results.LocalRedirect("~/");
+}).DisableAntiforgery();
 
 // tr .net authentication and authorization
 app.UseAuthentication();
@@ -146,7 +167,7 @@ async Task SeedRolesAndAdmin(RoleManager<IdentityRole> roleManager, UserManager<
 
     // Create default Admin user if not exists
     string adminEmail = "admin@example.com";
-    string adminPassword = "Aa1234_"; // Change this!
+    string adminPassword = "Aa1234_"; 
 
     var adminUser = await userManager.FindByEmailAsync(adminEmail);
     if (adminUser == null)
