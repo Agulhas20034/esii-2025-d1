@@ -77,6 +77,14 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
+// Register SingletonUserManager with proper initialization
+builder.Services.AddSingleton<SingletonUserManager>(provider => 
+{
+    var manager = SingletonUserManager.Instance;
+    manager.Initialize(provider.GetRequiredService<IServiceScopeFactory>());
+    return manager;
+});
+
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 builder.Services.AddHttpClient();
 
@@ -138,15 +146,19 @@ app.MapRazorComponents<App>()
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints(); // tr
 
+
+
 // Ensure database is created & seed roles
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-    
+    var identityManager = app.Services.GetRequiredService<SingletonUserManager>();
+    identityManager.Initialize(app.Services.GetRequiredService<IServiceScopeFactory>());
     await SeedRolesAndAdmin(roleManager, userManager);
 }
+
 
 app.Run();
 

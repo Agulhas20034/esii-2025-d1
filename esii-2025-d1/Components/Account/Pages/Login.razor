@@ -109,7 +109,7 @@
             }
             else // Default role (e.g., "User")
             {
-                RedirectManager.RedirectTo(ReturnUrl ?? "/User/Home");
+                RedirectManager.RedirectTo(ReturnUrl ?? "/Account/Manage");
             }
         }
         else if (result.RequiresTwoFactor)

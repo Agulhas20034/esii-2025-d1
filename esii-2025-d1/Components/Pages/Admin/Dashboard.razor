@@ -15,16 +15,20 @@
         <div class="admin-header">
             <h2>Admin Dashboard</h2>
             <div class="admin-actions">
-                <button @onclick="NavigateToLogs" class="btn btn-primary">
-                    <span class="oi oi-list-rich"></span> View System Logs
-                </button>
+                <!-- Button Grid -->
+                <div class="button-grid">
+                    <button @onclick="NavigateToLogs" class="btn btn-primary">
+                        <span class="oi oi-list-rich"></span> View System Logs
+                    </button>
+                    <!-- Users Button -->
+                    <button @onclick="NavigateToUsers" class="btn btn-primary">
+                        <i class="bi bi-people-fill"></i> Manage Users
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Button Grid -->
-        <div class="button-grid">
-            <!-- Your existing content -->
-        </div>
+        
     </div>
 </div>
 
@@ -32,6 +36,11 @@
     private void NavigateToLogs()
     {
         Navigation.NavigateTo("/Admin/Logs"); // Use the injected Navigation instance
+    }
+    
+    private void NavigateToUsers()
+    {
+        Navigation.NavigateTo("/Admin/Users");
     }
 }
 
