@@ -77,7 +77,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-// Register SingletonUserManager with proper initialization
+// Regista serviço singleton para uso
 builder.Services.AddSingleton<SingletonUserManager>(provider => 
 {
     var manager = SingletonUserManager.Instance;
@@ -148,7 +148,7 @@ app.MapAdditionalIdentityEndpoints(); // tr
 
 
 
-// Ensure database is created & seed roles
+// Certifica-se que base de dados esta criada e conta admin/seeds estao seeded, tambem inicializa serviços registados
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -163,7 +163,7 @@ using (var scope = app.Services.CreateScope())
 app.Run();
 
 // ====================================
-// Seed Roles and Admin
+// Roles seeded e Conta admin
 // ====================================
 async Task SeedRolesAndAdmin(RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager)
 {
@@ -177,7 +177,7 @@ async Task SeedRolesAndAdmin(RoleManager<IdentityRole> roleManager, UserManager<
         }
     }
 
-    // Create default Admin user if not exists
+    // Cria admin default se nao existir
     string adminEmail = "admin@example.com";
     string adminPassword = "Aa1234_"; 
 

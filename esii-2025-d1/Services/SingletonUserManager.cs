@@ -52,22 +52,22 @@ public sealed class SingletonUserManager
         }
         return false;
     }
-
+    //Função pra obter todos os users
     public List<ApplicationUser> GetAllUsers() => _users.Values.ToList();
-    
+    //Função para criar novo user
     public async Task<(bool Success, string ErrorMessage)> CreateUserAsync(string email, string password, List<string> roles)
     {
         using var scope = _scopeFactory.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        // Validate email doesn't exist
+        //Valida se email ja esta registado
         if (await userManager.FindByEmailAsync(email) != null)
         {
             return (false, "Email already exists");
         }
 
-        // Create new user
+        //Cria novo user
         var user = new ApplicationUser { UserName = email, Email = email };
         var createResult = await userManager.CreateAsync(user, password);
 
@@ -76,10 +76,10 @@ public sealed class SingletonUserManager
             return (false, string.Join(", ", createResult.Errors.Select(e => e.Description)));
         }
 
-        // Add roles
+        //Adiciona Role
         foreach (var role in roles)
         {
-            // Verify role exists
+            //Verifica se o role existe
             if (!await roleManager.RoleExistsAsync(role))
             {
                 await userManager.DeleteAsync(user);
@@ -94,18 +94,19 @@ public sealed class SingletonUserManager
             }
         }
 
-        // Add to in-memory cache
+        //Adiciona user criado a cache(singleton feature)
         _users.TryAdd(user.Id, user);
 
         return (true, "User created successfully");
     }
+    //Busca user por id
     public async Task<ApplicationUser?> GetUserByIdAsync(string userId)
 {
-    // Try to get from cache first
+    // Tenta primeiro ir buscar á cache
     if (_users.TryGetValue(userId, out var cachedUser))
         return cachedUser;
 
-    // Fall back to database
+    // Em caso de erro vai á db
     using var scope = _scopeFactory.CreateScope();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
     var user = await userManager.FindByIdAsync(userId);
@@ -117,6 +118,7 @@ public sealed class SingletonUserManager
     
     return user;
 }
+    //Busca user roles por id do role
 
     public async Task<List<string>> GetUserRolesAsync(string userId)
     {
@@ -125,48 +127,75 @@ public sealed class SingletonUserManager
         var user = await userManager.FindByIdAsync(userId);
         return user != null ? (await userManager.GetRolesAsync(user)).ToList() : new List<string>();
     }
-
+//Atualiza User
     public async Task<bool> UpdateUserAsync(ApplicationUser user)
     {
         using var scope = _scopeFactory.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        
-        // Update in database
-        var result = await userManager.UpdateAsync(user);
-        
-        // Update in cache if successful
+    
+        // Pega no user da DB
+        var dbUser = await userManager.FindByIdAsync(user.Id);
+    
+        // Atualiza dados
+        dbUser.Email = user.Email;
+        dbUser.UserName = user.Email;
+        dbUser.EmailConfirmed = user.EmailConfirmed;
+    
+        // Grava
+        var result = await userManager.UpdateAsync(dbUser);
+    
+        // Atualiza cache
         if (result.Succeeded)
         {
-            _users.AddOrUpdate(user.Id, user, (id, existing) => user);
+            _users.AddOrUpdate(user.Id, _ => 
+                {
+                    // Cria nova instancia pra evitar erros
+                    return new ApplicationUser 
+                    {
+                        Id = dbUser.Id,
+                        Email = dbUser.Email,
+                        UserName = dbUser.UserName,
+                        EmailConfirmed = dbUser.EmailConfirmed
+                        
+                    };
+                }, 
+                (_, existing) => 
+                {
+                    // Atualiza instancia existente
+                    existing.Email = dbUser.Email;
+                    existing.UserName = dbUser.UserName;
+                    existing.EmailConfirmed = dbUser.EmailConfirmed;
+                    return existing;
+                });
         }
-        
+    
         return result.Succeeded;
     }
-
+//Atualiza roles do user
     public async Task<bool> UpdateUserRoleAsync(string userId, string role)
     {
         using var scope = _scopeFactory.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        // Verify role exists
+        // Verifica se role existe
         if (!await roleManager.RoleExistsAsync(role))
             return false;
 
         var user = await userManager.FindByIdAsync(userId);
         if (user == null) return false;
 
-        // Remove all existing roles
+        // Apaga role atual e adiciona a atualizada
         var currentRoles = await userManager.GetRolesAsync(user);
         await userManager.RemoveFromRolesAsync(user, currentRoles);
         
-        // Add new single role
+        // Adiciona nova role
         var result = await userManager.AddToRoleAsync(user, role);
         
-        // Update cache
+        // Atualiza cache
         if (result.Succeeded && _users.TryGetValue(userId, out var cachedUser))
         {
-            // Trigger reload of this user's data
+            // Atualiza dados do user
             _users.TryRemove(userId, out _);
             _ = await GetUserByIdAsync(userId);
         }

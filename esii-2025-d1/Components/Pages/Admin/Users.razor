@@ -89,7 +89,7 @@
         public ApplicationUser User { get; set; }
         public List<string> RoleNames { get; set; } = new();
     }
-
+//Carrega users para a pagina
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -114,7 +114,7 @@
 
         users = userList;
     }
-
+//Verifica se user pode ser apagado
     private bool CanDeleteUser(UserWithRoles user)
     {
         // Can't delete yourself
@@ -127,7 +127,7 @@
 
         return true;
     }
-
+//Da razao para nao poder ser apagado
     private string GetDeleteDisabledReason(UserWithRoles user)
     {
         if (user.User.Id == currentUserId)
@@ -137,7 +137,8 @@
             return "Cannot delete other administrators";
         
         return "Delete disabled";
-    }
+    } 
+//links para navegação
 
     private void NavigateToCreateUser()
     {
@@ -148,7 +149,7 @@
     {
         NavigationManager.NavigateTo($"/Admin/UpdateUser/{userId}");
     }
-
+//Trigger para apagar user(logica)
     private async Task DeleteUser(string userId)
     {
         var userToDelete = users.FirstOrDefault(u => u.User.Id == userId);

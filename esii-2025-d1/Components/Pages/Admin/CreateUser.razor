@@ -82,7 +82,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Load available roles
+        // Carrega roles disponiveis
         availableRoles = RoleManager.Roles.Select(r => r.Name).ToList();
     }
 
@@ -99,7 +99,7 @@
                 return;
             }
 
-            // Create user using your SingletonUserManager
+            //Cria o user com o singleton manager
             var result = await UserManager.CreateUserAsync(
                 newUser.Email, 
                 newUser.Password, 
@@ -110,8 +110,8 @@
                 statusMessage = $"User {newUser.Email} created successfully!";
                 isSuccess = true;
                 
-                // Wait 2 seconds before redirecting
-                await Task.Delay(2000);
+                // espera 0.5 segundos antes de redirecionar
+                await Task.Delay(500);
                 NavigationManager.NavigateTo("/Admin/Dashboard");
             }
             else

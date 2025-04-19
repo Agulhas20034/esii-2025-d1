@@ -89,7 +89,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Load user data
+        // Carrega dados do user
         user = await UserManager.GetUserByIdAsync(UserId);
         if (user == null)
         {
@@ -97,17 +97,17 @@
             return;
         }
 
-        // Initialize form model
+        // Inicializa o model criado acima
         editModel = new EditUserModel
         {
             Email = user.Email,
             EmailConfirmed = user.EmailConfirmed
         };
 
-        // Load available roles
+        // Carrega roles disponiveis
         availableRoles = RoleManager.Roles.Select(r => r.Name).ToList();
         
-        // Get current role (take first if multiple exist)
+        // pega no role atual
         var currentRoles = await UserManager.GetUserRolesAsync(UserId);
         selectedRole = currentRoles.FirstOrDefault();
     }
@@ -119,31 +119,41 @@
 
         try
         {
-            // Validate role selection
+            // verifica role selecionado
             if (string.IsNullOrEmpty(selectedRole))
             {
                 errorMessage = "Please select a role";
                 return;
             }
 
-            // Update user properties if changed
+            // Atualiza dados
             bool needsUpdate = user.Email != editModel.Email || 
                              user.EmailConfirmed != editModel.EmailConfirmed;
 
-            if (needsUpdate)
+
+            try
             {
-                user.Email = editModel.Email;
-                user.UserName = editModel.Email;
-                user.EmailConfirmed = editModel.EmailConfirmed;
-                
-                if (!await UserManager.UpdateUserAsync(user))
+                // Create new object with JUST the changed fields
+                var userUpdate = new ApplicationUser
+                {
+                    Id = user.Id, // Required for lookup
+                    Email = editModel.Email,
+                    UserName = editModel.Email,
+                    EmailConfirmed = editModel.EmailConfirmed
+                };
+
+                if (!await UserManager.UpdateUserAsync(userUpdate))
                 {
                     errorMessage = "Failed to update user details";
                     return;
                 }
+            }catch
+            {
+                errorMessage = "Failed to update data in try-catch";
+                return;
             }
 
-            // Update role if changed
+            // Atualiza role se tiver sido mudado
             var currentRoles = await UserManager.GetUserRolesAsync(UserId);
             if (!currentRoles.Contains(selectedRole))
             {
@@ -155,7 +165,7 @@
             }
 
             isSuccess = true;
-            await Task.Delay(2000); // Show success message briefly
+            await Task.Delay(2000); 
             NavigationManager.NavigateTo("/Admin/Users");
         }
         catch (Exception ex)
