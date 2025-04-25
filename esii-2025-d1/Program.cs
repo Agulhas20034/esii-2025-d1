@@ -2,6 +2,7 @@ using esii_2025_d1.Components;
 using esii_2025_d1.Data;
 using esii_2025_d1.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Http;
 using Microsoft.OpenApi.Models;
 
 
@@ -30,6 +31,7 @@ builder.Services.AddScoped<ILogService, LogService>();
 
 // Adicionar HttpClient
 builder.Services.AddHttpClient();
+
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7185") });
 
 // Adicionar serviços do Swagger

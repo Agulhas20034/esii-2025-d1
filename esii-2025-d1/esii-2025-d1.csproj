@@ -27,11 +27,16 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-      <PackageReference Include="Swashbuckle.AspNetCore" Version="8.0.0" />
+      <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
     </ItemGroup>
 
     <ItemGroup>
       <_ContentIncludedByDefault Remove="Components\Modal\Jom\Edit.razor" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="appsettings.Development.json" />
+      <None Include="appsettings.json" />
     </ItemGroup>
 
 </Project>

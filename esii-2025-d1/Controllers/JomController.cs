@@ -1,6 +1,7 @@
 using esii_2025_d1.Data;
 using esii_2025_d1.Dtos.JomDtos;
 using esii_2025_d1.Models;
+using esii_2025_d1.Models.Enums;
 using esii_2025_d1.Services;
 
 namespace esii_2025_d1.Controllers;
@@ -14,7 +15,7 @@ public class JomController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogService _logService;
-    protected string entity = "Jom";
+    protected string Entity = "Jom";
     
     public JomController(
         ApplicationDbContext context,
@@ -44,15 +45,13 @@ public class JomController : ControllerBase
                 })
                 .ToListAsync();
             
-             var log = new Log
-             {
-                 entity_id = null,
-                 entity_name = entity,
-                 user_id = 1, // Replace with actual user ID
-                 action = "GetList",
-             };
-            
-             await _logService.CreateLog(log);
+            await _logService.CreateLog(new Log
+            {
+                entity_id = null,
+                entity_name = Entity,
+                user_id = 1,
+                action = LogAction.Read
+            });
             
             return Ok(joms);
         }
@@ -85,15 +84,13 @@ public class JomController : ControllerBase
             updated_at = jom.updated_at
         };
         
-        var log = new Log
+        await _logService.CreateLog(new Log
         {
             entity_id = null,
-            entity_name = entity,
-            user_id = 1, // Replace with actual user ID
-            action = "GetID",
-        };
-            
-        await _logService.CreateLog(log);
+            entity_name = Entity,
+            user_id = 1,
+            action = LogAction.Read
+        });
 
         return Ok(jomResponse);
     }
@@ -112,15 +109,13 @@ public class JomController : ControllerBase
             updated_at = DateTime.UtcNow,
         };
         
-        var log = new Log
+        await _logService.CreateLog(new Log
         {
             entity_id = null,
-            entity_name = entity,
-            user_id = 1, // Replace with actual user ID
-            action = "Post",
-        };
-            
-        await _logService.CreateLog(log);
+            entity_name = Entity,
+            user_id = 1,
+            action = LogAction.Create
+        });
         
         _context.Joms.Add(jom);
         await _context.SaveChangesAsync();
@@ -148,15 +143,13 @@ public class JomController : ControllerBase
         
         try
         {
-            var log = new Log
+            await _logService.CreateLog(new Log
             {
                 entity_id = null,
-                entity_name = entity,
-                user_id = 1, // Replace with actual user ID
-                action = "Update",
-            };
-            
-            await _logService.CreateLog(log);
+                entity_name = Entity,
+                user_id = 1,
+                action = LogAction.Update
+            });
             await _context.SaveChangesAsync();
         }
         catch (DbUpdateConcurrencyException)
@@ -186,15 +179,13 @@ public class JomController : ControllerBase
         jom.updated_at = DateTime.UtcNow;
         jom.deleted_at = DateTime.UtcNow;
         
-        var log = new Log
+        await _logService.CreateLog(new Log
         {
             entity_id = null,
-            entity_name = entity,
-            user_id = 1, // Replace with actual user ID
-            action = "Delete",
-        };
-            
-        await _logService.CreateLog(log);
+            entity_name = Entity,
+            user_id = 1,
+            action = LogAction.Delete
+        });
         
         await _context.SaveChangesAsync();
         return NoContent();

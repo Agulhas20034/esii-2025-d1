@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using esii_2025_d1.Models;
+using esii_2025_d1.Models.Enums;
 
 namespace esii_2025_d1.Data;
 
@@ -14,7 +15,15 @@ public class ApplicationDbContext : DbContext
     
     public DbSet<Jom> Joms { get; set; } = null!;
     public DbSet<Log> logs { get; set; } = null!;
-    
+    public DbSet<Customer> Customers { get; set; } = null!;
+    public DbSet<Media> Media { get; set; } = null!;
+    public DbSet<Permission> Permissions { get; set; } = null!;
+    public DbSet<Project> Projects { get; set; } = null!;
+    public DbSet<ProjectUser> ProjectUsers { get; set; } = null!;
+    public DbSet<Report> Reports { get; set; } = null!;
+    public DbSet<Role> Roles { get; set; } = null!;
+    public DbSet<Assignment> Assignments { get; set; } = null!;
+    public DbSet<User> Users { get; set; } = null!;
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {   
@@ -48,39 +57,166 @@ public class ApplicationDbContext : DbContext
                 created_at = DateTime.UtcNow, 
                 updated_at = DateTime.UtcNow,
                 deleted_at = null
+            }
+        );
+        
+        modelBuilder.Entity<Assignment>().HasData(
+            new Assignment
+            {
+                Id = 1,
+                UserId = 1,
+                ProjectId = 1,
+                Description = "Test assignment",
+                HourlyRate = 20.0f,
+                StartDate = DateTime.UtcNow,
+                EndDate = DateTime.UtcNow.AddDays(7),
+                Status = AssignmentStatus.Created,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                DeletedAt = null
             },
-            new Jom 
-            { 
+            new Assignment
+            {
                 Id = 2,
-                Label = "Joms2", 
-                Date = DateTime.UtcNow, 
-                IsDone = true, 
-                TestNumber = 7.5f, 
-                created_at = DateTime.UtcNow, 
-                updated_at = DateTime.UtcNow,
-                deleted_at = null
+                UserId = 1,
+                ProjectId = 1,
+                Description = "Test assignment2",
+                HourlyRate = 20.0f,
+                StartDate = DateTime.UtcNow,
+                EndDate = DateTime.UtcNow.AddDays(6),
+                Status = AssignmentStatus.Created,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                DeletedAt = null
             },
-            new Jom 
-            { 
+            new Assignment
+            {
                 Id = 3,
-                Label = "Joms3", 
-                Date = DateTime.UtcNow, 
-                IsDone = true, 
-                TestNumber = 10, 
-                created_at = DateTime.UtcNow, 
-                updated_at = DateTime.UtcNow,
-                deleted_at = null
+                UserId = 2,
+                ProjectId = 2,
+                Description = "Test assignment3",
+                HourlyRate = 20.0f,
+                StartDate = DateTime.UtcNow,
+                EndDate = DateTime.UtcNow.AddDays(3),
+                Status = AssignmentStatus.Created,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                DeletedAt = null
+            }
+        );
+        
+        modelBuilder.Entity<Customer>().HasData(
+            new Customer
+            {
+                Id = 1,
+                Name = "Test Customer",
+                Email = "test@gmail.com",
+                PhoneNumber = "123456789",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                DeletedAt = null,
             },
-            new Jom 
-            { 
-                Id = 4,
-                Label = "Joms4", 
-                Date = DateTime.UtcNow, 
-                IsDone = false, 
-                TestNumber = 62, 
-                created_at = DateTime.UtcNow, 
-                updated_at = DateTime.UtcNow,
-                deleted_at = null
+            new Customer
+            {
+                Id = 2,
+                Name = "Test Customer2",
+                Email = "test2@gmail.com",
+                PhoneNumber = "923456789",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                DeletedAt = null,
+            }
+        );
+        
+        modelBuilder.Entity<Project>().HasData(
+            new Project
+            {
+                Id = 1,
+                UserId = 1,
+                CustomerId = 1,
+                Name = "Test Project",
+                Description = "Test project description",
+                HourlyRate = 14.0f,
+                DailyWorkHours = 8,
+                Status = ProjectStatus.Created,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                DeletedAt = null,
+            },
+            new Project
+            {
+                Id = 2,
+                UserId = 1,
+                CustomerId = 1,
+                Name = "Test Project2",
+                Description = "Test project description2",
+                HourlyRate = 16.0f,
+                DailyWorkHours = 4,
+                Status = ProjectStatus.Created,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                DeletedAt = null,
+            },
+            new Project
+            {
+                Id = 3,
+                UserId = 1,
+                CustomerId = 1,
+                Name = "Test Project3",
+                Description = "Test project description3",
+                HourlyRate = 16.0f,
+                DailyWorkHours = 4,
+                Status = ProjectStatus.Created,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                DeletedAt = null,
+            }
+        );
+        modelBuilder.Entity<Report>().HasData(
+            new Report
+            {
+                Id = 1,
+                ProjectId = 1,
+                UserId = 1,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                DeletedAt = null
+            },
+            new Report
+            {
+                Id = 2,
+                ProjectId = 2,
+                UserId = 2,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                DeletedAt = null
+            }
+        );
+        modelBuilder.Entity<Media>().HasData(
+            new Media
+            {
+                Id = 1,
+                ReportId = null,
+                ProjectId = 1,
+                Name = "test",
+                Type = "image",
+                Path = "test.jpg",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                DeletedAt = null
+            },
+            new Media
+            {
+                Id = 2,
+                ReportId = 2,
+                ProjectId = 2,
+                Name = "test2",
+                Type = "Report",
+                Path = "test2.jpg",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                DeletedAt = null
+                    
             }
         );
     }
