@@ -9,6 +9,7 @@ using Microsoft.Extensions.Primitives;
 using esii_2025_d1.Components.Account.Pages;
 using esii_2025_d1.Components.Account.Pages.Manage;
 using esii_2025_d1.Data;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Microsoft.AspNetCore.Routing;
 
@@ -40,10 +41,10 @@ internal static class IdentityComponentsEndpointRouteBuilderExtensions
             return TypedResults.Challenge(properties, [provider]);
         });
 
-        accountGroup.MapPost("/Logout", async (
+        accountGroup.MapGet("/Logout", async (
             ClaimsPrincipal user,
             SignInManager<ApplicationUser> signInManager,
-            [FromForm] string returnUrl) =>
+            [FromQuery] string returnUrl) =>
         {
             await signInManager.SignOutAsync();
             return TypedResults.LocalRedirect($"~/{returnUrl}");

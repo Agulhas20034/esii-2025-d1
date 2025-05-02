@@ -1,4 +1,4 @@
-using esii_2025_d1.Data;
+﻿using esii_2025_d1.Data;
 using esii_2025_d1.Dtos.JomDtos;
 using esii_2025_d1.Models;
 using esii_2025_d1.Services;
@@ -15,7 +15,7 @@ public class JomController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly ILogService _logService;
     protected string entity = "Jom";
-    
+
     public JomController(
         ApplicationDbContext context,
         ILogService logService
@@ -24,7 +24,7 @@ public class JomController : ControllerBase
         _context = context;
         _logService = logService;
     }
-    
+
     // GET: api/Jom
     [HttpGet]
     public async Task<ActionResult<IEnumerable<JomResponseDto>>> GetJoms()
@@ -43,17 +43,17 @@ public class JomController : ControllerBase
                     updated_at = jom.updated_at
                 })
                 .ToListAsync();
-            
-             var log = new Log
-             {
-                 entity_id = null,
-                 entity_name = entity,
-                 user_id = 1, // Replace with actual user ID
-                 action = "GetList",
-             };
-            
-             await _logService.CreateLog(log);
-            
+
+            var log = new Log
+            {
+                entity_id = null,
+                entity_name = entity,
+                user_id = 1, // Replace with actual user ID
+                action = "GetList",
+            };
+
+            await _logService.CreateLog(log);
+
             return Ok(joms);
         }
         catch (Exception e)
@@ -62,13 +62,13 @@ public class JomController : ControllerBase
             throw;
         }
     }
-    
+
     // GET: api/Jom/"id"
     [HttpGet("{id}")]
     public async Task<ActionResult<JomResponseDto>> GetJom(int id)
     {
         var jom = await _context.Joms.FindAsync(id);
-    
+
         if (jom == null)
         {
             return NotFound();
@@ -84,7 +84,7 @@ public class JomController : ControllerBase
             created_at = jom.created_at,
             updated_at = jom.updated_at
         };
-        
+
         var log = new Log
         {
             entity_id = null,
@@ -92,7 +92,7 @@ public class JomController : ControllerBase
             user_id = 1, // Replace with actual user ID
             action = "GetID",
         };
-            
+
         await _logService.CreateLog(log);
 
         return Ok(jomResponse);
@@ -111,7 +111,7 @@ public class JomController : ControllerBase
             created_at = DateTime.UtcNow,
             updated_at = DateTime.UtcNow,
         };
-        
+
         var log = new Log
         {
             entity_id = null,
@@ -119,33 +119,33 @@ public class JomController : ControllerBase
             user_id = 1, // Replace with actual user ID
             action = "Post",
         };
-            
+
         await _logService.CreateLog(log);
-        
+
         _context.Joms.Add(jom);
         await _context.SaveChangesAsync();
 
         return CreatedAtAction(nameof(GetJom), new { id = jom.Id }, jom);
     }
-        
+
     // PUT: api/Jom/"id"
     [HttpPut("{id}")]
     public async Task<IActionResult> PutJom(int id, JomUpdateDto jom)
     {
         var existingJom = await _context.Joms.FindAsync(id);
-        
+
         if (existingJom == null)
         {
             return NotFound();
         }
-        
+
         // Update only the modified properties
         existingJom.Label = jom.Label ?? existingJom.Label;
         existingJom.Date = jom.Date != default ? jom.Date : existingJom.Date;
         existingJom.IsDone = jom.IsDone;
         existingJom.TestNumber = existingJom.TestNumber != jom.TestNumber ? jom.TestNumber : existingJom.TestNumber;
         existingJom.updated_at = DateTime.UtcNow;
-        
+
         try
         {
             var log = new Log
@@ -155,7 +155,7 @@ public class JomController : ControllerBase
                 user_id = 1, // Replace with actual user ID
                 action = "Update",
             };
-            
+
             await _logService.CreateLog(log);
             await _context.SaveChangesAsync();
         }
@@ -172,7 +172,7 @@ public class JomController : ControllerBase
         }
         return NoContent();
     }
-    
+
     // DELETE: api/Jom/"id"
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteJom(int id)
@@ -182,10 +182,10 @@ public class JomController : ControllerBase
         {
             return NotFound();
         }
-        
+
         jom.updated_at = DateTime.UtcNow;
         jom.deleted_at = DateTime.UtcNow;
-        
+
         var log = new Log
         {
             entity_id = null,
@@ -193,12 +193,11 @@ public class JomController : ControllerBase
             user_id = 1, // Replace with actual user ID
             action = "Delete",
         };
-            
+
         await _logService.CreateLog(log);
-        
+
         await _context.SaveChangesAsync();
         return NoContent();
     }
 }
-
 
