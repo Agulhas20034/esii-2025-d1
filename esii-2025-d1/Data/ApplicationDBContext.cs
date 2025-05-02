@@ -4,14 +4,15 @@ using esii_2025_d1.Models.Enums;
 
 namespace esii_2025_d1.Data;
 
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-        : base(options)
-    {
-    }
+    //public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    //    : base(options)
+    //{
+    //}
     
     public DbSet<Jom> Joms { get; set; } = null!;
     public DbSet<Log> logs { get; set; } = null!;

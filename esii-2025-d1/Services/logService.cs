@@ -1,32 +1,49 @@
+// Services/LogService.cs
 using esii_2025_d1.Data;
 using esii_2025_d1.Models;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace esii_2025_d1.Services;
-
-public interface ILogService
+namespace esii_2025_d1.Services
 {
-    Task CreateLog(Log log);
-}
-
-public class LogService : ILogService
-{
-    private readonly ApplicationDbContext _context;
-
-    public LogService(ApplicationDbContext context)
+    public interface ILogService
     {
-        _context = context;
+        Task CreateLog(Log log);
+        Task<List<Log>> GetRecentLogsAsync(int count = 100);
     }
 
-    public async Task CreateLog(Log log)
+    public class LogService : ILogService
     {
-        try
+        private readonly ApplicationDbContext _context;
+
+        public LogService(ApplicationDbContext context)
         {
-            _context.logs.Add(log);
-            await _context.SaveChangesAsync();
+            _context = context;
         }
-        catch (Exception e)
+
+        public async Task CreateLog(Log log)
         {
-            Console.Error.WriteLine($"Error creating log: {e.Message}");
+            try
+            {
+                // Ensure created_at is set (though your model already defaults to UtcNow)
+                log.created_at = DateTime.UtcNow;
+                _context.logs.Add(log);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine($"Error creating log: {e.Message}");
+            }
+        }
+
+        public async Task<List<Log>> GetRecentLogsAsync(int count = 100)
+        {
+            return await _context.logs
+                .OrderByDescending(l => l.created_at)  // Using created_at instead of Timestamp
+                .Take(count)
+                .ToListAsync();
         }
     }
 }

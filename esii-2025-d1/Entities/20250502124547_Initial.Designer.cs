@@ -12,8 +12,8 @@ using esii_2025_d1.Data;
 namespace esii2025d1.Entities
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250425133139_finishControllers")]
-    partial class finishControllers
+    [Migration("20250502124547_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,202 @@ namespace esii2025d1.Entities
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex");
+
+                    b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("esii_2025_d1.Data.ApplicationUser", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex");
+
+                    b.ToTable("AspNetUsers", (string)null);
+                });
 
             modelBuilder.Entity("esii_2025_d1.Models.Assignment", b =>
                 {
@@ -73,40 +269,40 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 845, DateTimeKind.Utc).AddTicks(7378),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2362),
                             Description = "Test assignment",
-                            EndDate = new DateTime(2025, 5, 2, 13, 31, 38, 845, DateTimeKind.Utc).AddTicks(7003),
+                            EndDate = new DateTime(2025, 5, 9, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(1975),
                             HourlyRate = 20f,
                             ProjectId = 1,
-                            StartDate = new DateTime(2025, 4, 25, 13, 31, 38, 845, DateTimeKind.Utc).AddTicks(6818),
+                            StartDate = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(1795),
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 845, DateTimeKind.Utc).AddTicks(7589),
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2518),
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 845, DateTimeKind.Utc).AddTicks(7947),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2855),
                             Description = "Test assignment2",
-                            EndDate = new DateTime(2025, 5, 1, 13, 31, 38, 845, DateTimeKind.Utc).AddTicks(7946),
+                            EndDate = new DateTime(2025, 5, 8, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2854),
                             HourlyRate = 20f,
                             ProjectId = 1,
-                            StartDate = new DateTime(2025, 4, 25, 13, 31, 38, 845, DateTimeKind.Utc).AddTicks(7945),
+                            StartDate = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2853),
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 845, DateTimeKind.Utc).AddTicks(7947),
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2855),
                             UserId = 1
                         },
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 845, DateTimeKind.Utc).AddTicks(7954),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2862),
                             Description = "Test assignment3",
-                            EndDate = new DateTime(2025, 4, 28, 13, 31, 38, 845, DateTimeKind.Utc).AddTicks(7953),
+                            EndDate = new DateTime(2025, 5, 5, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2861),
                             HourlyRate = 20f,
                             ProjectId = 2,
-                            StartDate = new DateTime(2025, 4, 25, 13, 31, 38, 845, DateTimeKind.Utc).AddTicks(7953),
+                            StartDate = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2861),
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 845, DateTimeKind.Utc).AddTicks(7954),
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2862),
                             UserId = 2
                         });
                 });
@@ -147,20 +343,20 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 845, DateTimeKind.Utc).AddTicks(9673),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(4377),
                             Email = "test@gmail.com",
                             Name = "Test Customer",
                             PhoneNumber = "123456789",
-                            UpdatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 845, DateTimeKind.Utc).AddTicks(9833)
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(4525)
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 846, DateTimeKind.Utc).AddTicks(154),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(4821),
                             Email = "test2@gmail.com",
                             Name = "Test Customer2",
                             PhoneNumber = "923456789",
-                            UpdatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 846, DateTimeKind.Utc).AddTicks(154)
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(4821)
                         });
                 });
 
@@ -201,12 +397,12 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            Date = new DateTime(2025, 4, 25, 13, 31, 38, 843, DateTimeKind.Utc).AddTicks(1774),
+                            Date = new DateTime(2025, 5, 2, 12, 45, 46, 69, DateTimeKind.Utc).AddTicks(6313),
                             IsDone = false,
                             Label = "Joms",
                             TestNumber = 2.5f,
-                            created_at = new DateTime(2025, 4, 25, 13, 31, 38, 843, DateTimeKind.Utc).AddTicks(2300),
-                            updated_at = new DateTime(2025, 4, 25, 13, 31, 38, 843, DateTimeKind.Utc).AddTicks(2474)
+                            created_at = new DateTime(2025, 5, 2, 12, 45, 46, 69, DateTimeKind.Utc).AddTicks(6869),
+                            updated_at = new DateTime(2025, 5, 2, 12, 45, 46, 69, DateTimeKind.Utc).AddTicks(7079)
                         });
                 });
 
@@ -286,23 +482,23 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 846, DateTimeKind.Utc).AddTicks(6614),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(1542),
                             Name = "test",
                             Path = "test.jpg",
                             ProjectId = 1,
                             Type = "image",
-                            UpdatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 846, DateTimeKind.Utc).AddTicks(6766)
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(1682)
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 846, DateTimeKind.Utc).AddTicks(7073),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(1970),
                             Name = "test2",
                             Path = "test2.jpg",
                             ProjectId = 2,
                             ReportId = 2,
                             Type = "Report",
-                            UpdatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 846, DateTimeKind.Utc).AddTicks(7074)
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(1970)
                         });
                 });
 
@@ -382,40 +578,40 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 846, DateTimeKind.Utc).AddTicks(3032),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(7666),
                             CustomerId = 1,
                             DailyWorkHours = 8,
                             Description = "Test project description",
                             HourlyRate = 14f,
                             Name = "Test Project",
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 846, DateTimeKind.Utc).AddTicks(3174),
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(7798),
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 846, DateTimeKind.Utc).AddTicks(3481),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(8410),
                             CustomerId = 1,
                             DailyWorkHours = 4,
                             Description = "Test project description2",
                             HourlyRate = 16f,
                             Name = "Test Project2",
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 846, DateTimeKind.Utc).AddTicks(3482),
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(8411),
                             UserId = 1
                         },
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 846, DateTimeKind.Utc).AddTicks(3485),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(8415),
                             CustomerId = 1,
                             DailyWorkHours = 4,
                             Description = "Test project description3",
                             HourlyRate = 16f,
                             Name = "Test Project3",
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 846, DateTimeKind.Utc).AddTicks(3486),
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(8415),
                             UserId = 1
                         });
                 });
@@ -487,17 +683,17 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 846, DateTimeKind.Utc).AddTicks(4648),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(9601),
                             ProjectId = 1,
-                            UpdatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 846, DateTimeKind.Utc).AddTicks(4797),
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(9743),
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 846, DateTimeKind.Utc).AddTicks(5098),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(148),
                             ProjectId = 2,
-                            UpdatedAt = new DateTime(2025, 4, 25, 13, 31, 38, 846, DateTimeKind.Utc).AddTicks(5099),
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(148),
                             UserId = 2
                         });
                 });
@@ -569,6 +765,57 @@ namespace esii2025d1.Entities
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.HasOne("esii_2025_d1.Data.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.HasOne("esii_2025_d1.Data.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("esii_2025_d1.Data.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.HasOne("esii_2025_d1.Data.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("esii_2025_d1.Models.Assignment", b =>
