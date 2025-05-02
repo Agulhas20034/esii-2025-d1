@@ -1,0 +1,147 @@
+﻿@page "/Admin/CreateUser"
+@using Microsoft.AspNetCore.Authorization
+@using esii_2025_d1.Services
+@using esii_2025_d1.Data
+@using Microsoft.AspNetCore.Identity
+@using System.ComponentModel.DataAnnotations
+@attribute [Authorize(Roles = "Admin")]
+@inject SingletonUserManager UserManager
+@inject RoleManager<IdentityRole> RoleManager
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<div class="create-user-container">
+    <h3>Create New User</h3>
+    
+    <EditForm Model="@newUser" OnValidSubmit="HandleValidSubmit" class="mt-4">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label for="email">Email</label>
+            <InputText id="email" @bind-Value="newUser.Email" class="form-control" />
+            <ValidationMessage For="@(() => newUser.Email)" />
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <InputText type="password" id="password" @bind-Value="newUser.Password" class="form-control" />
+            <ValidationMessage For="@(() => newUser.Password)" />
+        </div>
+
+        <div class="form-group">
+            <label for="confirmPassword">Confirm Password</label>
+            <InputText type="password" id="confirmPassword" @bind-Value="newUser.ConfirmPassword" class="form-control" />
+            <ValidationMessage For="@(() => newUser.ConfirmPassword)" />
+        </div>
+
+        <div class="form-group">
+            <label for="role">Role</label>
+            <InputSelect id="role" @bind-Value="selectedRole" class="form-control">
+                <option value="">Select a role</option>
+                @foreach (var role in availableRoles)
+                {
+                    <option value="@role">@role</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="form-group mt-4">
+            <button type="submit" class="btn btn-primary mr-2">Create User</button>
+            <button type="button" @onclick="Cancel" class="btn btn-secondary">Cancel</button>
+        </div>
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(statusMessage))
+    {
+        <div class="alert @(isSuccess ? "alert-success" : "alert-danger") mt-3">@statusMessage</div>
+    }
+</div>
+
+@code {
+    private class NewUserModel
+    {
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email format")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Password is required")]
+        [MinLength(6, ErrorMessage = "Password must be at least 6 characters")]
+        public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Please confirm password")]
+        [Compare(nameof(Password), ErrorMessage = "Passwords don't match")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+
+    private NewUserModel newUser = new();
+    private List<string> availableRoles = new();
+    private string selectedRole = string.Empty;
+    private string statusMessage = string.Empty;
+    private bool isSuccess = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Carrega roles disponiveis
+        availableRoles = RoleManager.Roles.Select(r => r.Name).ToList();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        statusMessage = string.Empty;
+        isSuccess = false;
+
+        try
+        {
+            if (string.IsNullOrEmpty(selectedRole))
+            {
+                statusMessage = "Please select a role";
+                return;
+            }
+
+            //Cria o user com o singleton manager
+            var result = await UserManager.CreateUserAsync(
+                newUser.Email, 
+                newUser.Password, 
+                new List<string> { selectedRole });
+
+            if (result.Success)
+            {
+                statusMessage = $"User {newUser.Email} created successfully!";
+                isSuccess = true;
+                
+                // espera 0.5 segundos antes de redirecionar
+                await Task.Delay(500);
+                NavigationManager.NavigateTo("/Admin/Dashboard");
+            }
+            else
+            {
+                statusMessage = $"Error creating user: {result.ErrorMessage}";
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"An error occurred: {ex.Message}";
+        }
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/Admin/Users");
+    }
+}
+
+<style>
+    .create-user-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+</style>

@@ -1,55 +1,64 @@
 using esii_2025_d1.Data;
 using esii_2025_d1.Dtos.MediaDtos;
-using esii_2025_d1.Models;
+using esii_2025_d1.Models.Enums;
+using esii_2025_d1.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace esii_2025_d1.Controllers
-{
-    [Route("api/[controller]")]
+[ApiController]
+[Route("api/[controller]")]
     [ApiController]
-    public class MediaController : ControllerBase
+public class MediaController : ControllerBase
+{
+    private readonly ApplicationDbContext _context;
+    
+    public MediaController(ApplicationDbContext context, ILogService logService)
     {
-        private readonly ApplicationDbContext _context;
-
-        public MediaController(ApplicationDbContext context)
+        _context = context;
+    }
+    
+    // GET: api/Media
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<MediaResponseDto>>> GetMedias()
+    {
+        try
         {
-            _context = context;
-        }
-
-        // GET: api/Media
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<MediaResponseDto>>> GetMedia()
-        {
-            var media = await _context.Media
-                .Select(m => new MediaResponseDto
+            var medias = await _context.Media
+                .Select(media => new MediaResponseDto
                 {
-                    Id = m.Id,
-                    ProjectId = m.ProjectId,
-                    ReportId = m.ReportId,
-                    Name = m.Name,
-                    Type = m.Type,
-                    Path = m.Path,
-                    Created_at = m.Created_at,
-                    Updated_at = m.Updated_at,
-                    Deleted_at = m.Deleted_at
+                    Id = media.Id,
+                    ProjectId = media.ProjectId,
+                    ReportId = media.ReportId,
+                    Name = media.Name,
+                    Type = media.Type,
+                    Path = media.Path,
                 })
                 .ToListAsync();
+            
+            await _logService.CreateLog(new Log
+            {
+                entity_id = null,
+                entity_name = Entity,
+                user_id = 1,
+                action = LogAction.Read
+            });
 
-            return Ok(media);
+            return Ok(medias);
+        }
+    
+    // GET: api/Media/{id}
+    [HttpGet("{id}")]
+    public async Task<ActionResult<MediaResponseDto>> GetMedia(int id)
+    {
+        var media = await _context.Media.FindAsync(id);
+
+        if (media == null)
+        {
+            return NotFound();
         }
 
-        // GET: api/Media/{id}
-        [HttpGet("{id}")]
-        public async Task<ActionResult<MediaResponseDto>> GetMediaById(int id)
+        try
         {
-            var media = await _context.Media.FindAsync(id);
-
-            if (media == null)
-            {
-                return NotFound();
-            }
-
             var mediaResponse = new MediaResponseDto
             {
                 Id = media.Id,
@@ -62,53 +71,71 @@ namespace esii_2025_d1.Controllers
                 Updated_at = media.Updated_at,
                 Deleted_at = media.Deleted_at
             };
+            
+            await _logService.CreateLog(new Log
+            {
+                entity_id = media.Id,
+                entity_name = Entity,
+                user_id = 1,
+                action = LogAction.Read
+            });
 
             return Ok(mediaResponse);
         }
-
-        // POST: api/Media
-        [HttpPost]
-        public async Task<ActionResult<MediaResponseDto>> PostMedia(MediaCreateDto mediaCreateDto)
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error fetching Media: {e.Message}");
+            throw;
+        }
+    }
+    
+    // POST: api/Media
+    [HttpPost]
+    public async Task<ActionResult<MediaResponseDto>> PostMedia(MediaCreateDto mediaRequest)
+    {
+        try
         {
             var media = new Media
             {
-                ProjectId = mediaCreateDto.ProjectId,
-                ReportId = mediaCreateDto.ReportId,
-                Name = mediaCreateDto.Name,
-                Type = mediaCreateDto.Type,
-                Path = mediaCreateDto.Path,
-                Created_at = DateTime.UtcNow,
-                Updated_at = DateTime.UtcNow
+                ProjectId = mediaRequest.ProjectId,
+                ReportId = mediaRequest.ReportId,
+                Name = mediaRequest.Name,
+                Type = mediaRequest.Type,
+                Path = mediaRequest.Path,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             _context.Media.Add(media);
             await _context.SaveChangesAsync();
 
-            var mediaResponse = new MediaResponseDto
+            await _logService.CreateLog(new Log
             {
-                Id = media.Id,
-                ProjectId = media.ProjectId,
-                ReportId = media.ReportId,
-                Name = media.Name,
-                Type = media.Type,
-                Path = media.Path,
-                Created_at = media.Created_at,
-                Updated_at = media.Updated_at,
-                Deleted_at = media.Deleted_at
-            };
+                entity_id = media.Id,
+                entity_name = Entity,
+                user_id = 1,
+                action = LogAction.Create
+            });
 
-            return CreatedAtAction(nameof(GetMediaById), new { id = media.Id }, mediaResponse);
+            return await GetMedia(media.Id);
+
         }
-
-        // PUT: api/Media/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutMedia(int id, MediaUpdateDto mediaUpdateDto)
+        catch (Exception e)
         {
-            var media = await _context.Media.FindAsync(id);
+            Console.Error.WriteLine($"Error creating Media: {e.Message}");
+            throw;
+        }
+    }
+    
+    // PUT: api/Media/{id}
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutMedia(int id, MediaUpdateDto mediaRequest)
+    {
+        var media = await _context.Media.FindAsync(id);
 
-            if (media == null)
+        if (media == null)
             {
-                return NotFound();
+            return NotFound();
             }
 
             media.ProjectId = mediaUpdateDto.ProjectId ?? media.ProjectId;
@@ -118,28 +145,46 @@ namespace esii_2025_d1.Controllers
             media.Path = mediaUpdateDto.Path ?? media.Path;
             media.Updated_at = DateTime.UtcNow;
 
-            try
+        try
+        {
+            media.ProjectId = mediaRequest.ProjectId ?? media.ProjectId;
+            media.ReportId = mediaRequest.ReportId ?? media.ReportId;
+            media.Name = mediaRequest.Name ?? media.Name;
+            media.Type = mediaRequest.Type ?? media.Type;
+            media.Path = mediaRequest.Path ?? media.Path;
+            media.UpdatedAt = DateTime.UtcNow;
+            
+            await _logService.CreateLog(new Log
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Media.Any(m => m.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+                entity_id = media.Id,
+                entity_name = Entity,
+                user_id = 1,
+                action = LogAction.Update
+            });
 
-            return NoContent();
+            await _context.SaveChangesAsync();
+            
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!_context.Media.Any(a => a.Id == id))
+            {
+                return NotFound();
+            }
+            else
+            {
+                throw;
+            }
         }
 
-        // DELETE: api/Media/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteMedia(int id)
+        return NoContent();
+    }
+    
+    // DELETE: api/Media/{id}
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteMedia(int id)
+    {
+        try
         {
             var media = await _context.Media.FindAsync(id);
 
@@ -148,12 +193,28 @@ namespace esii_2025_d1.Controllers
                 return NotFound();
             }
 
-            media.Deleted_at = DateTime.UtcNow;
-            media.Updated_at = DateTime.UtcNow;
+            media.DeletedAt = DateTime.UtcNow;
+            media.UpdatedAt = DateTime.UtcNow;
+
+            await _logService.CreateLog(new Log
+            {
+                entity_id = media.Id,
+                entity_name = Entity,
+                user_id = 1,
+                action = LogAction.Delete
+            });
 
             await _context.SaveChangesAsync();
-
-            return NoContent();
         }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error deleting Media: {e.Message}");
+            throw;
+        }
+        return NoContent();
     }
+    
 }
+
+    
+

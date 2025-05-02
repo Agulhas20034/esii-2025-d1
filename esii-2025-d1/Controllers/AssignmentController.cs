@@ -1,56 +1,80 @@
 using esii_2025_d1.Data;
 using esii_2025_d1.Models;
-using esii_2025_d1.Dtos.AssignmentsDtos;
+using esii_2025_d1.Dtos.AssignmentDtos;
+using esii_2025_d1.Models.Enums;
+using esii_2025_d1.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace esii_2025_d1.Controllers
-{
-    [Route("api/[controller]")]
+namespace esii_2025_d1.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
     [ApiController]
-    public class AssignmentController : ControllerBase
+public class AssignmentController : ControllerBase
+{
+    private readonly ApplicationDbContext _context;
+    private readonly ILogService _logService;
+    protected string Entity = "Assignment";
+    
+    public AssignmentController(ApplicationDbContext context, ILogService logService)
     {
-        private readonly ApplicationDbContext _context;
+        _context = context;
+        _logService = logService;
+    }
 
-        public AssignmentController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
-
-        // GET: api/Assignment
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<AssignmentResponseDto>>> GetAssignments()
+    // GET: api/Assignment
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<AssignmentResponseDto>>> GetAssignments()
+    {
+        try
         {
             var assignments = await _context.Assignments
-                .Select(a => new AssignmentResponseDto
+                .Select(assignment => new AssignmentResponseDto
                 {
-                    Id = a.Id,
-                    UserId = a.UserId,
-                    ProjectId = a.ProjectId,
-                    Description = a.Description,
-                    HourlyRate = a.HourlyRate,
-                    StartDate = a.StartDate,
-                    EndDate = a.EndDate,
-                    Status = a.Status,
-                    CreatedAt = a.CreatedAt,
-                    UpdatedAt = a.UpdatedAt,
-                    DeletedAt = a.DeletedAt
+                    Id = assignment.Id,
+                    UserId = assignment.UserId,
+                    ProjectId = assignment.ProjectId,
+                    Description = assignment.Description,
+                    HourlyRate = assignment.HourlyRate,
+                    StartDate = assignment.StartDate,
+                    EndDate = assignment.EndDate,
+                    Status = assignment.Status,
                 })
                 .ToListAsync();
+            
+            await _logService.CreateLog(new Log
+            {
+                entity_id = null,
+                entity_name = Entity,
+                user_id = 1,
+                action = LogAction.Read
+            });
 
             return Ok(assignments);
         }
-
-        // GET: api/Assignment/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<AssignmentResponseDto>> GetAssignment(int id)
+        catch (Exception e)
         {
-            var assignment = await _context.Assignments.FindAsync(id);
+            Console.Error.WriteLine($"Error fetching Assignments: {e.Message}");
+            throw;
+        }
+    }
+    
 
-            if (assignment == null)
-                return NotFound();
+    // GET: api/Assignment/{id}
+    [HttpGet("{id}")]
+    public async Task<ActionResult<AssignmentResponseDto>> GetAssignment(int id)
+    {
+        var assignment = await _context.Assignments.FindAsync(id);
 
-            var response = new AssignmentResponseDto
+        if (assignment == null)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            var assignmentResponse = new AssignmentResponseDto
             {
                 Id = assignment.Id,
                 UserId = assignment.UserId,
@@ -64,23 +88,38 @@ namespace esii_2025_d1.Controllers
                 UpdatedAt = assignment.UpdatedAt,
                 DeletedAt = assignment.DeletedAt
             };
+            
+            await _logService.CreateLog(new Log
+            {
+                entity_id = assignment.Id,
+                entity_name = Entity,
+                user_id = 1,
+                action = LogAction.Read
+            });
 
-            return Ok(response);
+            return Ok(assignmentResponse);
         }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error fetching Assignment: {e.Message}");
+            throw;
+        }
+    }
 
-        // POST: api/Assignment
-        [HttpPost]
-        public async Task<ActionResult<AssignmentResponseDto>> PostAssignment(AssignmentCreateDto dto)
+    // POST: api/Assignment
+    [HttpPost]
+    public async Task<ActionResult<AssignmentResponseDto>> PostAssignment(AssignmentCreateDto assignmentRequest)
+    {
+        try
         {
             var assignment = new Assignment
             {
-                UserId = dto.UserId,
-                ProjectId = dto.ProjectId,
-                Description = dto.Description,
-                HourlyRate = dto.HourlyRate,
-                StartDate = dto.StartDate,
-                EndDate = dto.EndDate,
-                Status = dto.Status,
+                ProjectId = assignmentRequest.ProjectId,
+                Description = assignmentRequest.Description,
+                HourlyRate = assignmentRequest.HourlyRate,
+                StartDate = assignmentRequest.StartDate,
+                EndDate = assignmentRequest.EndDate,
+                Status = assignmentRequest.Status,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -88,62 +127,97 @@ namespace esii_2025_d1.Controllers
             _context.Assignments.Add(assignment);
             await _context.SaveChangesAsync();
 
-            var response = new AssignmentResponseDto
+            await _logService.CreateLog(new Log
             {
-                Id = assignment.Id,
-                UserId = assignment.UserId,
-                ProjectId = assignment.ProjectId,
-                Description = assignment.Description,
-                HourlyRate = assignment.HourlyRate,
-                StartDate = assignment.StartDate,
-                EndDate = assignment.EndDate,
-                Status = assignment.Status,
-                CreatedAt = assignment.CreatedAt,
-                UpdatedAt = assignment.UpdatedAt,
-                DeletedAt = assignment.DeletedAt
-            };
+                entity_id = assignment.Id,
+                entity_name = Entity,
+                user_id = 1,
+                action = LogAction.Create
+            });
 
-            return CreatedAtAction(nameof(GetAssignment), new { id = assignment.Id }, response);
+            return await GetAssignment(assignment.Id);
+
         }
-
-        // PUT: api/Assignment/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutAssignment(int id, AssignmentUpdateDto dto)
+        catch (Exception e)
         {
-            var assignment = await _context.Assignments.FindAsync(id);
+            Console.Error.WriteLine($"Error creating Assignment: {e.Message}");
+            throw;
+        }
+    }
+    // PUT: api/Assignment/{id}
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutAssignment(int id, AssignmentUpdateDto assignmentRequest)
+    {
+        var assignment = await _context.Assignments.FindAsync(id);
 
-            if (assignment == null)
-                return NotFound();
-
-            assignment.UserId = dto.UserId; // ?? assignment.UserId;
-            assignment.ProjectId = dto.ProjectId; // ?? assignment.ProjectId;
-            assignment.Description = dto.Description ?? assignment.Description;
-            assignment.HourlyRate = dto.HourlyRate ?? assignment.HourlyRate;
-            assignment.StartDate = dto.StartDate ?? assignment.StartDate;
-            assignment.EndDate = dto.EndDate ?? assignment.EndDate;
-            assignment.Status = dto.Status ?? assignment.Status;
+        if (assignment == null)
+            return NotFound();
+        try
+        {
+            assignment.ProjectId = assignmentRequest.ProjectId ?? assignment.ProjectId;
+            assignment.Description = assignmentRequest.Description ?? assignment.Description;
+            assignment.HourlyRate = assignmentRequest.HourlyRate ?? assignment.HourlyRate;
+            assignment.StartDate = assignmentRequest.StartDate ?? assignment.StartDate;
+            assignment.EndDate = assignmentRequest.EndDate ?? assignment.EndDate;
+            assignment.Status = assignmentRequest.Status;
             assignment.UpdatedAt = DateTime.UtcNow;
+            
+            await _logService.CreateLog(new Log
+            {
+                entity_id = assignment.Id,
+                entity_name = Entity,
+                user_id = 1,
+                action = LogAction.Update
+            });
 
             await _context.SaveChangesAsync();
-
-            return NoContent();
+            
         }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!_context.Assignments.Any(a => a.Id == id))
+            {
+                return NotFound();
+            }
+            else
+            {
+                throw;
+            }
+        }
+        return NoContent();
+    }
 
-        // DELETE: api/Assignment/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAssignment(int id)
+    // DELETE: api/Assignment/{id}
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteAssignment(int id)
+    {
+        try
         {
             var assignment = await _context.Assignments.FindAsync(id);
 
             if (assignment == null)
+            {
                 return NotFound();
+            }
 
             assignment.DeletedAt = DateTime.UtcNow;
             assignment.UpdatedAt = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
+            await _logService.CreateLog(new Log
+            {
+                entity_id = assignment.Id,
+                entity_name = Entity,
+                user_id = 1,
+                action = LogAction.Delete
+            });
 
-            return NoContent();
+            await _context.SaveChangesAsync();
         }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error deleting Assignment: {e.Message}");
+            throw;
+        }
+        return NoContent();
     }
 }

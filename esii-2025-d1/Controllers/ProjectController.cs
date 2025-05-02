@@ -1,82 +1,150 @@
-using esii_2025_d1.Data;
+using esii_2025_d1.Dtos.AssignmentDtos;
 using esii_2025_d1.Dtos.ProjectDtos;
+
+namespace esii_2025_d1.Controllers;
+
+using esii_2025_d1.Data;
 using esii_2025_d1.Models;
+using esii_2025_d1.Dtos.ProjectDtos;
+using esii_2025_d1.Models.Enums;
+using esii_2025_d1.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace esii_2025_d1.Controllers
-{
-    [Route("api/[controller]")]
+[ApiController]
+[Route("api/[controller]")]
     [ApiController]
-    public class ProjectController : ControllerBase
+public class ProjectController : ControllerBase
+{
+    private readonly ApplicationDbContext _context;
+    private readonly ILogService _logService;
+    protected string Entity = "Project";
+    
+    public ProjectController(ApplicationDbContext context, ILogService logService)
     {
-        private readonly ApplicationDbContext _context;
-
-        public ProjectController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
-
-        // GET: api/Project
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProjectsResponseDto>>> GetProjects()
+        _context = context;
+        _logService = logService;
+    }
+    
+    // GET: api/Project
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<ProjectResponseDto>>> GetProjects()
+    {
+        try
         {
             var projects = await _context.Projects
-                .Select(p => new ProjectsResponseDto
+                .Include(p => p.Assignments) 
+                .Include(p => p.Media)
+                .Include(p => p.Reports)
+                .Select(project => new ProjectResponseDto
                 {
-                    Id = p.Id,
-                    UserId = p.UserId,
-                    CustomerId = p.CustomerId,
-                    Name = p.Name,
-                    HourlyRate = p.HourlyRate,
-                    DailyWorkHours = p.DailyWorkHours,
-                    CreatedAt = p.CreatedAt,
-                    UpdatedAt = p.UpdatedAt,
-                    DeletedAt = p.DeletedAt
+                    Id = project.Id,
+                    UserId = project.UserId,
+                    CustomerId = project.CustomerId,
+                    Name = project.Name,
+                    Description = project.Description,
+                    Status = project.Status,
+                    DailyWorkHours = project.DailyWorkHours,
+                    HourlyRate = project.HourlyRate,
+                    Assignments = project.Assignments.Select(a => new AssignmentResponseDto
+                    {
+                        Id = a.Id,
+                        UserId = a.UserId,
+                        ProjectId = a.ProjectId,
+                        Description = a.Description,
+                        HourlyRate = a.HourlyRate,
+                        StartDate = a.StartDate,
+                        EndDate = a.EndDate,
+                        Status = a.Status,
+                    }).ToList(),
                 })
                 .ToListAsync();
+            
+            await _logService.CreateLog(new Log
+            {
+                entity_id = null,
+                entity_name = Entity,
+                user_id = 1,
+                action = LogAction.Read
+            });
 
             return Ok(projects);
         }
-
-        // GET: api/Project/{id}
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ProjectsResponseDto>> GetProjectById(int id)
+        catch (Exception e)
         {
-            var project = await _context.Projects.FindAsync(id);
+            Console.Error.WriteLine($"Error fetching Projects: {e.Message}");
+            throw;
+        }
+    }
+    
+    // GET: api/Project/{id}
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ProjectResponseDto>> GetProject(int id)
+    {
+        var project = await _context.Projects.FindAsync(id);
 
-            if (project == null)
-            {
-                return NotFound();
-            }
+        if (project == null)
+        {
+            return NotFound();
+        }
 
-            var projectResponse = new ProjectsResponseDto
+        try
+        {
+            var projectResponse = new ProjectResponseDto
             {
                 Id = project.Id,
                 UserId = project.UserId,
                 CustomerId = project.CustomerId,
                 Name = project.Name,
+                Description = project.Description,
                 HourlyRate = project.HourlyRate,
                 DailyWorkHours = project.DailyWorkHours,
-                CreatedAt = project.CreatedAt,
-                UpdatedAt = project.UpdatedAt,
-                DeletedAt = project.DeletedAt
+                Status = project.Status,
+                Assignments = project.Assignments.Select(a => new AssignmentResponseDto
+                {
+                    Id = a.Id,
+                    UserId = a.UserId,
+                    ProjectId = a.ProjectId,
+                    Description = a.Description,
+                    HourlyRate = a.HourlyRate,
+                    StartDate = a.StartDate,
+                    EndDate = a.EndDate,
+                    Status = a.Status,
+                }).ToList(),
             };
+            
+            await _logService.CreateLog(new Log
+            {
+                entity_id = project.Id,
+                entity_name = Entity,
+                user_id = 1,
+                action = LogAction.Read
+            });
 
             return Ok(projectResponse);
         }
-
-        // POST: api/Project
-        [HttpPost]
-        public async Task<ActionResult<ProjectsResponseDto>> PostProject(ProjectsCreateDto projectCreateDto)
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error fetching Project: {e.Message}");
+            throw;
+        }
+    }
+    
+    // POST: api/Project
+    [HttpPost]
+    public async Task<ActionResult<ProjectResponseDto>> PostProject(ProjectCreateDto projectRequest)
+    {
+        try
         {
             var project = new Project
             {
-                UserId = projectCreateDto.UserId,
-                CustomerId = projectCreateDto.CustomerId,
-                Name = projectCreateDto.Name,
-                HourlyRate = projectCreateDto.HourlyRate,
-                DailyWorkHours = projectCreateDto.DailyWorkHours,
+                UserId = projectRequest.UserId,
+                CustomerId = projectRequest.CustomerId,
+                Name = projectRequest.Name,
+                Description = projectRequest.Description,
+                HourlyRate = projectRequest.HourlyRate,
+                DailyWorkHours = projectRequest.DailyWorkHours,
+                Status = projectRequest.Status,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -84,62 +152,75 @@ namespace esii_2025_d1.Controllers
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
 
-            var projectResponse = new ProjectsResponseDto
+            await _logService.CreateLog(new Log
             {
-                Id = project.Id,
-                UserId = project.UserId,
-                CustomerId = project.CustomerId,
-                Name = project.Name,
-                HourlyRate = project.HourlyRate,
-                DailyWorkHours = project.DailyWorkHours,
-                CreatedAt = project.CreatedAt,
-                UpdatedAt = project.UpdatedAt,
-                DeletedAt = project.DeletedAt
-            };
+                entity_id = project.Id,
+                entity_name = Entity,
+                user_id = 1,
+                action = LogAction.Create
+            });
 
-            return CreatedAtAction(nameof(GetProjectById), new { id = project.Id }, projectResponse);
+            return await GetProject(project.Id);
+            
         }
-
-        // PUT: api/Project/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutProject(int id, ProjectsUpdateDto projectUpdateDto)
+        catch (Exception e)
         {
-            var project = await _context.Projects.FindAsync(id);
+            Console.Error.WriteLine($"Error creating Project: {e.Message}");
+            throw;
+        }
+    }
+    
+    // PUT: api/Project/{id}
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutProject(int id, ProjectUpdateDto projectRequest)
+    {
+        var project = await _context.Projects.FindAsync(id);
 
-            if (project == null)
+        if (project == null)
+            {
+            return NotFound();
+        try
+        {
+            project.CustomerId = projectRequest.CustomerId ?? project.CustomerId;
+            project.UserId = projectRequest.UserId ?? project.UserId;
+            project.Name = projectRequest.Name ?? project.Name;
+            project.Description = projectRequest.Description ?? project.Description;
+            project.HourlyRate = projectRequest.HourlyRate ?? project.HourlyRate;
+            project.DailyWorkHours = projectRequest.DailyWorkHours ?? project.DailyWorkHours;
+            project.Status = projectRequest.Status;
+            project.UpdatedAt = DateTime.UtcNow;
+            
+            await _logService.CreateLog(new Log
+            {
+                entity_id = project.Id,
+                entity_name = Entity,
+                user_id = 1,
+                action = LogAction.Update
+            });
+
+            await _context.SaveChangesAsync();
+            
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!_context.Projects.Any(a => a.Id == id))
             {
                 return NotFound();
             }
-
-            project.UserId = projectUpdateDto.UserId ?? project.UserId;
-            project.CustomerId = projectUpdateDto.CustomerId ?? project.CustomerId;
-            project.Name = projectUpdateDto.Name ?? project.Name;
-            project.HourlyRate = projectUpdateDto.HourlyRate ?? project.HourlyRate;
-            project.DailyWorkHours = projectUpdateDto.DailyWorkHours ?? project.DailyWorkHours;
-            project.UpdatedAt = DateTime.UtcNow;
-
-            try
+            else
             {
-                await _context.SaveChangesAsync();
+                throw;
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Projects.Any(p => p.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
         }
 
-        // DELETE: api/Project/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProject(int id)
+        return NoContent();
+    }
+    
+    // DELETE: api/Project/{id}
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteProject(int id)
+    {
+        try
         {
             var project = await _context.Projects.FindAsync(id);
 
@@ -151,9 +232,33 @@ namespace esii_2025_d1.Controllers
             project.DeletedAt = DateTime.UtcNow;
             project.UpdatedAt = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
+            await _logService.CreateLog(new Log
+            {
+                entity_id = project.Id,
+                entity_name = Entity,
+                user_id = 1,
+                action = LogAction.Delete
+            });
 
-            return NoContent();
+            await _context.SaveChangesAsync();
         }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error deleting Project: {e.Message}");
+            throw;
+        }
+        return NoContent();
     }
 }
+    
+
+
+
+
+    
+    
+    
+
+
+
+

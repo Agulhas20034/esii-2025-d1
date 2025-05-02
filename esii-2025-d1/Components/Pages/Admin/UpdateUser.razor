@@ -1,0 +1,208 @@
+﻿@page "/Admin/UpdateUser/{userId}"
+@using Microsoft.AspNetCore.Authorization
+@using esii_2025_d1.Services
+@using esii_2025_d1.Data
+@using Microsoft.AspNetCore.Identity
+@using System.ComponentModel.DataAnnotations
+@attribute [Authorize(Roles = "Admin")]
+@inject SingletonUserManager UserManager
+@inject RoleManager<IdentityRole> RoleManager
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<div class="update-user-container">
+    <h3>Update User</h3>
+    
+    @if (user == null)
+    {
+        <p>Loading user data...</p>
+    }
+    else
+    {
+        <EditForm Model="@editModel" OnValidSubmit="HandleValidSubmit" class="mt-4">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <InputText id="email" @bind-Value="editModel.Email" class="form-control" />
+                <ValidationMessage For="@(() => editModel.Email)" />
+            </div>
+
+            <div class="form-group">
+                <label for="role">Role</label>
+                <InputSelect id="role" @bind-Value="selectedRole" class="form-control">
+                    <option value="">Select a role</option>
+                    @foreach (var role in availableRoles)
+                    {
+                        <option value="@role">@role</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="form-group">
+                <label>Email Confirmation Status</label>
+                <div class="form-check">
+                    <InputCheckbox id="emailConfirmed" @bind-Value="editModel.EmailConfirmed" class="form-check-input" />
+                    <label class="form-check-label" for="emailConfirmed">
+                        @(editModel.EmailConfirmed ? "Confirmed" : "Not Confirmed")
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group mt-4">
+                <button type="submit" class="btn btn-primary mr-2">Update User</button>
+                <button type="button" @onclick="Cancel" class="btn btn-secondary">Cancel</button>
+                @if (isSuccess)
+                {
+                    <span class="text-success ml-2">✓ Changes saved successfully!</span>
+                }
+            </div>
+        </EditForm>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger mt-3">@errorMessage</div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string UserId { get; set; }
+
+    private class EditUserModel
+    {
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email format")]
+        public string Email { get; set; } = string.Empty;
+
+        public bool EmailConfirmed { get; set; }
+    }
+
+    private ApplicationUser user;
+    private EditUserModel editModel = new();
+    private List<string> availableRoles = new();
+    private string selectedRole = string.Empty;
+    private string errorMessage = string.Empty;
+    private bool isSuccess = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Carrega dados do user
+        user = await UserManager.GetUserByIdAsync(UserId);
+        if (user == null)
+        {
+            errorMessage = "User not found";
+            return;
+        }
+
+        // Inicializa o model criado acima
+        editModel = new EditUserModel
+        {
+            Email = user.Email,
+            EmailConfirmed = user.EmailConfirmed
+        };
+
+        // Carrega roles disponiveis
+        availableRoles = RoleManager.Roles.Select(r => r.Name).ToList();
+        
+        // pega no role atual
+        var currentRoles = await UserManager.GetUserRolesAsync(UserId);
+        selectedRole = currentRoles.FirstOrDefault();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        errorMessage = string.Empty;
+        isSuccess = false;
+
+        try
+        {
+            // verifica role selecionado
+            if (string.IsNullOrEmpty(selectedRole))
+            {
+                errorMessage = "Please select a role";
+                return;
+            }
+
+            // Atualiza dados
+            bool needsUpdate = user.Email != editModel.Email || 
+                             user.EmailConfirmed != editModel.EmailConfirmed;
+
+
+            try
+            {
+                // Create new object with JUST the changed fields
+                var userUpdate = new ApplicationUser
+                {
+                    Id = user.Id, // Required for lookup
+                    Email = editModel.Email,
+                    UserName = editModel.Email,
+                    EmailConfirmed = editModel.EmailConfirmed
+                };
+
+                if (!await UserManager.UpdateUserAsync(userUpdate))
+                {
+                    errorMessage = "Failed to update user details";
+                    return;
+                }
+            }catch
+            {
+                errorMessage = "Failed to update data in try-catch";
+                return;
+            }
+
+            // Atualiza role se tiver sido mudado
+            var currentRoles = await UserManager.GetUserRolesAsync(UserId);
+            if (!currentRoles.Contains(selectedRole))
+            {
+                if (!await UserManager.UpdateUserRoleAsync(UserId, selectedRole))
+                {
+                    errorMessage = "Failed to update user role";
+                    return;
+                }
+            }
+
+            isSuccess = true;
+            await Task.Delay(2000); 
+            NavigationManager.NavigateTo("/Admin/Users");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/Admin/Users");
+    }
+}
+
+<style>
+    .update-user-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-check {
+        margin-bottom: 0.5rem;
+    }
+
+    .mr-2 {
+        margin-right: 0.5rem;
+    }
+
+    .ml-2 {
+        margin-left: 0.5rem;
+    }
+</style>

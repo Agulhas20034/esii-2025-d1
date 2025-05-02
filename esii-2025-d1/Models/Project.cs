@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using esii_2025_d1.Models.Enums;
 
 namespace esii_2025_d1.Models;
 
@@ -13,15 +14,30 @@ public class Project
 
     public int CustomerId { get; set; }
     public string? Name { get; set; } = string.Empty;
-
-    [Range(0.0, 10.5, ErrorMessage = "the number must not be higher than 10.5")]
+    
+    [Required]
+    public string Name { get; set; }
+    
+    public string Description { get; set; }
+    
     public float? HourlyRate { get; set; } = 0;
 
     public int? DailyWorkHours { get; set; } = 0;
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     
-    public DateTime UpdatedAt { get; set; } = DateTime.Now;
+    [EnumDataType(typeof(ProjectStatus))]
+    public ProjectStatus Status { get; set; } = ProjectStatus.Created;
+    
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     
     public DateTime? DeletedAt { get; set; }
+    
+    public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
+    
+    public virtual ICollection<Media> Media { get; set; } = new List<Media>();
+    
+    public virtual ICollection<Report> Reports { get; set; } = new List<Report>();
     
 }

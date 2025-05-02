@@ -11,7 +11,7 @@ public class Media
 
     public int ProjectId { get; set; }
 
-    public int ReportId { get; set; }
+    public int? ReportId { get; set; }
 
     public string Name { get; set; }
 
@@ -19,10 +19,10 @@ public class Media
 
     public string Path { get; set; }
     
-    public DateTime Created_at { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
-    public DateTime Updated_at { get; set; } = DateTime.Now;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     
-    public DateTime? Deleted_at { get; set; }
+    public DateTime? DeletedAt { get; set; }
     
 }

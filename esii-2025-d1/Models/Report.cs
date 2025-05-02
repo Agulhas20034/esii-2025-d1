@@ -13,8 +13,12 @@ public class Report
     public int ProjectId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     
-    public DateTime UpdatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     
     public DateTime? DeletedAt { get; set; }
+    
+    public virtual ICollection<Media> Media { get; set; } = new List<Media>();
     
 }
