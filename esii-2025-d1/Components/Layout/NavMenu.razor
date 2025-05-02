@@ -60,9 +60,13 @@
                     <form method="post" action="Account/Logout">
                         <input type="hidden" name="__RequestVerificationToken" value="@GetFreshAntiforgeryToken()"/>
                         <input type="hidden" name="returnUrl" value="@currentUrl"/>
-                        <button type="submit" class="nav-link">
-                            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
-                        </button>
+                        <form action="Account/Logout" method="get">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                            <button type="submit" class="nav-link">
+                                <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
+                            </button>
+                        </form>
                     </form>
                 </div>
             </Authorized>
@@ -81,6 +85,7 @@
         </AuthorizeView>
     </nav>
 </div>
+
 
 @code {
     private string? currentUrl;
