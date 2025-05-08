@@ -97,7 +97,7 @@ public sealed class SingletonUserManager
         //Adiciona user criado a cache(singleton feature)
         _users.TryAdd(user.Id, user);
 
-        return (true, "User created successfully");
+        return (true, "UserInfo created successfully");
     }
     //Busca user por id
     public async Task<ApplicationUser?> GetUserByIdAsync(string userId)
@@ -127,7 +127,7 @@ public sealed class SingletonUserManager
         var user = await userManager.FindByIdAsync(userId);
         return user != null ? (await userManager.GetRolesAsync(user)).ToList() : new List<string>();
     }
-//Atualiza User
+//Atualiza UserInfo
     public async Task<bool> UpdateUserAsync(ApplicationUser user)
     {
         using var scope = _scopeFactory.CreateScope();

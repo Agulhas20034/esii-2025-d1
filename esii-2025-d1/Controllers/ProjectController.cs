@@ -1,5 +1,6 @@
 using esii_2025_d1.Dtos.AssignmentDtos;
 using esii_2025_d1.Dtos.ProjectDtos;
+using esii_2025_d1.Interfaces.ObserverPattern;
 
 namespace esii_2025_d1.Controllers;
 
@@ -17,12 +18,14 @@ public class ProjectController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogService _logService;
+    private readonly IProjectObserver _projectObserver;
     protected string Entity = "Project";
     
-    public ProjectController(ApplicationDbContext context, ILogService logService)
+    public ProjectController(ApplicationDbContext context, ILogService logService, IProjectObserver projectObserver)
     {
         _context = context;
         _logService = logService;
+        _projectObserver = projectObserver;
     }
     
     // GET: api/Project
@@ -150,7 +153,7 @@ public class ProjectController : ControllerBase
 
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
-
+            
             await _logService.CreateLog(new Log
             {
                 entity_id = project.Id,

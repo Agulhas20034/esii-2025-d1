@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using esii_2025_d1.Models;
 using esii_2025_d1.Models.Enums;
+using Microsoft.AspNetCore.Identity;
 
 namespace esii_2025_d1.Data;
 
@@ -9,22 +10,19 @@ using Microsoft.EntityFrameworkCore;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
-    //public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-    //    : base(options)
-    //{
-    //}
     
     public DbSet<Jom> Joms { get; set; } = null!;
     public DbSet<Log> logs { get; set; } = null!;
     public DbSet<Customer> Customers { get; set; } = null!;
     public DbSet<Media> Media { get; set; } = null!;
-    public DbSet<Permission> Permissions { get; set; } = null!;
     public DbSet<Project> Projects { get; set; } = null!;
     public DbSet<ProjectUser> ProjectUsers { get; set; } = null!;
     public DbSet<Report> Reports { get; set; } = null!;
-    public DbSet<Role> Roles { get; set; } = null!;
     public DbSet<Assignment> Assignments { get; set; } = null!;
-    public DbSet<User> Users { get; set; } = null!;
+    
+    public DbSet<UserInfo> UserInfos { get; set; } = null!;
+    
+    
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {   

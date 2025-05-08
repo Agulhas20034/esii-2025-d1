@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using esii_2025_d1.Data;
@@ -11,9 +12,11 @@ using esii_2025_d1.Data;
 namespace esii2025d1.Entities
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250508171628_add_userInfo")]
+    partial class add_userInfo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -266,40 +269,40 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(993),
+                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2347),
                             Description = "Test assignment",
-                            EndDate = new DateTime(2025, 5, 15, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(665),
+                            EndDate = new DateTime(2025, 5, 15, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2012),
                             HourlyRate = 20f,
                             ProjectId = 1,
-                            StartDate = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(485),
+                            StartDate = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(1824),
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1143),
+                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2495),
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1450),
+                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2793),
                             Description = "Test assignment2",
-                            EndDate = new DateTime(2025, 5, 14, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1449),
+                            EndDate = new DateTime(2025, 5, 14, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2792),
                             HourlyRate = 20f,
                             ProjectId = 1,
-                            StartDate = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1449),
+                            StartDate = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2791),
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1451),
+                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2794),
                             UserId = 1
                         },
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1457),
+                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2801),
                             Description = "Test assignment3",
-                            EndDate = new DateTime(2025, 5, 11, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1456),
+                            EndDate = new DateTime(2025, 5, 11, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2800),
                             HourlyRate = 20f,
                             ProjectId = 2,
-                            StartDate = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1456),
+                            StartDate = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2800),
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1457),
+                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2801),
                             UserId = 2
                         });
                 });
@@ -340,20 +343,20 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(3054),
+                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(4387),
                             Email = "test@gmail.com",
                             Name = "Test Customer",
                             PhoneNumber = "123456789",
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(3211)
+                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(4538)
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(3514),
+                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(4855),
                             Email = "test2@gmail.com",
                             Name = "Test Customer2",
                             PhoneNumber = "923456789",
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(3514)
+                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(4855)
                         });
                 });
 
@@ -394,12 +397,12 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            Date = new DateTime(2025, 5, 8, 17, 55, 51, 552, DateTimeKind.Utc).AddTicks(4500),
+                            Date = new DateTime(2025, 5, 8, 17, 16, 27, 526, DateTimeKind.Utc).AddTicks(6468),
                             IsDone = false,
                             Label = "Joms",
                             TestNumber = 2.5f,
-                            created_at = new DateTime(2025, 5, 8, 17, 55, 51, 552, DateTimeKind.Utc).AddTicks(5035),
-                            updated_at = new DateTime(2025, 5, 8, 17, 55, 51, 552, DateTimeKind.Utc).AddTicks(5202)
+                            created_at = new DateTime(2025, 5, 8, 17, 16, 27, 526, DateTimeKind.Utc).AddTicks(6990),
+                            updated_at = new DateTime(2025, 5, 8, 17, 16, 27, 526, DateTimeKind.Utc).AddTicks(7155)
                         });
                 });
 
@@ -479,23 +482,23 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 556, DateTimeKind.Utc).AddTicks(94),
+                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(1481),
                             Name = "test",
                             Path = "test.jpg",
                             ProjectId = 1,
                             Type = "image",
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 556, DateTimeKind.Utc).AddTicks(237)
+                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(1626)
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 556, DateTimeKind.Utc).AddTicks(519),
+                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(1924),
                             Name = "test2",
                             Path = "test2.jpg",
                             ProjectId = 2,
                             ReportId = 2,
                             Type = "Report",
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 556, DateTimeKind.Utc).AddTicks(519)
+                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(1925)
                         });
                 });
 
@@ -549,40 +552,40 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(6660),
+                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(7884),
                             CustomerId = 1,
                             DailyWorkHours = 8,
                             Description = "Test project description",
                             HourlyRate = 14f,
                             Name = "Test Project",
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(6798),
+                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(8035),
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(7094),
+                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(8354),
                             CustomerId = 1,
                             DailyWorkHours = 4,
                             Description = "Test project description2",
                             HourlyRate = 16f,
                             Name = "Test Project2",
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(7094),
+                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(8354),
                             UserId = 1
                         },
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(7098),
+                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(8409),
                             CustomerId = 1,
                             DailyWorkHours = 4,
                             Description = "Test project description3",
                             HourlyRate = 16f,
                             Name = "Test Project3",
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(7098),
+                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(8410),
                             UserId = 1
                         });
                 });
@@ -601,9 +604,8 @@ namespace esii2025d1.Entities
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("InviterId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("InviterId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("ProjectId")
                         .HasColumnType("integer");
@@ -614,9 +616,8 @@ namespace esii2025d1.Entities
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -656,17 +657,17 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(8268),
+                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(9592),
                             ProjectId = 1,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(8411),
+                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(9735),
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(8700),
+                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(35),
                             ProjectId = 2,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(8701),
+                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(36),
                             UserId = 2
                         });
                 });
