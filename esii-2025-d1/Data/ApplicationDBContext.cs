@@ -47,7 +47,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         }
         
         // Seed data
-        modelBuilder.Entity<Jom>().HasData(
+       /* modelBuilder.Entity<Jom>().HasData(
             new Jom 
             { 
                 Id = 1,
@@ -220,6 +220,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     
             }
         );
+        */
     }
 
 

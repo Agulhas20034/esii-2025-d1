@@ -18,17 +18,25 @@ public class ProjectUserController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly ILogService _logService;
     protected string Entity = "ProjectUser";
+    private readonly SingletonUserManager _usermanager;
+
     
-    public ProjectUserController(ApplicationDbContext context, ILogService logService)
+    public ProjectUserController(ApplicationDbContext context, ILogService logService,SingletonUserManager usermanager)
     {
         _context = context;
         _logService = logService;
+        _usermanager = usermanager;
     }
     
     // GET: api/ProjectUser
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProjectUserResponseDto>>> GetProjectUsers()
     {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
         try
         {
             var projectUsers = await _context.ProjectUsers
@@ -47,7 +55,7 @@ public class ProjectUserController : ControllerBase
             {
                 entity_id = null,
                 entity_name = Entity,
-                user_id = 1,
+                user_id = userId,
                 action = LogAction.Read
             });
 
@@ -64,6 +72,11 @@ public class ProjectUserController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<ProjectUserResponseDto>> GetProjectUser(int id)
     {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
         var projectUser = await _context.ProjectUsers.FindAsync(id);
 
         if (projectUser == null)
@@ -86,7 +99,7 @@ public class ProjectUserController : ControllerBase
             {
                 entity_id = projectUser.Id,
                 entity_name = Entity,
-                user_id = 1,
+                user_id = userId,
                 action = LogAction.Read
             });
 
@@ -103,6 +116,11 @@ public class ProjectUserController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ProjectUserResponseDto>> PostProjectUser(ProjectUserCreateDto projectUserRequest)
     {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
         try
         {
             var projectUser = new ProjectUser
@@ -122,7 +140,7 @@ public class ProjectUserController : ControllerBase
             {
                 entity_id = projectUser.Id,
                 entity_name = Entity,
-                user_id = 1,
+                user_id = userId,
                 action = LogAction.Create
             });
 
@@ -140,6 +158,11 @@ public class ProjectUserController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> PutProjectUser(int id, ProjectUserUpdateDto projectUserRequest)
     {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
         var projectUser = await _context.ProjectUsers.FindAsync(id);
 
         if (projectUser == null)
@@ -156,7 +179,7 @@ public class ProjectUserController : ControllerBase
             {
                 entity_id = projectUser.Id,
                 entity_name = Entity,
-                user_id = 1,
+                user_id = userId,
                 action = LogAction.Update
             });
 
@@ -181,6 +204,11 @@ public class ProjectUserController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProjectUser(int id)
     {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
         try
         {
             var projectUser = await _context.ProjectUsers.FindAsync(id);
@@ -197,7 +225,7 @@ public class ProjectUserController : ControllerBase
             {
                 entity_id = projectUser.Id,
                 entity_name = Entity,
-                user_id = 1,
+                user_id = userId,
                 action = LogAction.Delete
             });
 
