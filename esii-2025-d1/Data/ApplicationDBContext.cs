@@ -9,10 +9,6 @@ using Microsoft.EntityFrameworkCore;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
-    //public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-    //    : base(options)
-    //{
-    //}
     
     public DbSet<Jom> Joms { get; set; } = null!;
     public DbSet<Log> logs { get; set; } = null!;
