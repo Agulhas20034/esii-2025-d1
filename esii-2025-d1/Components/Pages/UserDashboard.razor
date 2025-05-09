@@ -1,0 +1,342 @@
+﻿@page "/dashboard"
+@inject HttpClient Http
+@using esii_2025_d1.Dtos.AssignmentsDtos
+
+
+<PageTitle>Dashboard</PageTitle>
+
+<div class="dashboard-wrapper px-4 py-5">
+    <h2 class="mb-2">Bem-vindo, @currentUser?.Name</h2>
+    <h5 class="text-muted">Aqui estão as suas tarefas organizadas por projeto:</h5>
+    <p class="text-muted mb-4">@DateTime.Now.ToString("dddd, dd MMMM yyyy")</p>
+
+    <div class="mb-3 d-flex justify-content-end">
+        <button type="button" class="btn btn-primary" @onclick="ShowAddModal">
+            <i class="bi bi-plus-circle"></i> Adicionar nova tarefa
+        </button>
+    </div>
+
+    @if (assignments.Any())
+    {
+        @foreach (var group in assignments.GroupBy(a => a.ProjectId))
+        {
+            var projectName = projectDict.ContainsKey(group.Key) ? projectDict[group.Key] : $"Projeto {group.Key}";
+            <div class="mb-4">
+                <h5 class="text-primary">@projectName</h5>
+                <div class="row">
+                    @foreach (var a in group)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100 shadow-sm border-start border-4 border-primary">
+                                <div class="card-body">
+                                    <h5 class="card-title">@a.Description</h5>
+                                    <p><strong>Início:</strong> @a.StartDate?.ToString("yyyy-MM-dd")</p>
+                                    <p><strong>Fim:</strong> @a.EndDate?.ToString("yyyy-MM-dd")</p>
+                                    <p><strong>Estado:</strong> <span class="badge bg-secondary">@a.Status</span></p>
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => OpenEditModal(a)">
+                                            <i class="bi bi-pencil-square"></i> Editar
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => OpenDeleteModal(a.Id)">
+                                            <i class="bi bi-trash"></i> Remover
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <p class="text-muted">Sem tarefas atribuídas.</p>
+    }
+</div>
+
+@if (showAddModal)
+{
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content p-3 shadow-lg">
+                <div class="modal-header">
+                    <h5 class="modal-title">Adicionar Tarefa</h5>
+                    <button type="button" class="btn-close" @onclick="HideAddModal"></button>
+                </div>
+                <div class="modal-body">
+                    <select class="form-select mb-2" @bind="newAssignment.ProjectId">
+                        <option value="0" disabled>-- Selecione um projeto --</option>
+                        @foreach (var p in projects)
+                        {
+                            <option value="@p.Id">@p.Name</option>
+                        }
+                    </select>
+
+                    <InputText class="form-control mb-2" placeholder="Descrição da tarefa" @bind-Value="newAssignment.Description" />
+
+                    <InputDate class="form-control mb-2" @bind-Value="newAssignment.StartDate" />
+                    <InputDate class="form-control mb-2" @bind-Value="newAssignment.EndDate" />
+
+                    <select class="form-select mb-2" @bind="newAssignment.Status">
+                        <option value="" disabled>-- Selecione o estado --</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Em andamento">Em andamento</option>
+                        <option value="Concluído">Concluído</option>
+                    </select>
+
+                    <InputNumber class="form-control mb-2" placeholder="Valor por hora" @bind-Value="newAssignment.HourlyRate" />
+
+                    @if (!string.IsNullOrWhiteSpace(addErrorMessage))
+                    {
+                        <div class="alert alert-danger">@addErrorMessage</div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideAddModal">Cancelar</button>
+                    <button type="button" class="btn btn-success" @onclick="SaveAddAssignment">Adicionar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@if (showEditModal)
+{
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content p-3 shadow-lg">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Tarefa</h5>
+                    <button type="button" class="btn-close" @onclick="HideEditModal"></button>
+                </div>
+                <div class="modal-body">
+                    <select class="form-select mb-2" @bind="selectedAssignment.ProjectId">
+                        <option value="0" disabled>-- Selecione um projeto --</option>
+                        @foreach (var p in projects)
+                        {
+                            <option value="@p.Id">@p.Name</option>
+                        }
+                    </select>
+                    <InputText class="form-control mb-2" placeholder="Descrição da tarefa" @bind-Value="selectedAssignment.Description" />
+                    <InputDate class="form-control mb-2" @bind-Value="selectedAssignment.StartDate" />
+                    <InputDate class="form-control mb-2" @bind-Value="selectedAssignment.EndDate" />
+
+                    <select class="form-select mb-2" @bind="selectedAssignment.Status">
+                        <option value="" disabled>-- Selecione o estado --</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Em andamento">Em andamento</option>
+                        <option value="Concluído">Concluído</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideEditModal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveEditAssignment">Salvar alterações</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@if (showDeleteModal)
+{
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content p-3 shadow-lg">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" @onclick="HideDeleteModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza de que deseja excluir a tarefa "<strong>@selectedAssignment.Description</strong>"?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideDeleteModal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="DeleteAssignment">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    List<Assignment> assignments = new();
+    List<Project> projects = new();
+    Dictionary<int, string> projectDict = new();
+    User? currentUser;
+
+    Assignment newAssignment = new();
+    Assignment selectedAssignment = new();
+    int assignmentToDeleteId;
+    string addErrorMessage = string.Empty;
+
+    bool showAddModal = false;
+    bool showEditModal = false;
+    bool showDeleteModal = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUser = await Http.GetFromJsonAsync<User>("api/user/1");
+        await LoadData();
+    }
+
+    async Task LoadData()
+    {
+        assignments = await Http.GetFromJsonAsync<List<Assignment>>("api/assignment") ?? new();
+        projects = await Http.GetFromJsonAsync<List<Project>>("api/project") ?? new();
+        projectDict = projects.ToDictionary(p => p.Id, p => p.Name ?? $"Projeto {p.Id}");
+    }
+
+    void ShowAddModal()
+    {
+        newAssignment = new Assignment
+            {
+                StartDate = DateTime.Today,
+                EndDate = DateTime.Today.AddDays(1),
+                Status = "Pendente"
+            };
+        addErrorMessage = string.Empty;
+        showAddModal = true;
+    }
+
+    void HideAddModal() => showAddModal = false;
+
+    private async Task SaveAdd()
+    {
+        if (newAssignment.ProjectId == 0 ||
+            string.IsNullOrWhiteSpace(newAssignment.Description) ||
+            string.IsNullOrWhiteSpace(newAssignment.Status))
+        {
+            return;
+        }
+
+        newAssignment.UserId = currentUser?.Id ?? 0;
+        newAssignment.StartDate ??= DateTime.Today;
+        newAssignment.EndDate ??= DateTime.Today.AddDays(1);
+
+        var assignmentCreateDto = new AssignmentCreateDto
+            {
+                Description = newAssignment.Description,
+                Status = newAssignment.Status,
+                StartDate = newAssignment.StartDate.Value,
+                EndDate = newAssignment.EndDate.Value,
+                ProjectId = newAssignment.ProjectId,
+                UserId = newAssignment.UserId,
+                HourlyRate = newAssignment.HourlyRate 
+            };
+
+        var response = await Http.PostAsJsonAsync("api/assignment", assignmentCreateDto);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadData();
+            HideAddModal();
+        }
+        else
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Erro ao adicionar tarefa: {error}");
+        }
+    }
+
+    void OpenEditModal(Assignment a)
+    {
+        selectedAssignment = new Assignment
+            {
+                Id = a.Id,
+                Description = a.Description,
+                ProjectId = a.ProjectId,
+                StartDate = a.StartDate,
+                EndDate = a.EndDate,
+                Status = a.Status,
+                UserId = a.UserId
+            };
+        showEditModal = true;
+    }
+
+    void HideEditModal() => showEditModal = false;
+
+    private async Task SaveAddAssignment()
+    {
+        if (newAssignment.ProjectId == 0 ||
+            string.IsNullOrWhiteSpace(newAssignment.Description) ||
+            string.IsNullOrWhiteSpace(newAssignment.Status))
+        {
+            addErrorMessage = "Todos os campos obrigatórios devem ser preenchidos.";
+            return;
+        }
+
+        newAssignment.UserId = currentUser?.Id ?? 0;
+        newAssignment.StartDate ??= DateTime.Today;
+        newAssignment.EndDate ??= DateTime.Today.AddDays(1);
+
+        var dto = new AssignmentCreateDto
+            {
+                ProjectId = newAssignment.ProjectId,
+                Description = newAssignment.Description,
+                StartDate = newAssignment.StartDate.Value,
+                EndDate = newAssignment.EndDate.Value,
+                Status = newAssignment.Status,
+                UserId = newAssignment.UserId,
+                HourlyRate = newAssignment.HourlyRate
+            };
+
+        var response = await Http.PostAsJsonAsync("api/Assignment", dto);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadAssignments();
+            showAddModal = false;
+        }
+        else
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            addErrorMessage = $"Erro ao salvar: {error}";
+            Console.WriteLine(error);
+        }
+    }
+
+
+
+    private async Task LoadAssignments()
+    {
+        var result = await Http.GetFromJsonAsync<List<Assignment>>("api/Assignment");
+        assignments = result ?? new List<Assignment>();
+    }
+
+
+    async Task SaveEditAssignment()
+    {
+        if (string.IsNullOrWhiteSpace(selectedAssignment.Description) || selectedAssignment.ProjectId == 0 || string.IsNullOrWhiteSpace(selectedAssignment.Status))
+        {
+            return;
+        }
+
+        var response = await Http.PutAsJsonAsync($"api/assignment/{selectedAssignment.Id}", selectedAssignment);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadData();
+            HideEditModal();
+        }
+    }
+
+    void OpenDeleteModal(int id)
+    {
+        assignmentToDeleteId = id;
+
+        showDeleteModal = true;
+    }
+
+    void HideDeleteModal() => showDeleteModal = false;
+
+    async Task DeleteAssignment()
+    {
+        assignments.Remove(newAssignment);
+        await LoadData();
+        HideDeleteModal();
+    }
+}
