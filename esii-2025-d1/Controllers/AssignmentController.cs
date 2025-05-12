@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using esii_2025_d1.Data;
 using esii_2025_d1.Models;
 using esii_2025_d1.Dtos.AssignmentDtos;
@@ -15,16 +16,23 @@ public class AssignmentController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly ILogService _logService;
     protected string Entity = "Assignment";
+    private readonly SingletonUserManager _usermanager;
     
-    public AssignmentController(ApplicationDbContext context, ILogService logService)
+    public AssignmentController(ApplicationDbContext context, ILogService logService,SingletonUserManager usermanager)
     {
         _context = context;
         _logService = logService;
+        _usermanager = usermanager;
     }
     // GET: api/Assignment
     [HttpGet]
     public async Task<ActionResult<IEnumerable<AssignmentResponseDto>>> GetAssignments()
     {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
         try
         {
             var assignments = await _context.Assignments
@@ -45,7 +53,7 @@ public class AssignmentController : ControllerBase
             {
                 entity_id = null,
                 entity_name = Entity,
-                user_id = 1,
+                user_id = userId,
                 action = LogAction.Read
             });
 
@@ -64,7 +72,11 @@ public class AssignmentController : ControllerBase
     public async Task<ActionResult<AssignmentResponseDto>> GetAssignment(int id)
     {
         var assignment = await _context.Assignments.FindAsync(id);
-
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
         if (assignment == null)
         {
             return NotFound();
@@ -88,7 +100,7 @@ public class AssignmentController : ControllerBase
             {
                 entity_id = assignment.Id,
                 entity_name = Entity,
-                user_id = 1,
+                user_id = userId,
                 action = LogAction.Read
             });
 
@@ -105,6 +117,11 @@ public class AssignmentController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<AssignmentResponseDto>> PostAssignment(AssignmentCreateDto assignmentRequest)
     {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
         try
         {
             var assignment = new Assignment
@@ -126,7 +143,7 @@ public class AssignmentController : ControllerBase
             {
                 entity_id = assignment.Id,
                 entity_name = Entity,
-                user_id = 1,
+                user_id = userId,
                 action = LogAction.Create
             });
 
@@ -143,6 +160,11 @@ public class AssignmentController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> PutAssignment(int id, AssignmentUpdateDto assignmentRequest)
     {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
         var assignment = await _context.Assignments.FindAsync(id);
 
         if (assignment == null)
@@ -161,7 +183,7 @@ public class AssignmentController : ControllerBase
             {
                 entity_id = assignment.Id,
                 entity_name = Entity,
-                user_id = 1,
+                user_id = userId,
                 action = LogAction.Update
             });
 
@@ -186,6 +208,11 @@ public class AssignmentController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteAssignment(int id)
     {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
         try
         {
             var assignment = await _context.Assignments.FindAsync(id);
@@ -202,7 +229,7 @@ public class AssignmentController : ControllerBase
             {
                 entity_id = assignment.Id,
                 entity_name = Entity,
-                user_id = 1,
+                user_id = userId,
                 action = LogAction.Delete
             });
 

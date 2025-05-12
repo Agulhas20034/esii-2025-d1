@@ -6,69 +6,54 @@
 @rendermode InteractiveServer
 
 <div class="admin-container">
-    <button @onclick="ToggleLogs" class="btn btn-primary">
-        <span class="oi oi-list-rich"></span> 
-        @(showLogs ? "Hide" : "Show") System Logs
-    </button>
-
-    @if (showLogs)
-    {
-        <div class="logs-panel mt-3">
-            <h3>Recent System Logs</h3>
-            
-            @if (logs == null)
-            {
-                <p>Loading logs...</p>
-            }
-            else if (!logs.Any())
-            {
-                <p>No logs found</p>
-            }
-            else
-            {
-                <table class="table table-sm">
-                    <thead>
+    <div class="logs-panel mt-3">
+        <h3>Recent System Logs</h3>
+        
+        @if (logs == null)
+        {
+            <p>Loading logs...</p>
+        }
+        else if (!logs.Any())
+        {
+            <p>No logs found</p>
+        }
+        else
+        {
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Entity ID</th>
+                        <th>Entity Name</th>
+                        <th>User ID</th>
+                        <th>Action</th>
+                        <th>Created At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in logs)
+                    {
                         <tr>
-                            <th>ID</th>
-                            <th>Entity ID</th>
-                            <th>Entity Name</th>
-                            <th>User ID</th>
-                            <th>Action</th>
-                            <th>Created At</th>
+                            <td>@log.Id</td>
+                            <td>@log.entity_id</td>
+                            <td>@log.entity_name</td>
+                            <td>@log.user_id</td>
+                            <td>@log.action</td>
+                            <td>@log.created_at.ToString("g")</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var log in logs)
-                        {
-                            <tr>
-                                <td>@log.Id</td>
-                                <td>@log.entity_id</td>
-                                <td>@log.entity_name</td>
-                                <td>@log.user_id</td>
-                                <td>@log.action</td>
-                                <td>@log.created_at.ToString("g")</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-        </div>
-    }
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
 </div>
 
 @code {
-    private bool showLogs = false;
     private List<Log> logs = new();
 
-    private async Task ToggleLogs()
+    protected override async Task OnInitializedAsync()
     {
-        showLogs = !showLogs;
-        
-        if (showLogs && !logs.Any())
-        {
-            logs = await LogService.GetRecentLogsAsync();
-            StateHasChanged();
-        }
+        logs = await LogService.GetRecentLogsAsync();
     }
 }
 

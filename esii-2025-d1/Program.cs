@@ -79,12 +79,17 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
+builder.Services.AddHttpContextAccessor(); 
 // Regista serviço singleton para uso
+
 builder.Services.AddSingleton<SingletonUserManager>(provider => 
 {
-    var manager = SingletonUserManager.Instance;
-    manager.Initialize(provider.GetRequiredService<IServiceScopeFactory>());
-    return manager;
+    var instance = SingletonUserManager.Instance;
+    instance.Initialize(
+        scopeFactory: provider.GetRequiredService<IServiceScopeFactory>(),
+        httpContextAccessor: provider.GetRequiredService<IHttpContextAccessor>()
+    );
+    return instance;
 });
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
@@ -157,8 +162,13 @@ using (var scope = app.Services.CreateScope())
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     var identityManager = app.Services.GetRequiredService<SingletonUserManager>();
-    identityManager.Initialize(app.Services.GetRequiredService<IServiceScopeFactory>());
-    await SeedRolesAndAdmin(roleManager, userManager);
+    identityManager.Initialize(
+        services.GetRequiredService<IServiceScopeFactory>(),
+        services.GetRequiredService<IHttpContextAccessor>()
+    );
+    
+    
+    await SeedRolesAndAdmin(roleManager, userManager,identityManager);
 }
 
 
@@ -167,7 +177,7 @@ app.Run();
 // ====================================
 // Roles seeded e Conta admin
 // ====================================
-async Task SeedRolesAndAdmin(RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager)
+async Task SeedRolesAndAdmin(RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager,SingletonUserManager singletonUserManager)
 {
     string[] roleNames = { "Admin", "UserManager", "User" };
     
@@ -186,12 +196,16 @@ async Task SeedRolesAndAdmin(RoleManager<IdentityRole> roleManager, UserManager<
     var adminUser = await userManager.FindByEmailAsync(adminEmail);
     if (adminUser == null)
     {
-        var newAdmin = new ApplicationUser { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
-        var createUserResult = await userManager.CreateAsync(newAdmin, adminPassword);
-
-        if (createUserResult.Succeeded)
+        // Use SingletonUserManager to create the user
+        var (success, error) = await singletonUserManager.CreateUserAsync(
+            email: adminEmail,
+            password: adminPassword,
+            roles: new List<string> { "Admin" });
+    
+        if (!success)
         {
-            await userManager.AddToRoleAsync(newAdmin, "Admin");
+            // Log the error if user creation failed
+            Console.WriteLine($"Failed to create admin user: {error}");
         }
     }
 }
