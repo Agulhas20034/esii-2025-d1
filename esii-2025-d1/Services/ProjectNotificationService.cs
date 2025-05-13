@@ -1,4 +1,3 @@
-// Services/ProjectNotificationService.cs
 using esii_2025_d1.Data;
 using esii_2025_d1.Models;
 using Microsoft.EntityFrameworkCore;
