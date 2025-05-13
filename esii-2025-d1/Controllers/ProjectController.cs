@@ -1,5 +1,6 @@
 using esii_2025_d1.Dtos.AssignmentDtos;
 using esii_2025_d1.Dtos.ProjectDtos;
+using esii_2025_d1.Interfaces.ObserverPattern;
 
 namespace esii_2025_d1.Controllers;
 
@@ -17,13 +18,15 @@ public class ProjectController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogService _logService;
-    protected string Entity = "Project";
+    private readonly IProjectObserver _projectObserver;
     private readonly SingletonUserManager _usermanager;
-
+    protected string Entity = "Project";
+    
     public ProjectController(ApplicationDbContext context, ILogService logService,SingletonUserManager usermanager)
     {
         _context = context;
         _logService = logService;
+        //_projectObserver = projectObserver;
         _usermanager = usermanager;
 
     }

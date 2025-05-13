@@ -573,7 +573,7 @@ namespace esii2025d1.Entities
                     b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("esii_2025_d1.Models.User", b =>
+            modelBuilder.Entity("esii_2025_d1.Models.UserInfo", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()

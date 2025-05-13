@@ -2,6 +2,7 @@ using esii_2025_d1.Components;
 using esii_2025_d1.Data;
 using esii_2025_d1.Services;
 using esii_2025_d1.Components.Account;
+using esii_2025_d1.Interfaces.ObserverPattern;
 using Microsoft.AspNetCore.Antiforgery; // tr
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Http;
@@ -110,7 +111,8 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddHttpContextAccessor();
 
-
+// design pattern Observer ("hugo Guedes")
+builder.Services.AddScoped<IProjectNotificationService, ProjectNotificationService>();
 
 
 var app = builder.Build();
@@ -182,7 +184,7 @@ app.Run();
 // ====================================
 async Task SeedRolesAndAdmin(RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager,SingletonUserManager singletonUserManager)
 {
-    string[] roleNames = { "Admin", "UserManager", "User" };
+    string[] roleNames = { "Admin", "UserManager", "UserInfo" };
     
     foreach (var role in roleNames)
     {

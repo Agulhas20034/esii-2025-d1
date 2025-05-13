@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using esii_2025_d1.Interfaces.ObserverPattern;
 using esii_2025_d1.Models.Enums;
 
 namespace esii_2025_d1.Models;
@@ -37,5 +38,26 @@ public class Project
     public virtual ICollection<Media> Media { get; set; } = new List<Media>();
     
     public virtual ICollection<Report> Reports { get; set; } = new List<Report>();
+    
+    
+    private static readonly List<IProjectObserver> _observers = new();
+
+    public static void Subscribe(IProjectObserver observer)
+    {
+        _observers.Add(observer);
+    }
+
+    public static void Unsubscribe(IProjectObserver observer)
+    {
+        _observers.Remove(observer);
+    }
+
+    private async Task NotifyAssignmentChanged()
+    {
+        foreach (var observer in _observers)
+        {
+            await observer.OnAssignmentChanged(this.Id);
+        }
+    }
     
 }

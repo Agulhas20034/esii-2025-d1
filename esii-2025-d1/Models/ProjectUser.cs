@@ -10,17 +10,18 @@ public class ProjectUser
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
     
+    public string UserId { get; set; }  // foreign key to the user ASP.NET Identity
+    
     public int ProjectId { get; set; }
     
-    public int UserId{ get; set; }
-    
-    public int InviterId { get; set; }
+    public string InviterId { get; set; } // foreign key to the user ASP.NET Identity
     
     public ProjectUserStatus Status { get; set; } = ProjectUserStatus.Pending;
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;   
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;   
     public DateTime? DeletedAt { get; set; }
+    
     
     
 }
