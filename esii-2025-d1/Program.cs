@@ -184,7 +184,7 @@ app.Run();
 // ====================================
 async Task SeedRolesAndAdmin(RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager,SingletonUserManager singletonUserManager)
 {
-    string[] roleNames = { "Admin", "UserManager", "UserInfo" };
+    string[] roleNames = { "Admin", "UserManager", "User" };
     
     foreach (var role in roleNames)
     {
