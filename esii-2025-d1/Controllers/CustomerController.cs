@@ -1,11 +1,8 @@
 using esii_2025_d1.Dtos.CustomersDtos;
-using esii_2025_d1.Dtos.ProjectDtos;
-using esii_2025_d1.Dtos.ProjectDtos;
 
 namespace esii_2025_d1.Controllers;
 using esii_2025_d1.Data;
 using esii_2025_d1.Models;
-using esii_2025_d1.Dtos;
 using esii_2025_d1.Models.Enums;
 using esii_2025_d1.Services;
 using Microsoft.AspNetCore.Mvc;
