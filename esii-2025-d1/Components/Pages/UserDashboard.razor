@@ -249,7 +249,10 @@
 
     async Task LoadData()
     {
-        assignments = await Http.GetFromJsonAsync<List<Assignment>>("api/assignment") ?? new();
+        // assignments = await Http.GetFromJsonAsync<List<Assignment>>("api/assignment") ?? new();
+        // assignments = assignments.Where(a => a.DeletedAt == null).ToList(); // filtrar assignments com soft delete;
+        var response = await Http.GetFromJsonAsync<List<Assignment>>("api/Assignment");
+        assignments = response ?? new List<Assignment>();
         projects = await Http.GetFromJsonAsync<List<Project>>("api/project") ?? new();
         projectDict = projects.ToDictionary(p => p.Id, p => p.Name ?? $"Projeto {p.Id}");
     }
@@ -387,7 +390,7 @@
     void OpenDeleteModal(int id)
     {
         assignmentToDeleteId = id;
-
+        selectedAssignment = assignments.FirstOrDefault(a => a.Id == assignmentToDeleteId);
         showDeleteModal = true;
     }
 
@@ -395,9 +398,13 @@
 
     async Task DeleteAssignment()
     {
-        assignments.Remove(newAssignment);
-        await LoadData();
-        HideDeleteModal();
+        var response = await Http.DeleteAsync($"api/assignment/{assignmentToDeleteId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadData();
+            HideDeleteModal();
+        }
     }
 
     
