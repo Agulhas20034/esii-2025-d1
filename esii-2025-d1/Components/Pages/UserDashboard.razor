@@ -1,8 +1,21 @@
-﻿@*
-@page "/dashboard"
+﻿@page "/dashboard"
 @inject HttpClient Http
-@using esii_2025_d1.Dtos.AssignmentDtos
 
+@using esii_2025_d1.Dtos.AssignmentDtos
+@using esii_2025_d1.Models.Enums
+
+@* // acrecentado para obter userID (user em geral) *@
+@using esii_2025_d1.Data;
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
+@using esii_2025_d1.Services
+@using System.Security.Claims
+@inject UserManager<ApplicationUser> AspNetUserManager;
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject RoleManager<IdentityRole> RoleManager
+@inject SingletonUserManager UserManager
+@* // acrecentado para obter userID (user em geral) *@
+@rendermode InteractiveServer
 
 <PageTitle>Dashboard</PageTitle>
 
@@ -10,7 +23,7 @@
     <h2 class="mb-2">Bem-vindo, @currentUser?.Name</h2>
     <h5 class="text-muted">Aqui estão as suas tarefas organizadas por projeto:</h5>
     <p class="text-muted mb-4">@DateTime.Now.ToString("dddd, dd MMMM yyyy")</p>
-
+    <p>@currentUserId</p>
     <div class="mb-3 d-flex justify-content-end">
         <button type="button" class="btn btn-primary" @onclick="ShowAddModal">
             <i class="bi bi-plus-circle"></i> Adicionar nova tarefa
@@ -21,7 +34,8 @@
     {
         @foreach (var group in assignments.GroupBy(a => a.ProjectId))
         {
-            var projectName = projectDict.ContainsKey(group.Key) ? projectDict[group.Key] : $"Projeto {group.Key}";
+            var projectId = group.Key ?? 0;
+            var projectName = projectDict.ContainsKey(projectId) ? projectDict[projectId] : $"Projeto {projectId}";
             <div class="mb-4">
                 <h5 class="text-primary">@projectName</h5>
                 <div class="row">
@@ -80,11 +94,13 @@
                     <InputDate class="form-control mb-2" @bind-Value="newAssignment.EndDate" />
 
                     <select class="form-select mb-2" @bind="newAssignment.Status">
-                        <option value="" disabled>-- Selecione o estado --</option>
-                        <option value="Pendente">Pendente</option>
-                        <option value="Em andamento">Em andamento</option>
-                        <option value="Concluído">Concluído</option>
+                        <option disabled value="">-- Estado: --</option>
+                        @foreach (var status in Enum.GetValues<AssignmentStatus>())
+                        {
+                            <option value="@status">@status</option>
+                        }
                     </select>
+
 
                     <InputNumber class="form-control mb-2" placeholder="Valor por hora" @bind-Value="newAssignment.HourlyRate" />
 
@@ -124,12 +140,14 @@
                     <InputDate class="form-control mb-2" @bind-Value="selectedAssignment.StartDate" />
                     <InputDate class="form-control mb-2" @bind-Value="selectedAssignment.EndDate" />
 
-                    <select class="form-select mb-2" @bind="selectedAssignment.Status">
-                        <option value="" disabled>-- Selecione o estado --</option>
-                        <option value="Pendente">Pendente</option>
-                        <option value="Em andamento">Em andamento</option>
-                        <option value="Concluído">Concluído</option>
+                    <select class="form-select mb-2" @bind="newAssignment.Status">
+                        <option disabled value="">-- Selecione o estado --</option>
+                        @foreach (var status in Enum.GetValues<AssignmentStatus>())
+                        {
+                            <option value="@status">@status</option>
+                        }
                     </select>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="HideEditModal">Cancelar</button>
@@ -167,8 +185,6 @@
     List<Assignment> assignments = new();
     List<Project> projects = new();
     Dictionary<int, string> projectDict = new();
-    User? currentUser;
-
     Assignment newAssignment = new();
     Assignment selectedAssignment = new();
     int assignmentToDeleteId;
@@ -178,15 +194,65 @@
     bool showEditModal = false;
     bool showDeleteModal = false;
 
+    @* // acrecentado para obter userID (user em geral) *@
+    User? currentUser;
+    private List<UserWithRoles> users = new();
+    private string? currentUserId;
+
+    public class UserWithRoles
+    {
+        public ApplicationUser User { get; set; }
+        public List<string> RoleNames { get; set; } = new();
+    }
+    @* // acrecentado para obter userID (user em geral) *@
+
+
+
     protected override async Task OnInitializedAsync()
     {
-        currentUser = await Http.GetFromJsonAsync<User>("api/user/1");
+        try
+        {
+            currentUser = await Http.GetFromJsonAsync<User>("api/user/4");
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"Erro ao buscar utilizador: {ex.Message}");
+        }
+
         await LoadData();
+
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        await LoadUsersWithRoles();
     }
+
+    @* // acrecentado para obter userID (user em geral) *@
+    private async Task LoadUsersWithRoles()
+    {
+        var allUsers = UserManager.GetAllUsers();
+        var userList = new List<UserWithRoles>();
+
+        foreach (var user in allUsers)
+        {
+            var roles = await AspNetUserManager.GetRolesAsync(user);
+            userList.Add(new UserWithRoles
+                {
+                    User = user,
+                    RoleNames = roles.ToList()
+                });
+        }
+
+        users = userList;
+    }
+    @* // acrecentado para obter userID (user em geral) *@
 
     async Task LoadData()
     {
-        assignments = await Http.GetFromJsonAsync<List<Assignment>>("api/assignment") ?? new();
+        // assignments = await Http.GetFromJsonAsync<List<Assignment>>("api/assignment") ?? new();
+        // assignments = assignments.Where(a => a.DeletedAt == null).ToList(); // filtrar assignments com soft delete;
+        var response = await Http.GetFromJsonAsync<List<Assignment>>("api/Assignment");
+        assignments = response ?? new List<Assignment>();
         projects = await Http.GetFromJsonAsync<List<Project>>("api/project") ?? new();
         projectDict = projects.ToDictionary(p => p.Id, p => p.Name ?? $"Projeto {p.Id}");
     }
@@ -197,7 +263,7 @@
             {
                 StartDate = DateTime.Today,
                 EndDate = DateTime.Today.AddDays(1),
-                Status = "Pendente"
+                Status = AssignmentStatus.Created,
             };
         addErrorMessage = string.Empty;
         showAddModal = true;
@@ -208,8 +274,7 @@
     private async Task SaveAdd()
     {
         if (newAssignment.ProjectId == 0 ||
-            string.IsNullOrWhiteSpace(newAssignment.Description) ||
-            string.IsNullOrWhiteSpace(newAssignment.Status))
+            string.IsNullOrWhiteSpace(newAssignment.Description))
         {
             return;
         }
@@ -225,8 +290,7 @@
                 StartDate = newAssignment.StartDate.Value,
                 EndDate = newAssignment.EndDate.Value,
                 ProjectId = newAssignment.ProjectId,
-                UserId = newAssignment.UserId,
-                HourlyRate = newAssignment.HourlyRate 
+                HourlyRate = newAssignment.HourlyRate
             };
 
         var response = await Http.PostAsJsonAsync("api/assignment", assignmentCreateDto);
@@ -263,8 +327,7 @@
     private async Task SaveAddAssignment()
     {
         if (newAssignment.ProjectId == 0 ||
-            string.IsNullOrWhiteSpace(newAssignment.Description) ||
-            string.IsNullOrWhiteSpace(newAssignment.Status))
+            string.IsNullOrWhiteSpace(newAssignment.Description))
         {
             addErrorMessage = "Todos os campos obrigatórios devem ser preenchidos.";
             return;
@@ -281,7 +344,6 @@
                 StartDate = newAssignment.StartDate.Value,
                 EndDate = newAssignment.EndDate.Value,
                 Status = newAssignment.Status,
-                UserId = newAssignment.UserId,
                 HourlyRate = newAssignment.HourlyRate
             };
 
@@ -311,7 +373,7 @@
 
     async Task SaveEditAssignment()
     {
-        if (string.IsNullOrWhiteSpace(selectedAssignment.Description) || selectedAssignment.ProjectId == 0 || string.IsNullOrWhiteSpace(selectedAssignment.Status))
+        if (string.IsNullOrWhiteSpace(selectedAssignment.Description) || selectedAssignment.ProjectId == 0)
         {
             return;
         }
@@ -328,7 +390,7 @@
     void OpenDeleteModal(int id)
     {
         assignmentToDeleteId = id;
-
+        selectedAssignment = assignments.FirstOrDefault(a => a.Id == assignmentToDeleteId);
         showDeleteModal = true;
     }
 
@@ -336,9 +398,14 @@
 
     async Task DeleteAssignment()
     {
-        assignments.Remove(newAssignment);
-        await LoadData();
-        HideDeleteModal();
+        var response = await Http.DeleteAsync($"api/assignment/{assignmentToDeleteId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadData();
+            HideDeleteModal();
+        }
     }
+
+    
 }
-*@

@@ -30,11 +30,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         // Soft delete
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
-            var deletedAtProperty = entityType.FindProperty("deleted_at");
+            var deletedAtProperty = entityType.FindProperty("DeletedAt");
             if (deletedAtProperty != null && deletedAtProperty.ClrType == typeof(DateTime?))
             {
                 var parameter = Expression.Parameter(entityType.ClrType, "e");
-                var property = Expression.Property(parameter, "deleted_at");
+                var property = Expression.Property(parameter, "DeletedAt");
                 var nullValue = Expression.Constant(null, typeof(DateTime?));
                 var filter = Expression.Lambda(Expression.Equal(property, nullValue), parameter);
 
