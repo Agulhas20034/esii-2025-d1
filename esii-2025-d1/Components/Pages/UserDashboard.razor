@@ -212,7 +212,7 @@
     {
         try
         {
-            currentUser = await Http.GetFromJsonAsync<User>("api/user/4");
+            currentUser = await Http.GetFromJsonAsync<UserInfo>("api/user/4");
         }
         catch (HttpRequestException ex)
         {
