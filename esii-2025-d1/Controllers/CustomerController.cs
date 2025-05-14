@@ -1,9 +1,12 @@
 using esii_2025_d1.Dtos.CustomersDtos;
+using esii_2025_d1.Dtos.ProjectDtos;
+using esii_2025_d1.Dtos.ProjectDtos;
 
 namespace esii_2025_d1.Controllers;
 using esii_2025_d1.Data;
 using esii_2025_d1.Dtos.CustomersDtos;
 using esii_2025_d1.Models;
+using esii_2025_d1.Dtos;
 using esii_2025_d1.Models.Enums;
 using esii_2025_d1.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -17,24 +20,17 @@ public class CustomerController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly ILogService _logService;
     protected string Entity = "Customer";
-    private readonly SingletonUserManager _usermanager;
     
-    public CustomerController(ApplicationDbContext context, ILogService logService,SingletonUserManager usermanager)
+    public CustomerController(ApplicationDbContext context, ILogService logService)
     {
         _context = context;
         _logService = logService;
-        _usermanager = usermanager;
     }
     
     // GET: api/Customer
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CustomerResponseDto>>> GetCustomers()
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var customers = await _context.Customers
@@ -60,7 +56,7 @@ public class CustomerController : ControllerBase
             {
                 entity_id = null,
                 entity_name = Entity,
-                user_id = userId,
+                user_id = 1,
                 action = LogAction.Read
             });
 
@@ -77,11 +73,6 @@ public class CustomerController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<CustomerResponseDto>> GetCustomer(int id)
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         // todo: se for necessario mais dados do projeto, criar um DTO
         
         var customer = await _context.Customers
@@ -115,7 +106,7 @@ public class CustomerController : ControllerBase
             {
                 entity_id = customer.Id,
                 entity_name = Entity,
-                user_id = userId,
+                user_id = 1,
                 action = LogAction.Read
             });
 
@@ -132,11 +123,6 @@ public class CustomerController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<CustomerResponseDto>> PostCustomer(CustomerCreateDto customerRequest)
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var customer = new Customer
@@ -165,7 +151,7 @@ public class CustomerController : ControllerBase
             {
                 entity_id = customer.Id,
                 entity_name = Entity,
-                user_id = userId,
+                user_id = 1,
                 action = LogAction.Create
             });
 
@@ -183,11 +169,6 @@ public class CustomerController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> PutCustomer(int id, CustomerUpdateDto customerRequest)
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         var customer = await _context.Customers
             .Include(p => p.Projects) 
             .FirstOrDefaultAsync(c => c.Id == id);
@@ -220,7 +201,7 @@ public class CustomerController : ControllerBase
             {
                 entity_id = customer.Id,
                 entity_name = Entity,
-                user_id = userId,
+                user_id = 1,
                 action = LogAction.Update
             });
 
@@ -245,11 +226,6 @@ public class CustomerController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCustomer(int id)
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var customer = await _context.Customers.FindAsync(id);
@@ -266,7 +242,7 @@ public class CustomerController : ControllerBase
             {
                 entity_id = customer.Id,
                 entity_name = Entity,
-                user_id = userId,
+                user_id = 1,
                 action = LogAction.Delete
             });
 

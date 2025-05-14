@@ -261,8 +261,3 @@ __pycache__/
 *.pyc
 esii-2025-d1/appsettings.Development.json
 esii-2025-d1/appsettings.json
-/esii-2025-d1/Migrations/20250512173732_init_2.cs
-/esii-2025-d1/Migrations/20250512173732_init_2.Designer.cs
-/esii-2025-d1/Migrations/20250512174121_seeder.cs
-/esii-2025-d1/Migrations/20250512174121_seeder.Designer.cs
-/esii-2025-d1/Migrations/ApplicationDbContextModelSnapshot.cs

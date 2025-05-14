@@ -2,7 +2,6 @@ using esii_2025_d1.Components;
 using esii_2025_d1.Data;
 using esii_2025_d1.Services;
 using esii_2025_d1.Components.Account;
-using esii_2025_d1.Interfaces.ObserverPattern;
 using Microsoft.AspNetCore.Antiforgery; // tr
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Http;
@@ -72,9 +71,6 @@ builder.Services.AddAuthentication(options =>
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
-
-
-AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true); //para datas UCT
 //builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
@@ -83,17 +79,12 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-builder.Services.AddHttpContextAccessor(); 
 // Regista serviço singleton para uso
-
 builder.Services.AddSingleton<SingletonUserManager>(provider => 
 {
-    var instance = SingletonUserManager.Instance;
-    instance.Initialize(
-        scopeFactory: provider.GetRequiredService<IServiceScopeFactory>(),
-        httpContextAccessor: provider.GetRequiredService<IHttpContextAccessor>()
-    );
-    return instance;
+    var manager = SingletonUserManager.Instance;
+    manager.Initialize(provider.GetRequiredService<IServiceScopeFactory>());
+    return manager;
 });
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
@@ -111,8 +102,7 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddHttpContextAccessor();
 
-// design pattern Observer ("hugo Guedes")
-builder.Services.AddScoped<IProjectNotificationService, ProjectNotificationService>();
+
 
 
 var app = builder.Build();
@@ -167,13 +157,8 @@ using (var scope = app.Services.CreateScope())
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     var identityManager = app.Services.GetRequiredService<SingletonUserManager>();
-    identityManager.Initialize(
-        services.GetRequiredService<IServiceScopeFactory>(),
-        services.GetRequiredService<IHttpContextAccessor>()
-    );
-    
-    
-    await SeedRolesAndAdmin(roleManager, userManager,identityManager);
+    identityManager.Initialize(app.Services.GetRequiredService<IServiceScopeFactory>());
+    await SeedRolesAndAdmin(roleManager, userManager);
 }
 
 
@@ -182,7 +167,7 @@ app.Run();
 // ====================================
 // Roles seeded e Conta admin
 // ====================================
-async Task SeedRolesAndAdmin(RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager,SingletonUserManager singletonUserManager)
+async Task SeedRolesAndAdmin(RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager)
 {
     string[] roleNames = { "Admin", "UserManager", "User" };
     
@@ -201,16 +186,12 @@ async Task SeedRolesAndAdmin(RoleManager<IdentityRole> roleManager, UserManager<
     var adminUser = await userManager.FindByEmailAsync(adminEmail);
     if (adminUser == null)
     {
-        // Use SingletonUserManager to create the user
-        var (success, error) = await singletonUserManager.CreateUserAsync(
-            email: adminEmail,
-            password: adminPassword,
-            roles: new List<string> { "Admin" });
-    
-        if (!success)
+        var newAdmin = new ApplicationUser { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
+        var createUserResult = await userManager.CreateAsync(newAdmin, adminPassword);
+
+        if (createUserResult.Succeeded)
         {
-            // Log the error if user creation failed
-            Console.WriteLine($"Failed to create admin user: {error}");
+            await userManager.AddToRoleAsync(newAdmin, "Admin");
         }
     }
 }

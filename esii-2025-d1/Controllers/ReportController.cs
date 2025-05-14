@@ -22,26 +22,17 @@ public class ReportController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly ILogService _logService;
     protected string Entity = "Report";
-    private readonly SingletonUserManager _usermanager;
-
     
-    public ReportController(ApplicationDbContext context, ILogService logService,SingletonUserManager usermanager)
+    public ReportController(ApplicationDbContext context, ILogService logService)
     {
         _context = context;
         _logService = logService;
-        _usermanager = usermanager;
-
     }
     
     // GET: api/Report
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ReportResponseDto>>> GetReports()
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var reports = await _context.Reports
@@ -68,7 +59,7 @@ public class ReportController : ControllerBase
             {
                 entity_id = null,
                 entity_name = Entity,
-                user_id = userId,
+                user_id = 1,
                 action = LogAction.Read
             });
 
@@ -85,11 +76,6 @@ public class ReportController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<ReportResponseDto>> GetReport(int id)
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }        
         var report = await _context.Reports
             .Include(r => r.Media)
             .FirstOrDefaultAsync(r => r.Id == id);
@@ -121,7 +107,7 @@ public class ReportController : ControllerBase
             {
                 entity_id = report.Id,
                 entity_name = Entity,
-                user_id = userId,
+                user_id = 1,
                 action = LogAction.Read
             });
 
@@ -138,11 +124,6 @@ public class ReportController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ReportResponseDto>> PostReport(ReportCreateDto reportRequest)
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var report = new Report
@@ -170,7 +151,7 @@ public class ReportController : ControllerBase
             {
                 entity_id = report.Id,
                 entity_name = Entity,
-                user_id = userId,
+                user_id = 1,
                 action = LogAction.Create
             });
 
@@ -189,11 +170,6 @@ public class ReportController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> PutReport(int id, ReportUpdateDto reportRequest)
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         var report = await _context.Reports
             .Include(r => r.Media) 
             .FirstOrDefaultAsync(r => r.Id == id);
@@ -225,7 +201,7 @@ public class ReportController : ControllerBase
             {
                 entity_id = report.Id,
                 entity_name = Entity,
-                user_id = userId,
+                user_id = 1,
                 action = LogAction.Update
             });
 
@@ -251,11 +227,6 @@ public class ReportController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteReport(int id)
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var report = await _context.Reports.FindAsync(id);
@@ -272,7 +243,7 @@ public class ReportController : ControllerBase
             {
                 entity_id = report.Id,
                 entity_name = Entity,
-                user_id = userId,
+                user_id = 1,
                 action = LogAction.Delete
             });
 

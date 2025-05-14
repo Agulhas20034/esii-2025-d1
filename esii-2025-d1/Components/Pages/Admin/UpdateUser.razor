@@ -11,7 +11,7 @@
 @rendermode InteractiveServer
 
 <div class="update-user-container">
-    <h3>Update UserInfo</h3>
+    <h3>Update User</h3>
     
     @if (user == null)
     {
@@ -51,7 +51,7 @@
             </div>
 
             <div class="form-group mt-4">
-                <button type="submit" class="btn btn-primary mr-2">Update UserInfo</button>
+                <button type="submit" class="btn btn-primary mr-2">Update User</button>
                 <button type="button" @onclick="Cancel" class="btn btn-secondary">Cancel</button>
                 @if (isSuccess)
                 {
@@ -93,7 +93,7 @@
         user = await UserManager.GetUserByIdAsync(UserId);
         if (user == null)
         {
-            errorMessage = "UserInfo not found";
+            errorMessage = "User not found";
             return;
         }
 

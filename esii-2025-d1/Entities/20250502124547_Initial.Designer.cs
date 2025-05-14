@@ -12,8 +12,8 @@ using esii_2025_d1.Data;
 namespace esii2025d1.Entities
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250508171628_add_userInfo")]
-    partial class add_userInfo
+    [Migration("20250502124547_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -269,40 +269,40 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2347),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2362),
                             Description = "Test assignment",
-                            EndDate = new DateTime(2025, 5, 15, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2012),
+                            EndDate = new DateTime(2025, 5, 9, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(1975),
                             HourlyRate = 20f,
                             ProjectId = 1,
-                            StartDate = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(1824),
+                            StartDate = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(1795),
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2495),
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2518),
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2793),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2855),
                             Description = "Test assignment2",
-                            EndDate = new DateTime(2025, 5, 14, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2792),
+                            EndDate = new DateTime(2025, 5, 8, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2854),
                             HourlyRate = 20f,
                             ProjectId = 1,
-                            StartDate = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2791),
+                            StartDate = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2853),
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2794),
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2855),
                             UserId = 1
                         },
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2801),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2862),
                             Description = "Test assignment3",
-                            EndDate = new DateTime(2025, 5, 11, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2800),
+                            EndDate = new DateTime(2025, 5, 5, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2861),
                             HourlyRate = 20f,
                             ProjectId = 2,
-                            StartDate = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2800),
+                            StartDate = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2861),
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2801),
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2862),
                             UserId = 2
                         });
                 });
@@ -343,20 +343,20 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(4387),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(4377),
                             Email = "test@gmail.com",
                             Name = "Test Customer",
                             PhoneNumber = "123456789",
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(4538)
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(4525)
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(4855),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(4821),
                             Email = "test2@gmail.com",
                             Name = "Test Customer2",
                             PhoneNumber = "923456789",
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(4855)
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(4821)
                         });
                 });
 
@@ -397,12 +397,12 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            Date = new DateTime(2025, 5, 8, 17, 16, 27, 526, DateTimeKind.Utc).AddTicks(6468),
+                            Date = new DateTime(2025, 5, 2, 12, 45, 46, 69, DateTimeKind.Utc).AddTicks(6313),
                             IsDone = false,
                             Label = "Joms",
                             TestNumber = 2.5f,
-                            created_at = new DateTime(2025, 5, 8, 17, 16, 27, 526, DateTimeKind.Utc).AddTicks(6990),
-                            updated_at = new DateTime(2025, 5, 8, 17, 16, 27, 526, DateTimeKind.Utc).AddTicks(7155)
+                            created_at = new DateTime(2025, 5, 2, 12, 45, 46, 69, DateTimeKind.Utc).AddTicks(6869),
+                            updated_at = new DateTime(2025, 5, 2, 12, 45, 46, 69, DateTimeKind.Utc).AddTicks(7079)
                         });
                 });
 
@@ -482,24 +482,50 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(1481),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(1542),
                             Name = "test",
                             Path = "test.jpg",
                             ProjectId = 1,
                             Type = "image",
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(1626)
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(1682)
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(1924),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(1970),
                             Name = "test2",
                             Path = "test2.jpg",
                             ProjectId = 2,
                             ReportId = 2,
                             Type = "Report",
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(1925)
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(1970)
                         });
+                });
+
+            modelBuilder.Entity("esii_2025_d1.Models.Permission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Created_at")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("Deleted_at")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Updated_at")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Permissions");
                 });
 
             modelBuilder.Entity("esii_2025_d1.Models.Project", b =>
@@ -552,40 +578,40 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(7884),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(7666),
                             CustomerId = 1,
                             DailyWorkHours = 8,
                             Description = "Test project description",
                             HourlyRate = 14f,
                             Name = "Test Project",
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(8035),
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(7798),
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(8354),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(8410),
                             CustomerId = 1,
                             DailyWorkHours = 4,
                             Description = "Test project description2",
                             HourlyRate = 16f,
                             Name = "Test Project2",
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(8354),
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(8411),
                             UserId = 1
                         },
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(8409),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(8415),
                             CustomerId = 1,
                             DailyWorkHours = 4,
                             Description = "Test project description3",
                             HourlyRate = 16f,
                             Name = "Test Project3",
                             Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(8410),
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(8415),
                             UserId = 1
                         });
                 });
@@ -657,22 +683,51 @@ namespace esii2025d1.Entities
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(9592),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(9601),
                             ProjectId = 1,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(9735),
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(9743),
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(35),
+                            CreatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(148),
                             ProjectId = 2,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(36),
+                            UpdatedAt = new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(148),
                             UserId = 2
                         });
                 });
 
-            modelBuilder.Entity("esii_2025_d1.Models.UserInfo", b =>
+            modelBuilder.Entity("esii_2025_d1.Models.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("esii_2025_d1.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -689,20 +744,27 @@ namespace esii2025d1.Entities
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UserId")
+                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
-                    b.ToTable("UserInfos");
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

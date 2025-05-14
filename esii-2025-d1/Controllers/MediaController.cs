@@ -11,34 +11,16 @@ using Microsoft.EntityFrameworkCore;
 public class MediaController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-<<<<<<< HEAD
     
     public MediaController(ApplicationDbContext context, ILogService logService)
     {
         _context = context;
-=======
-    private readonly ILogService _logService;
-    protected string Entity = "Media";
-    private readonly SingletonUserManager _usermanager;
-
-    public MediaController(ApplicationDbContext context, ILogService logService,SingletonUserManager usermanager)
-    {
-        _context = context;
-        _logService = logService;
-        _usermanager = usermanager;
-
->>>>>>> origin/develop
     }
     
     // GET: api/Media
     [HttpGet]
     public async Task<ActionResult<IEnumerable<MediaResponseDto>>> GetMedias()
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var medias = await _context.Media
@@ -57,7 +39,7 @@ public class MediaController : ControllerBase
             {
                 entity_id = null,
                 entity_name = Entity,
-                user_id = userId,
+                user_id = 1,
                 action = LogAction.Read
             });
 
@@ -68,11 +50,6 @@ public class MediaController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<MediaResponseDto>> GetMedia(int id)
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         var media = await _context.Media.FindAsync(id);
 
         if (media == null)
@@ -99,7 +76,7 @@ public class MediaController : ControllerBase
             {
                 entity_id = media.Id,
                 entity_name = Entity,
-                user_id = userId,
+                user_id = 1,
                 action = LogAction.Read
             });
 
@@ -116,11 +93,6 @@ public class MediaController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<MediaResponseDto>> PostMedia(MediaCreateDto mediaRequest)
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var media = new Media
@@ -141,7 +113,7 @@ public class MediaController : ControllerBase
             {
                 entity_id = media.Id,
                 entity_name = Entity,
-                user_id = userId,
+                user_id = 1,
                 action = LogAction.Create
             });
 
@@ -159,11 +131,6 @@ public class MediaController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> PutMedia(int id, MediaUpdateDto mediaRequest)
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         var media = await _context.Media.FindAsync(id);
 
         if (media == null)
@@ -191,7 +158,7 @@ public class MediaController : ControllerBase
             {
                 entity_id = media.Id,
                 entity_name = Entity,
-                user_id = userId,
+                user_id = 1,
                 action = LogAction.Update
             });
 
@@ -217,11 +184,6 @@ public class MediaController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteMedia(int id)
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var media = await _context.Media.FindAsync(id);
@@ -238,7 +200,7 @@ public class MediaController : ControllerBase
             {
                 entity_id = media.Id,
                 entity_name = Entity,
-                user_id = userId,
+                user_id = 1,
                 action = LogAction.Delete
             });
 

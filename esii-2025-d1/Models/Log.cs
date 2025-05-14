@@ -14,7 +14,7 @@ public class Log
     
     public string entity_name { get; set; } 
     
-    public string user_id { get; set; } 
+    public int user_id { get; set; } 
     
     [EnumDataType(typeof(LogAction))]
     public LogAction action { get; set; } = LogAction.Undefined;

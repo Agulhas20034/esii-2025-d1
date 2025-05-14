@@ -4,6 +4,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace esii2025d1.Entities
 {
     /// <inheritdoc />
@@ -96,7 +98,7 @@ namespace esii2025d1.Entities
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     entity_id = table.Column<int>(type: "integer", nullable: true),
                     entity_name = table.Column<string>(type: "text", nullable: false),
-                    user_id = table.Column<string>(type: "text", nullable: false),
+                    user_id = table.Column<int>(type: "integer", nullable: false),
                     action = table.Column<int>(type: "integer", nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -391,6 +393,59 @@ namespace esii2025d1.Entities
                         principalTable: "Reports",
                         principalColumn: "Id");
                 });
+
+            migrationBuilder.InsertData(
+                table: "Customers",
+                columns: new[] { "Id", "CreatedAt", "DeletedAt", "Email", "Name", "PhoneNumber", "UpdatedAt" },
+                values: new object[,]
+                {
+                    { 1, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(4377), null, "test@gmail.com", "Test Customer", "123456789", new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(4525) },
+                    { 2, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(4821), null, "test2@gmail.com", "Test Customer2", "923456789", new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(4821) }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Joms",
+                columns: new[] { "Id", "Date", "IsDone", "Label", "TestNumber", "created_at", "deleted_at", "updated_at" },
+                values: new object[] { 1, new DateTime(2025, 5, 2, 12, 45, 46, 69, DateTimeKind.Utc).AddTicks(6313), false, "Joms", 2.5f, new DateTime(2025, 5, 2, 12, 45, 46, 69, DateTimeKind.Utc).AddTicks(6869), null, new DateTime(2025, 5, 2, 12, 45, 46, 69, DateTimeKind.Utc).AddTicks(7079) });
+
+            migrationBuilder.InsertData(
+                table: "Projects",
+                columns: new[] { "Id", "CreatedAt", "CustomerId", "DailyWorkHours", "DeletedAt", "Description", "HourlyRate", "Name", "Status", "UpdatedAt", "UserId" },
+                values: new object[,]
+                {
+                    { 1, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(7666), 1, 8, null, "Test project description", 14f, "Test Project", 0, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(7798), 1 },
+                    { 2, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(8410), 1, 4, null, "Test project description2", 16f, "Test Project2", 0, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(8411), 1 },
+                    { 3, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(8415), 1, 4, null, "Test project description3", 16f, "Test Project3", 0, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(8415), 1 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Assignments",
+                columns: new[] { "Id", "CreatedAt", "DeletedAt", "Description", "EndDate", "HourlyRate", "ProjectId", "StartDate", "Status", "UpdatedAt", "UserId" },
+                values: new object[,]
+                {
+                    { 1, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2362), null, "Test assignment", new DateTime(2025, 5, 9, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(1975), 20f, 1, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(1795), 0, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2518), 1 },
+                    { 2, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2855), null, "Test assignment2", new DateTime(2025, 5, 8, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2854), 20f, 1, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2853), 0, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2855), 1 },
+                    { 3, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2862), null, "Test assignment3", new DateTime(2025, 5, 5, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2861), 20f, 2, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2861), 0, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(2862), 2 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Media",
+                columns: new[] { "Id", "CreatedAt", "DeletedAt", "Name", "Path", "ProjectId", "ReportId", "Type", "UpdatedAt" },
+                values: new object[] { 1, new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(1542), null, "test", "test.jpg", 1, null, "image", new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(1682) });
+
+            migrationBuilder.InsertData(
+                table: "Reports",
+                columns: new[] { "Id", "CreatedAt", "DeletedAt", "ProjectId", "UpdatedAt", "UserId" },
+                values: new object[,]
+                {
+                    { 1, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(9601), null, 1, new DateTime(2025, 5, 2, 12, 45, 46, 72, DateTimeKind.Utc).AddTicks(9743), 1 },
+                    { 2, new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(148), null, 2, new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(148), 2 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Media",
+                columns: new[] { "Id", "CreatedAt", "DeletedAt", "Name", "Path", "ProjectId", "ReportId", "Type", "UpdatedAt" },
+                values: new object[] { 2, new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(1970), null, "test2", "test2.jpg", 2, 2, "Report", new DateTime(2025, 5, 2, 12, 45, 46, 73, DateTimeKind.Utc).AddTicks(1970) });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
