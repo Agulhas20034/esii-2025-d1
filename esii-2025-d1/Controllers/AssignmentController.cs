@@ -126,6 +126,7 @@ public class AssignmentController : ControllerBase
         {
             var assignment = new Assignment
             {
+                UserId = assignmentRequest.UserId,
                 ProjectId = assignmentRequest.ProjectId,
                 Description = assignmentRequest.Description,
                 HourlyRate = assignmentRequest.HourlyRate,
