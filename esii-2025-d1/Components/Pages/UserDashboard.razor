@@ -2,6 +2,8 @@
 @inject HttpClient Http
 
 @using esii_2025_d1.Dtos.AssignmentDtos
+@using esii_2025_d1.Dtos.UserInfoDtos
+@using esii_2025_d1.Dtos.UserDtos
 @using esii_2025_d1.Models.Enums
 
 @* // acrecentado para obter userID (user em geral) *@
@@ -210,9 +212,27 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        await LoadUsersWithRoles();
+
         try
         {
-            currentUser = await Http.GetFromJsonAsync<UserInfo>("api/user/4");
+            var response = await Http.GetFromJsonAsync<List<UserFullResponseDto>>("api/user");
+            //var info = response ?? new List<UserInfoResponseDto>();
+            var userExists = response.FirstOrDefault(a => a?.UserInfo?.UserId == currentUserId);
+            if (userExists == null)
+            {
+                var newUserInfo = new UserInfoCreateDto
+                    {
+                        UserId = currentUserId,
+                        Name = authState.User.Identity.Name,
+                        DailyWorkHours = 0
+                    };
+                var response2 =  await Http.PostAsJsonAsync<UserInfoCreateDto>("api/user/info", newUserInfo);
+                var abcd = 1;
+            }
+            
         }
         catch (HttpRequestException ex)
         {
@@ -222,9 +242,7 @@
         await LoadData();
 
 
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        await LoadUsersWithRoles();
+        
     }
 
     @* // acrecentado para obter userID (user em geral) *@
@@ -279,7 +297,7 @@
             return;
         }
 
-        newAssignment.UserId = currentUser?.Id ?? 0;
+        newAssignment.UserId = currentUserId ?? string.Empty;
         newAssignment.StartDate ??= DateTime.Today;
         newAssignment.EndDate ??= DateTime.Today.AddDays(1);
 
@@ -333,12 +351,13 @@
             return;
         }
 
-        newAssignment.UserId = currentUser?.Id ?? 0;
+        newAssignment.UserId = currentUserId ?? string.Empty;
         newAssignment.StartDate ??= DateTime.Today;
         newAssignment.EndDate ??= DateTime.Today.AddDays(1);
 
         var dto = new AssignmentCreateDto
             {
+                UserId = newAssignment.UserId,
                 ProjectId = newAssignment.ProjectId,
                 Description = newAssignment.Description,
                 StartDate = newAssignment.StartDate.Value,
