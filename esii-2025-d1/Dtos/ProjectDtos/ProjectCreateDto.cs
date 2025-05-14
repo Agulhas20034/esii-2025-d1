@@ -6,7 +6,7 @@ namespace esii_2025_d1.Dtos.ProjectDtos;
 public class ProjectCreateDto
 { 
     [Required]
-    public int UserId { get; set; }
+    public string? UserId { get; set; }
     
     [Required]
     public int CustomerId { get; set; }
