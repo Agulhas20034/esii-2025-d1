@@ -1,0 +1,232 @@
+﻿@page "/user/projects"
+@inject HttpClient Http
+
+
+@using esii_2025_d1.Dtos.ProjectDtos
+@using esii_2025_d1.Dtos.AssignmentDtos
+@using esii_2025_d1.Dtos.UserInfoDtos
+@using esii_2025_d1.Dtos.UserDtos
+@using esii_2025_d1.Models
+
+@* // acrecentado para obter userID (user em geral) *@
+@using esii_2025_d1.Data;
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
+@using esii_2025_d1.Services
+@using System.Security.Claims
+@inject UserManager<ApplicationUser> AspNetUserManager;
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject RoleManager<IdentityRole> RoleManager
+@inject SingletonUserManager UserManager
+@* // acrecentado para obter userID (user em geral) *@
+@rendermode InteractiveServer
+
+<PageTitle>My Projects</PageTitle>
+
+
+<div class="d-flex justify-content-between mb-3">
+    <h1>My Projects</h1>
+    <Button Color="ButtonColor.Primary" @onclick="OnShowAddModalClick">
+        <i class="bi bi-plus-circle"></i> Create Project
+    </Button>
+</div>
+
+
+<Grid TItem="Project"
+Class="table table-hover table-bordered table-striped"
+Data="@projects"
+AllowPaging="true"
+PageSize="10"
+AllowSorting="true"
+AllowSelection="true"
+SelectionMode="GridSelectionMode.Multiple"
+SelectedItemsChanged="OnSelectedItemsChanged"
+Responsive="true">
+
+    <GridColumns>
+        <GridColumn TItem="Project" HeaderText="Name" PropertyName="Name" SortKeySelector="item => item.Name">
+            @context.Name
+        </GridColumn>
+        <GridColumn TItem="Project" HeaderText="Description" PropertyName="Description" SortKeySelector="item => item.Description">
+            @context.Description
+        </GridColumn>
+        <GridColumn TItem="Project" HeaderText="CustomerID" PropertyName="CustomerId" SortKeySelector="item => item.CustomerId">
+            @context.CustomerId
+        </GridColumn>
+        <GridColumn TItem="Project" HeaderText="Hourly Rate" PropertyName="HourlyRate" SortKeySelector="item => item.HourlyRate">
+            @context.CustomerId
+        </GridColumn>
+        <GridColumn TItem="Project" HeaderText="Actions">
+            <button class="btn btn-warning btn-sm" @onclick="() => OpenEditModal(context)">
+                <i class="bi bi-pencil-square"></i> Edit
+            </button>
+            @*             <button class="btn btn-danger btn-sm" @onclick="() => OpenDeleteModal(context.Id)">
+                <i class="bi bi-trash"></i> Remove
+            </button> *@
+        </GridColumn>
+    </GridColumns>
+</Grid>
+
+<!-- Modal de Edit -->
+<Modal @ref="editModal" Title="Edit Project">
+    <BodyTemplate>
+        <div class="form-group">
+            <label>Name</label>
+            <TextInput @bind-Value="@editingProjectCopy.Name" />
+        </div>
+
+        <div class="form-group mt-2">
+            <label for="description">Description</label>
+            <TextInput @bind-Value="@editingProjectCopy.Name" />
+        </div>
+
+        @*         <div class="form-group mt-2">
+            <label for="hourlyRate">Hourly Rate</label>
+            <NumberInput TValue="int"
+                         @bind-Value="editingProjectCopy.HourlyRate"
+                         Placeholder="Hourly rate"
+                         Min="1"
+                         Max="1000"
+                         Step="1" />
+        </div> *@
+    </BodyTemplate>
+
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideEditModalClick">Cancel</Button>
+        <Button Color="ButtonColor.Primary" @onclick="SaveEdit">Confirm Changes</Button>
+    </FooterTemplate>
+</Modal>
+
+<!-- Modal de Store  -->
+<Modal @ref="addModal" Title="Create Project">
+    <BodyTemplate>
+        <div class="form-group">
+            <label for="newName">Name</label>
+            <input type="text" class="form-control" id="newName" @bind="newProject.Name" Placeholder="Name"  />
+        </div>
+
+        <div class="form-group mt-2">
+            <label for="newDescription">Description</label>
+            <TextAreaInput @bind-Value="newProject.Description" />
+        </div>
+
+        <div class="form-group mt-2">
+            <label for="newCustomer">Customer</label>
+            <NumberInput Tvalue="integer" @bind-value="newProject.CustomerId" />
+        </div>
+
+        <div class="form-group mt-2">
+            <label for="newHourlyRate">Hourly Rate</label>
+            <NumberInput Tvalue="integer" @bind-Value="newProject.HourlyRate" />
+        </div>
+
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideAddModalClick">Cancel</Button>
+        <Button Color="ButtonColor.Primary" @onclick="SaveAdd">Create</Button>
+    </FooterTemplate>
+</Modal>
+
+@code
+{
+    private Modal addModal = default!;
+    private Modal editModal = default!;
+    private Modal deleteModal = default!;
+
+    private List<Project> projects = new();
+    private HashSet<Project> selectedProjects = new();
+
+    private Project? editingProject;
+    private Project editingProjectCopy = new Project();
+    private Project newProject = new Project();
+
+    private string? currentUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        await LoadProjects();
+    }
+
+    private async Task LoadProjects()
+    {
+        var response = await Http.GetFromJsonAsync<List<Project>>("api/project");
+        projects = response ?? new List<Project>();
+    }
+
+    private Task OnSelectedItemsChanged(HashSet<Project> items)
+    {
+        selectedProjects = items is not null && items.Any() ? items : new();
+        return Task.CompletedTask;
+    }
+
+    private async Task OnShowAddModalClick()
+    {
+        newProject = new Project();
+        await addModal.ShowAsync();
+    }
+
+    private async Task OnHideAddModalClick()
+    {
+        await addModal.HideAsync();
+    }
+
+    private async Task SaveAdd()
+    {
+
+        var projectCreateDto = new ProjectCreateDto
+            {
+                UserId = currentUserId,
+                Name = newProject.Name,
+                Description = newProject.Description,
+                CustomerId = newProject.CustomerId,
+                HourlyRate = newProject.HourlyRate
+            };
+
+        var response = await Http.PostAsJsonAsync("api/project", projectCreateDto);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadProjects();
+            await addModal.HideAsync();
+        }
+    }
+
+    private void OpenEditModal(Project project)
+    {
+        editingProject = project;
+        editingProjectCopy = new Project
+            {
+                Name = project.Name,
+                Description = project.Description,
+                CustomerId = project.CustomerId,
+                HourlyRate = project.HourlyRate
+            };
+        editModal.ShowAsync();
+    }
+
+    private async Task OnHideEditModalClick()
+    {
+        await editModal.HideAsync();
+    }
+
+    private async Task SaveEdit()
+    {
+        if (editingProjectCopy == null)
+            return;
+
+        editingProject.Name = editingProjectCopy.Name;
+        editingProject.Description = editingProjectCopy.Description;
+        editingProject.CustomerId = editingProjectCopy.CustomerId;
+        editingProject.HourlyRate = editingProjectCopy.HourlyRate;
+
+        var response = await Http.PutAsJsonAsync($"api/Project/{editingProject.Id}", editingProject);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadProjects();
+            await editModal.HideAsync();
+        }
+    }
+}
