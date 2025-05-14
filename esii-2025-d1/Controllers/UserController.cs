@@ -47,7 +47,7 @@ public class UserController : ControllerBase
                         .Where(ui => ui.UserId == u.Id)
                         .Select(ui => new UserInfoResponseDto
                         {
-                            Id = ui.Id,
+                            UserId = ui.UserId,
                             Name = ui.Name,
                             DailyWorkHours = ui.DailyWorkHours,
                             CreatedAt = ui.CreatedAt,
@@ -85,7 +85,7 @@ public class UserController : ControllerBase
             .Where(ui => ui.UserId == id)
             .Select(ui => new UserInfoResponseDto
             {
-                Id = ui.Id,
+                UserId = ui.UserId,
                 Name = ui.Name,
                 DailyWorkHours = ui.DailyWorkHours,
                 CreatedAt = ui.CreatedAt,
@@ -113,7 +113,30 @@ public class UserController : ControllerBase
         return Ok(response);
     }
 
-    // POST: api/User
+    [HttpPost("info")]
+    public async Task<ActionResult<UserInfoResponseDto>> CreateUserInfo(UserInfoCreateDto userInfoRequest)
+    {
+
+        var userinfo = new UserInfo
+        {
+            UserId = userInfoRequest.UserId,
+            Name = userInfoRequest.Name,
+            DailyWorkHours = userInfoRequest.DailyWorkHours
+        };
+        _context.UserInfos.Add(userinfo);
+        await _context.SaveChangesAsync();
+
+        await _logService.CreateLog(new Log
+        {
+            entity_id = 1,
+            entity_name = Entity,
+            user_id = userInfoRequest.UserId
+        });
+
+        return Ok(Response);
+    }
+
+    //POST: api/User
     [HttpPost]
     public async Task<ActionResult<UserFullResponseDto>> CreateUser(
         [FromBody] UserCreateDto userDto,
@@ -161,7 +184,7 @@ public class UserController : ControllerBase
             PhoneNumber = user.PhoneNumber,
             UserInfo = createdUserInfo != null ? new UserInfoResponseDto
             {
-                Id = createdUserInfo.Id,
+                UserId = createdUserInfo.UserId,
                 Name = createdUserInfo.Name,
                 DailyWorkHours = createdUserInfo.DailyWorkHours,
                 CreatedAt = createdUserInfo.CreatedAt,
