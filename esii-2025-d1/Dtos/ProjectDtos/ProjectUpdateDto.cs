@@ -8,7 +8,7 @@ namespace esii_2025_d1.Dtos.ProjectDtos
 {
     public class ProjectUpdateDto
     {
-        public int? UserId { get; set; }
+        public string? UserId { get; set; }
         public int? CustomerId { get; set; }
         
         [Required]

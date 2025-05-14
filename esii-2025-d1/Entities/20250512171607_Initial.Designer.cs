@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using esii_2025_d1.Data;
@@ -11,9 +12,11 @@ using esii_2025_d1.Data;
 namespace esii2025d1.Entities
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250512171607_Initial")]
+    partial class Initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -261,47 +264,6 @@ namespace esii2025d1.Entities
                     b.HasIndex("ProjectId");
 
                     b.ToTable("Assignments");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(993),
-                            Description = "Test assignment",
-                            EndDate = new DateTime(2025, 5, 15, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(665),
-                            HourlyRate = 20f,
-                            ProjectId = 1,
-                            StartDate = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(485),
-                            Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1143),
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1450),
-                            Description = "Test assignment2",
-                            EndDate = new DateTime(2025, 5, 14, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1449),
-                            HourlyRate = 20f,
-                            ProjectId = 1,
-                            StartDate = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1449),
-                            Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1451),
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1457),
-                            Description = "Test assignment3",
-                            EndDate = new DateTime(2025, 5, 11, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1456),
-                            HourlyRate = 20f,
-                            ProjectId = 2,
-                            StartDate = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1456),
-                            Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(1457),
-                            UserId = 2
-                        });
                 });
 
             modelBuilder.Entity("esii_2025_d1.Models.Customer", b =>
@@ -335,26 +297,6 @@ namespace esii2025d1.Entities
                     b.HasKey("Id");
 
                     b.ToTable("Customers");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(3054),
-                            Email = "test@gmail.com",
-                            Name = "Test Customer",
-                            PhoneNumber = "123456789",
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(3211)
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(3514),
-                            Email = "test2@gmail.com",
-                            Name = "Test Customer2",
-                            PhoneNumber = "923456789",
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(3514)
-                        });
                 });
 
             modelBuilder.Entity("esii_2025_d1.Models.Jom", b =>
@@ -389,18 +331,6 @@ namespace esii2025d1.Entities
                     b.HasKey("Id");
 
                     b.ToTable("Joms");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Date = new DateTime(2025, 5, 8, 17, 55, 51, 552, DateTimeKind.Utc).AddTicks(4500),
-                            IsDone = false,
-                            Label = "Joms",
-                            TestNumber = 2.5f,
-                            created_at = new DateTime(2025, 5, 8, 17, 55, 51, 552, DateTimeKind.Utc).AddTicks(5035),
-                            updated_at = new DateTime(2025, 5, 8, 17, 55, 51, 552, DateTimeKind.Utc).AddTicks(5202)
-                        });
                 });
 
             modelBuilder.Entity("esii_2025_d1.Models.Log", b =>
@@ -475,29 +405,32 @@ namespace esii2025d1.Entities
                     b.HasIndex("ReportId");
 
                     b.ToTable("Media");
+                });
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 556, DateTimeKind.Utc).AddTicks(94),
-                            Name = "test",
-                            Path = "test.jpg",
-                            ProjectId = 1,
-                            Type = "image",
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 556, DateTimeKind.Utc).AddTicks(237)
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 556, DateTimeKind.Utc).AddTicks(519),
-                            Name = "test2",
-                            Path = "test2.jpg",
-                            ProjectId = 2,
-                            ReportId = 2,
-                            Type = "Report",
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 556, DateTimeKind.Utc).AddTicks(519)
-                        });
+            modelBuilder.Entity("esii_2025_d1.Models.Permission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Created_at")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("Deleted_at")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Updated_at")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Permissions");
                 });
 
             modelBuilder.Entity("esii_2025_d1.Models.Project", b =>
@@ -545,47 +478,6 @@ namespace esii2025d1.Entities
                     b.HasIndex("CustomerId");
 
                     b.ToTable("Projects");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(6660),
-                            CustomerId = 1,
-                            DailyWorkHours = 8,
-                            Description = "Test project description",
-                            HourlyRate = 14f,
-                            Name = "Test Project",
-                            Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(6798),
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(7094),
-                            CustomerId = 1,
-                            DailyWorkHours = 4,
-                            Description = "Test project description2",
-                            HourlyRate = 16f,
-                            Name = "Test Project2",
-                            Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(7094),
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(7098),
-                            CustomerId = 1,
-                            DailyWorkHours = 4,
-                            Description = "Test project description3",
-                            HourlyRate = 16f,
-                            Name = "Test Project3",
-                            Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(7098),
-                            UserId = 1
-                        });
                 });
 
             modelBuilder.Entity("esii_2025_d1.Models.ProjectUser", b =>
@@ -602,9 +494,8 @@ namespace esii2025d1.Entities
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("InviterId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("InviterId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("ProjectId")
                         .HasColumnType("integer");
@@ -615,9 +506,8 @@ namespace esii2025d1.Entities
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -652,24 +542,35 @@ namespace esii2025d1.Entities
                     b.HasIndex("ProjectId");
 
                     b.ToTable("Reports");
+                });
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(8268),
-                            ProjectId = 1,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(8411),
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(8700),
-                            ProjectId = 2,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 55, 51, 555, DateTimeKind.Utc).AddTicks(8701),
-                            UserId = 2
-                        });
+            modelBuilder.Entity("esii_2025_d1.Models.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("esii_2025_d1.Models.UserInfo", b =>
@@ -689,20 +590,27 @@ namespace esii2025d1.Entities
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UserId")
+                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
-                    b.ToTable("UserInfos");
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

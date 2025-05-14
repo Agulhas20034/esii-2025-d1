@@ -5,7 +5,7 @@ namespace esii_2025_d1.Dtos.AssignmentDtos;
 
 public class AssignmentCreateDto
 {
-    
+    public string UserId { get; set; }
     public int? ProjectId { get; set; }
 
     [StringLength(500)]

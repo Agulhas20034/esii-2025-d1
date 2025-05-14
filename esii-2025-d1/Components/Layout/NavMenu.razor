@@ -6,7 +6,7 @@
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">esii-2025-d1</a>
+        <a class="navbar-brand" href="">SideBar</a>
     </div>
 </div>
 
@@ -19,53 +19,60 @@
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
+       <AuthorizeView Roles="Admin,UserManager,User">
+           <Authorized Context="authContext">
+               
+               <div class="nav-item px-3">
+                   <NavLink class="nav-link" href="counter">
+                       <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+                   </NavLink>
+               </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
+               <div class="nav-item px-3">
+                   <NavLink class="nav-link" href="weather">
+                       <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+                   </NavLink>
+               </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
+               <div class="nav-item px-3">
+                   <NavLink class="nav-link" href="test">
+                       <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Test
+                   </NavLink>
+               </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="test">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Test
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="auth">
-                <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
-            </NavLink>
-        </div>
-
-        <AuthorizeView>
-            <Authorized Context="authContext">
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Admin/Dashboard">
-                        <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Dashboard
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Manage">
-                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @authContext.User.Identity?.Name
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <form method="post" action="Account/Logout">
-                        <input type="hidden" name="__RequestVerificationToken" value="@GetFreshAntiforgeryToken()"/>
-                        <input type="hidden" name="returnUrl" value="@currentUrl"/>
-                        <button type="submit" class="nav-link">
-                            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
-                        </button>
-                    </form>
-                </div>
-            </Authorized>
+               <div class="nav-item px-3">
+                   <NavLink class="nav-link" href="auth">
+                       <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
+                   </NavLink>
+               </div>
+               
+               <div class="nav-item px-3">
+                   <NavLink class="nav-link" href="dashboard">
+                       <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> JomDashBoard
+                   </NavLink>
+               </div>
+               <AuthorizeView Roles="Admin">
+               <div class="nav-item px-3">
+                   <NavLink class="nav-link" href="Admin/Dashboard">
+                       <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Dashboard
+                   </NavLink>
+               </div>
+                </AuthorizeView>
+               <div class="nav-item px-3">
+                   <NavLink class="nav-link" href="Account/Manage">
+                       <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @authContext.User.Identity?.Name
+                   </NavLink>
+               </div>
+               <div class="nav-item px-3">
+                   <form method="post" action="Account/Logout">
+                       <input type="hidden" name="__RequestVerificationToken" value="@GetFreshAntiforgeryToken()"/>
+                       <input type="hidden" name="returnUrl" value="@currentUrl"/>
+                       <button type="submit" class="nav-link">
+                           <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
+                       </button>
+                   </form>
+               </div>
+           </Authorized>
             <NotAuthorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="Account/Register">
@@ -79,7 +86,9 @@
                 </div>
             </NotAuthorized>
         </AuthorizeView>
-    </nav>
+    </nav> 
+    
+    
 </div>
 
 @code {
@@ -87,7 +96,9 @@
 
     protected override void OnInitialized()
     {
+
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        //currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         NavigationManager.LocationChanged += OnLocationChanged;
     }
 

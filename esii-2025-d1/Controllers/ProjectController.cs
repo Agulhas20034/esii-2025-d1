@@ -1,5 +1,5 @@
 using esii_2025_d1.Dtos.AssignmentDtos;
-using esii_2025_d1.Dtos.ProjectDtos;
+using esii_2025_d1.Interfaces.ObserverPattern;
 
 namespace esii_2025_d1.Controllers;
 
@@ -18,18 +18,28 @@ public class ProjectController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogService _logService;
+    private readonly IProjectObserver _projectObserver;
+    private readonly SingletonUserManager _usermanager;
     protected string Entity = "Project";
     
-    public ProjectController(ApplicationDbContext context, ILogService logService)
+    public ProjectController(ApplicationDbContext context, ILogService logService,SingletonUserManager usermanager)
     {
         _context = context;
         _logService = logService;
+        //_projectObserver = projectObserver;
+        _usermanager = usermanager;
+
     }
     
     // GET: api/Project
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProjectResponseDto>>> GetProjects()
     {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
         try
         {
             var projects = await _context.Projects
@@ -64,7 +74,7 @@ public class ProjectController : ControllerBase
             {
                 entity_id = null,
                 entity_name = Entity,
-                user_id = 1,
+                user_id = userId,
                 action = LogAction.Read
             });
 
@@ -81,6 +91,11 @@ public class ProjectController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<ProjectResponseDto>> GetProject(int id)
     {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
         var project = await _context.Projects.FindAsync(id);
 
         if (project == null)
@@ -117,7 +132,7 @@ public class ProjectController : ControllerBase
             {
                 entity_id = project.Id,
                 entity_name = Entity,
-                user_id = 1,
+                user_id = userId,
                 action = LogAction.Read
             });
 
@@ -134,6 +149,11 @@ public class ProjectController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ProjectResponseDto>> PostProject(ProjectCreateDto projectRequest)
     {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
         try
         {
             var project = new Project
@@ -156,7 +176,7 @@ public class ProjectController : ControllerBase
             {
                 entity_id = project.Id,
                 entity_name = Entity,
-                user_id = 1,
+                user_id = userId,
                 action = LogAction.Create
             });
 
@@ -174,6 +194,11 @@ public class ProjectController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> PutProject(int id, ProjectUpdateDto projectRequest)
     {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
         var project = await _context.Projects.FindAsync(id);
 
         if (project == null)
@@ -194,7 +219,7 @@ public class ProjectController : ControllerBase
             {
                 entity_id = project.Id,
                 entity_name = Entity,
-                user_id = 1,
+                user_id = userId,
                 action = LogAction.Update
             });
 
@@ -220,6 +245,11 @@ public class ProjectController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProject(int id)
     {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
         try
         {
             var project = await _context.Projects.FindAsync(id);
@@ -236,7 +266,7 @@ public class ProjectController : ControllerBase
             {
                 entity_id = project.Id,
                 entity_name = Entity,
-                user_id = 1,
+                user_id = userId,
                 action = LogAction.Delete
             });
 

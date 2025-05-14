@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
+using System.Security.Claims;
 
 namespace esii_2025_d1.Services;
 
@@ -12,14 +13,15 @@ public sealed class SingletonUserManager
     
     private readonly ConcurrentDictionary<string, ApplicationUser> _users = new();
     private IServiceScopeFactory _scopeFactory;
-
+    private IHttpContextAccessor _httpContextAccessor;
     private SingletonUserManager() { }
 
     public static SingletonUserManager Instance => _instance.Value;
 
-    public void Initialize(IServiceScopeFactory scopeFactory)
+    public void Initialize(IServiceScopeFactory scopeFactory, IHttpContextAccessor httpContextAccessor)
     {
         _scopeFactory = scopeFactory;
+        _httpContextAccessor = httpContextAccessor;
         LoadUsersFromDatabase();
     }
 
@@ -97,7 +99,7 @@ public sealed class SingletonUserManager
         //Adiciona user criado a cache(singleton feature)
         _users.TryAdd(user.Id, user);
 
-        return (true, "User created successfully");
+        return (true, "UserInfo created successfully");
     }
     //Busca user por id
     public async Task<ApplicationUser?> GetUserByIdAsync(string userId)
@@ -127,7 +129,7 @@ public sealed class SingletonUserManager
         var user = await userManager.FindByIdAsync(userId);
         return user != null ? (await userManager.GetRolesAsync(user)).ToList() : new List<string>();
     }
-//Atualiza User
+//Atualiza UserInfo
     public async Task<bool> UpdateUserAsync(ApplicationUser user)
     {
         using var scope = _scopeFactory.CreateScope();
@@ -201,5 +203,15 @@ public sealed class SingletonUserManager
         }
         
         return result.Succeeded;
+    }
+    public async Task<string?> GetCurrentUserIdAsync()
+    {
+        var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return null;
+    
+        // Verify user exists in DB
+        using var scope = _scopeFactory.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        return await userManager.FindByIdAsync(userId) != null ? userId : null;
     }
 }

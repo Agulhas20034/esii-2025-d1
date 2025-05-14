@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using esii_2025_d1.Models;
 using esii_2025_d1.Models.Enums;
+using Microsoft.AspNetCore.Identity;
 
 namespace esii_2025_d1.Data;
 
@@ -9,22 +10,19 @@ using Microsoft.EntityFrameworkCore;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
-    //public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-    //    : base(options)
-    //{
-    //}
     
     public DbSet<Jom> Joms { get; set; } = null!;
     public DbSet<Log> logs { get; set; } = null!;
     public DbSet<Customer> Customers { get; set; } = null!;
     public DbSet<Media> Media { get; set; } = null!;
-    public DbSet<Permission> Permissions { get; set; } = null!;
     public DbSet<Project> Projects { get; set; } = null!;
     public DbSet<ProjectUser> ProjectUsers { get; set; } = null!;
     public DbSet<Report> Reports { get; set; } = null!;
-    public DbSet<Role> Roles { get; set; } = null!;
     public DbSet<Assignment> Assignments { get; set; } = null!;
-    public DbSet<User> Users { get; set; } = null!;
+    
+    public DbSet<UserInfo> UserInfos { get; set; } = null!;
+    
+    
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {   
@@ -34,11 +32,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         // Soft delete
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
-            var deletedAtProperty = entityType.FindProperty("deleted_at");
+            var deletedAtProperty = entityType.FindProperty("DeletedAt");
             if (deletedAtProperty != null && deletedAtProperty.ClrType == typeof(DateTime?))
             {
                 var parameter = Expression.Parameter(entityType.ClrType, "e");
-                var property = Expression.Property(parameter, "deleted_at");
+                var property = Expression.Property(parameter, "DeletedAt");
                 var nullValue = Expression.Constant(null, typeof(DateTime?));
                 var filter = Expression.Lambda(Expression.Equal(property, nullValue), parameter);
 
@@ -47,7 +45,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         }
         
         // Seed data
-        modelBuilder.Entity<Jom>().HasData(
+       /* modelBuilder.Entity<Jom>().HasData(
             new Jom 
             { 
                 Id = 1,
@@ -220,6 +218,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     
             }
         );
+        */
     }
 
 
