@@ -1,5 +1,4 @@
 using esii_2025_d1.Dtos.AssignmentDtos;
-using esii_2025_d1.Dtos.ProjectDtos;
 using esii_2025_d1.Interfaces.ObserverPattern;
 
 namespace esii_2025_d1.Controllers;

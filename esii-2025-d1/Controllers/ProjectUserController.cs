@@ -1,6 +1,3 @@
-using esii_2025_d1.Dtos.MediaDtos;
-using esii_2025_d1.Dtos.ProjectUserDtos;
-
 namespace esii_2025_d1.Controllers;
 
 using esii_2025_d1.Data;
