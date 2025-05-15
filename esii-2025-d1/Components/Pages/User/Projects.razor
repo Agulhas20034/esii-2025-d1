@@ -62,7 +62,7 @@ Responsive="true">
             @context.HourlyRate
         </GridColumn>
         <GridColumn TItem="Project" HeaderText="Actions" >
-            <button class="btn btn-outline-primary btn-sm" @onclick="() => OpenCollabModal(context.Id)">
+            <button class="btn btn-outline-primary btn-sm" @onclick="() => OpenCollabModal(context)">
                 <Icon Name="IconName.PeopleFill" /> Collaborators
             </button>
             <button class="btn btn-warning btn-sm" @onclick="() => OpenEditModal(context)">
@@ -194,7 +194,7 @@ Responsive="true">
                     @context.userInfo.DailyWorkHours
                 </GridColumn>
                 <GridColumn TItem="UserInfoAssignment" HeaderText="Actions">
-                    <button class="btn btn-danger btn-sm">
+                    <button class="btn btn-danger btn-sm" disabled="@(context.userInfo.UserId == currentUserId)">
                         <Icon Name="IconName.PersonDash" /> Remove
                     </button>
                 </GridColumn>
@@ -287,7 +287,10 @@ Responsive="true">
     private async Task LoadProjects()
     {
         var response = await Http.GetFromJsonAsync<List<Project>>("api/project");
-        projects = response ?? new List<Project>();
+        foreach(Project p in response)
+        {
+            if (p.UserId == currentUserId) projects.Add(p);
+        }
     }
 
     private Task OnSelectedItemsChanged(HashSet<Project> items)
@@ -362,6 +365,7 @@ Responsive="true">
         {
             await LoadProjects();
             await editModal.HideAsync();
+            ShowToast(ToastType.Success, "Changes Saved!", "Edit Result");
         }
     }
 
@@ -390,7 +394,6 @@ Responsive="true">
         foreach(ProjectUser pu in deletingProject.ProjectUsers)
         {
             var result = await Http.DeleteAsync($"api/projectuser/{pu.Id}");
-            int abc = 1;
         }
 
         var response = await Http.DeleteAsync($"api/project/{deletingProjectId}");
@@ -399,6 +402,7 @@ Responsive="true">
         {
             await LoadProjects();
             await deleteModal.HideAsync();
+            ShowToast(ToastType.Success, "Project removed. All the assignments were kept!", "Removal Result");
         }
     }
 
@@ -423,15 +427,16 @@ Responsive="true">
         {
             await LoadProjects();
             await deleteModal.HideAsync();
+            ShowToast(ToastType.Success, "Project and assignments removed!", "Removal Result");
         }
     }
 
-    private async Task OpenCollabModal(int projectId)
+    private async Task OpenCollabModal(Project project)
     {
-        await LoadProjectUsers();
-        await LoadUserAssignments(projectId);
+        await LoadProjectUsers(project);
+        await LoadUserAssignments(project);
         await LoadUsers();
-        selectedProjectId = projectId;
+        selectedProjectId = project.Id;
 
         await collabModal.ShowAsync();
     }
@@ -441,17 +446,27 @@ Responsive="true">
         collabModal.HideAsync();
     }
 
-    private async Task LoadProjectUsers()
+    private async Task LoadProjectUsers(Project project)
     {
 
         collaborators = new();
         var response = await Http.GetFromJsonAsync<List<ProjectUser>>("api/projectuser");
         projectUsers = response ?? new List<ProjectUser>();
+
+
+        var projectOwner = await Http.GetFromJsonAsync<UserFullResponseDto>($"api/user/{project.UserId}");
+        if (projectOwner.UserInfo.UserId != null) collaborators.Add(new UserInfo()
+                {
+                    UserId = projectOwner.UserInfo.UserId,
+                    Name = projectOwner.UserInfo.Name,
+                    DailyWorkHours = projectOwner.UserInfo.DailyWorkHours
+                });
+
+
         foreach (ProjectUser pu in projectUsers)
         {
-            if (pu.UserId == currentUserId)
-            {
-                var responseCollabs = await Http.GetFromJsonAsync<UserFullResponseDto>($"api/user/{currentUserId}");
+            if (pu.ProjectId == project.Id) {
+                var responseCollabs = await Http.GetFromJsonAsync<UserFullResponseDto>($"api/user/{pu.UserId}");
                 if (responseCollabs != null)
                 {
                     UserInfo newCollab = new UserInfo();
@@ -464,7 +479,7 @@ Responsive="true">
         }
     }
 
-    private async Task LoadUserAssignments(int projectId)
+    private async Task LoadUserAssignments(Project project)
     {
         assignments = new();
         userAssignments = new();
@@ -472,22 +487,26 @@ Responsive="true">
         List<Assignment> aList = assignmentsResponse ?? new List<Assignment>();
         foreach (Assignment a in aList)
         {
-            if (a.ProjectId == projectId) assignments.Add(a);
+            if (a.ProjectId == project.Id) assignments.Add(a);
         }
-
-        UserInfoAssignment newUA = new();
 
         foreach (UserInfo c in collaborators)
         {
+            UserInfoAssignment newUA = new();
 
             newUA.userInfo = c;
             foreach (Assignment a in assignments)
             {
                 if (c.UserId == a.UserId) newUA.assignments.Add(a);
             }
+
+            if (newUA.userInfo.UserId != null)
+            {
+                userAssignments.Add(newUA);
+            }
         }
 
-        userAssignments.Add(newUA);
+        
     }
 
     private async Task LoadUsers()
@@ -544,22 +563,22 @@ Responsive="true">
                     var invitationResponse = await Http.PostAsJsonAsync<ProjectUser>("api/projectuser", newInvitation);
                     if (invitationResponse.IsSuccessStatusCode)
                     {
-                        ShowToast(ToastType.Success, "Invitation sent successfuly!");
+                        ShowToast(ToastType.Success, "Invitation sent successfuly!", "Invitation Result");
                     }
                     else
                     {
-                        ShowToast(ToastType.Warning, "The user cannot join your project right now.");
+                        ShowToast(ToastType.Warning, "The user cannot join your project right now.", "Invitation Result");
                     }
                 }
                 catch (Exception ex)
                 {
-                    ShowToast(ToastType.Warning, "The user cannot join your project right now.");
+                    ShowToast(ToastType.Warning, "The user cannot join your project right now.", "Invitation Result");
                 }
 
             }
             else
             {
-                ShowToast(ToastType.Warning, "The user cannot join your project right now.");
+                ShowToast(ToastType.Warning, "The user cannot join your project right now.", "Invitation Result");
             }
 
         }
@@ -572,12 +591,12 @@ Responsive="true">
     }
 
 
-    private void ShowToast(ToastType type, string message) =>
+    private void ShowToast(ToastType type, string message, string title) =>
         messages.Add(
     new ToastMessage
             {
                 Type = type,
-                Title = "Blazor Bootstrap",
+                Title = title,
                 Content = @<div>@message <p>@DateTime.Now</p></div>,
             HelpText = $"{DateTime.Now}",
             AutoHide = true,
