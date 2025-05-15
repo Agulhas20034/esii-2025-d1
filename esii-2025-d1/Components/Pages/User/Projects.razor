@@ -38,15 +38,15 @@
 
 
 <Grid TItem="Project"
-Class="table table-hover table-bordered table-striped"
-Data="@projects"
-AllowPaging="true"
-PageSize="10"
-AllowSorting="true"
-AllowSelection="false"
-SelectionMode="GridSelectionMode.Multiple"
-SelectedItemsChanged="OnSelectedItemsChanged"
-Responsive="true">
+      Class="table table-hover table-bordered table-striped"
+      Data="@projects"
+      AllowPaging="true"
+      PageSize="10"
+      AllowSorting="true"
+      AllowSelection="false"
+      SelectionMode="GridSelectionMode.Multiple"
+      SelectedItemsChanged="OnSelectedItemsChanged"
+      Responsive="true">
 
     <GridColumns>
         <GridColumn TItem="Project" HeaderText="Name" PropertyName="Name" SortKeySelector="item => item.Name">
@@ -91,11 +91,11 @@ Responsive="true">
         <div class="form-group mt-2">
             <label for="hourlyRate">Hourly Rate</label>
             <NumberInput TValue="float?"
-            @bind-Value="editingProjectCopy.HourlyRate"
-            Placeholder="Hourly rate"
-            Min="1"
-            Max="1000"
-            Step="1" />
+                         @bind-Value="editingProjectCopy.HourlyRate"
+                         Placeholder="Hourly rate"
+                         Min="1"
+                         Max="1000"
+                         Step="1" />
         </div>
     </BodyTemplate>
 
@@ -173,9 +173,9 @@ Responsive="true">
         <p></p>
 
         <Grid TItem="UserInfoAssignment"
-        Class="table table-hover border-top"
-        Data="@userAssignments"
-        AllowDetailView="true">
+              Class="table table-hover border-top"
+              Data="@userAssignments"
+              AllowDetailView="true">
 
             <GridColumns>
                 <GridColumn TItem="UserInfoAssignment" HeaderText="User Id" PropertyName="Id">
@@ -501,12 +501,29 @@ Responsive="true">
                 newInvitation.ProjectId = selectedProjectId;
                 newInvitation.UserId = selectedUserId;
                 newInvitation.InviterId = currentUserId;
-
-                var invitationResponse = await Http.PostAsJsonAsync<ProjectUser>("api/projectuser", newInvitation);
-
-
+                try
+                {
+                    var invitationResponse = await Http.PostAsJsonAsync<ProjectUser>("api/projectuser", newInvitation);
+                    if (invitationResponse.IsSuccessStatusCode)
+                    {
+                        ShowToast(ToastType.Success, "Invitation sent successfuly!");
+                    }
+                    else
+                    {
+                        ShowToast(ToastType.Warning, "The user cannot join your project right now.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ShowToast(ToastType.Warning, "The user cannot join your project right now.");
+                }
 
             }
+            else
+            {
+                ShowToast(ToastType.Warning, "The user cannot join your project right now.");
+            }
+
         }
         catch (Exception ex)
         {
@@ -516,6 +533,18 @@ Responsive="true">
 
     }
 
+
+    private void ShowToast(ToastType type, string message) =>
+        messages.Add(
+    new ToastMessage
+            {
+                Type = type,
+                Title = "Blazor Bootstrap",
+                Content = @<div>@message <p>@DateTime.Now</p></div>,
+            HelpText = $"{DateTime.Now}",
+            AutoHide = true,
+
+        });
 
 
 }
