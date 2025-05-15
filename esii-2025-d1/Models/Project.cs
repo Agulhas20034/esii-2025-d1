@@ -34,7 +34,9 @@ public class Project
     public DateTime? DeletedAt { get; set; }
     
     public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
-    
+
+    public virtual ICollection<ProjectUser> ProjectUsers { get; set; } = new List<ProjectUser>();
+
     public virtual ICollection<Media> Media { get; set; } = new List<Media>();
     
     public virtual ICollection<Report> Reports { get; set; } = new List<Report>();
