@@ -2,6 +2,8 @@
 @inject HttpClient Http
 
 
+@using BlazorBootstrap
+
 @using esii_2025_d1.Dtos.ProjectDtos
 @using esii_2025_d1.Dtos.AssignmentDtos
 @using esii_2025_d1.Dtos.UserInfoDtos
@@ -21,6 +23,9 @@
 @* // acrecentado para obter userID (user em geral) *@
 @rendermode InteractiveServer
 
+
+<Toasts class="p-3" Messages="messages" />
+
 <PageTitle>My Projects</PageTitle>
 
 
@@ -38,7 +43,7 @@ Data="@projects"
 AllowPaging="true"
 PageSize="10"
 AllowSorting="true"
-AllowSelection="true"
+AllowSelection="false"
 SelectionMode="GridSelectionMode.Multiple"
 SelectedItemsChanged="OnSelectedItemsChanged"
 Responsive="true">
@@ -57,18 +62,21 @@ Responsive="true">
             @context.CustomerId
         </GridColumn>
         <GridColumn TItem="Project" HeaderText="Actions">
+            <button class="btn btn-outline-primary btn-sm" @onclick="() => OpenCollabModal(context.Id)">
+                <Icon Name="IconName.PeopleFill" /> Collaborators
+            </button>
             <button class="btn btn-warning btn-sm" @onclick="() => OpenEditModal(context)">
                 <i class="bi bi-pencil-square"></i> Edit
             </button>
-            @*             <button class="btn btn-danger btn-sm" @onclick="() => OpenDeleteModal(context.Id)">
+            <button class="btn btn-danger btn-sm" @onclick="() => OpenDeleteModal(context.Id)">
                 <i class="bi bi-trash"></i> Remove
-            </button> *@
+            </button>
         </GridColumn>
     </GridColumns>
 </Grid>
 
 <!-- Modal de Edit -->
-<Modal @ref="editModal" Title="Edit Project">
+<Modal @ref="editModal" Title="Edit Project" ModalType="ModalType.Warning">
     <BodyTemplate>
         <div class="form-group">
             <label>Name</label>
@@ -80,15 +88,15 @@ Responsive="true">
             <TextInput @bind-Value="@editingProjectCopy.Name" />
         </div>
 
-        @*         <div class="form-group mt-2">
+        <div class="form-group mt-2">
             <label for="hourlyRate">Hourly Rate</label>
-            <NumberInput TValue="int"
-                         @bind-Value="editingProjectCopy.HourlyRate"
-                         Placeholder="Hourly rate"
-                         Min="1"
-                         Max="1000"
-                         Step="1" />
-        </div> *@
+            <NumberInput TValue="float?"
+            @bind-Value="editingProjectCopy.HourlyRate"
+            Placeholder="Hourly rate"
+            Min="1"
+            Max="1000"
+            Step="1" />
+        </div>
     </BodyTemplate>
 
     <FooterTemplate>
@@ -97,12 +105,23 @@ Responsive="true">
     </FooterTemplate>
 </Modal>
 
+<!-- Modal de delete -->
+<Modal @ref="deleteModal" Title="Confirm Project Removal" ModalType="ModalType.Danger">
+    <BodyTemplate>
+        <p>Are you sure you want to remove this project?</p>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideDeleteModalClick">Cancel</Button>
+        <Button Color="ButtonColor.Danger" @onclick="DeleteProject">Remove</Button>
+    </FooterTemplate>
+</Modal>
+
 <!-- Modal de Store  -->
 <Modal @ref="addModal" Title="Create Project">
     <BodyTemplate>
         <div class="form-group">
             <label for="newName">Name</label>
-            <input type="text" class="form-control" id="newName" @bind="newProject.Name" Placeholder="Name"  />
+            <input type="text" class="form-control" id="newName" @bind="newProject.Name" Placeholder="Name" />
         </div>
 
         <div class="form-group mt-2">
@@ -127,11 +146,108 @@ Responsive="true">
     </FooterTemplate>
 </Modal>
 
+<!-- Modal de collaborators -->
+<Modal @ref="collabModal" Title="List of Project Collaborators" Size="ModalSize.Large" ModalType="ModalType.Primary" IsVerticallyCentered="true">
+    <BodyTemplate>
+
+        <!-- Invite Collaborator -->
+        <div class="row align-items-center g-2">
+            <div class="col">
+                <select class="form-select mb-2" @bind="@selectedUserId">
+                    <option disabled value="">-- Select User --</option>
+                    @foreach (var u in users)
+                    {
+                        <option value="@u.UserId">@u.Name</option>
+                    }
+                </select>
+
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary btn-sm" @onclick="@SendUserInvitation">
+                    <Icon Name="IconName.PersonAdd" /> Send Invitation
+                </button>
+            </div>
+        </div>
+
+
+        <p></p>
+
+        <Grid TItem="UserInfoAssignment"
+        Class="table table-hover border-top"
+        Data="@userAssignments"
+        AllowDetailView="true">
+
+            <GridColumns>
+                <GridColumn TItem="UserInfoAssignment" HeaderText="User Id" PropertyName="Id">
+                    @context.userInfo.Id
+                </GridColumn>
+                <GridColumn TItem="UserInfoAssignment" HeaderText="Name" PropertyName="Id">
+                    @context.userInfo.Name
+                </GridColumn>
+                <GridColumn TItem="UserInfoAssignment" Field="@nameof(UserInfoAssignment.userInfo.DailyWorkHours)" HeaderText="Daily Hours">
+                    @context.userInfo.DailyWorkHours
+                </GridColumn>
+                <GridColumn TItem="UserInfoAssignment" HeaderText="Actions">
+                    <button class="btn btn-danger btn-sm">
+                        <Icon Name="IconName.PersonDash" /> Remove
+                    </button>
+                </GridColumn>
+            </GridColumns>
+
+            <GridDetailView TItem="UserInfoAssignment">
+                @foreach (var assignment in context.assignments)
+                {
+                    <div class="assignment-detail">
+                        <div class="row">
+                            <div class="col-2 fw-bold">Description:</div>
+                            <div class="col">@assignment.Description</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2 fw-bold">Hourly Rate:</div>
+                            <div class="col">@assignment.HourlyRate</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2 fw-bold">Start Date:</div>
+                            <div class="col">@assignment.StartDate</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2 fw-bold">End Date:</div>
+                            <div class="col">@assignment.EndDate</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2 fw-bold">Status:</div>
+                            <div class="col">@assignment.Status</div>
+                        </div>
+                        <hr class="my-2" />
+                    </div>
+                }
+            </GridDetailView>
+        </Grid>
+
+
+
+
+
+
+
+
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="CloseCollabModal">Close</Button>
+    </FooterTemplate>
+</Modal>
+
 @code
 {
+    List<ToastMessage> messages = [];
+
+    private string? selectedUserId;
+    private int selectedProjectId;
+
     private Modal addModal = default!;
     private Modal editModal = default!;
     private Modal deleteModal = default!;
+    private Modal collabModal = default!;
 
     private List<Project> projects = new();
     private HashSet<Project> selectedProjects = new();
@@ -139,14 +255,31 @@ Responsive="true">
     private Project? editingProject;
     private Project editingProjectCopy = new Project();
     private Project newProject = new Project();
+    private int? deletingProjectId;
+
+    private List<ProjectUser> projectUsers = new();
+    private List<UserInfo> collaborators = new();
+
+    private List<Assignment> assignments = new();
 
     private string? currentUserId;
+
+    private class UserInfoAssignment
+    {
+        public UserInfo userInfo { get; set; } = new();
+        public List<Assignment> assignments { get; set; } = new();
+    }
+
+    private List<UserInfoAssignment> userAssignments = new();
+
+    private List<UserInfo> users;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         await LoadProjects();
+
     }
 
     private async Task LoadProjects()
@@ -176,13 +309,13 @@ Responsive="true">
     {
 
         var projectCreateDto = new ProjectCreateDto
-            {
-                UserId = currentUserId,
-                Name = newProject.Name,
-                Description = newProject.Description,
-                CustomerId = newProject.CustomerId,
-                HourlyRate = newProject.HourlyRate
-            };
+                {
+                    UserId = currentUserId,
+                    Name = newProject.Name,
+                    Description = newProject.Description,
+                    CustomerId = newProject.CustomerId,
+                    HourlyRate = newProject.HourlyRate
+                };
 
         var response = await Http.PostAsJsonAsync("api/project", projectCreateDto);
 
@@ -197,12 +330,12 @@ Responsive="true">
     {
         editingProject = project;
         editingProjectCopy = new Project
-            {
-                Name = project.Name,
-                Description = project.Description,
-                CustomerId = project.CustomerId,
-                HourlyRate = project.HourlyRate
-            };
+                {
+                    Name = project.Name,
+                    Description = project.Description,
+                    CustomerId = project.CustomerId,
+                    HourlyRate = project.HourlyRate
+                };
         editModal.ShowAsync();
     }
 
@@ -229,4 +362,160 @@ Responsive="true">
             await editModal.HideAsync();
         }
     }
+
+    private void OpenDeleteModal(int id)
+    {
+        deletingProjectId = id;
+        deleteModal.ShowAsync();
+    }
+
+    private async Task OnHideDeleteModalClick()
+    {
+        await deleteModal.HideAsync();
+    }
+
+    private async Task DeleteProject()
+    {
+        if (deletingProjectId == null)
+            return;
+
+        var response = await Http.DeleteAsync($"api/project/{deletingProjectId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadProjects();
+            await deleteModal.HideAsync();
+        }
+    }
+
+    private async Task OpenCollabModal(int projectId)
+    {
+        await LoadProjectUsers();
+        await LoadUserAssignments(projectId);
+        await LoadUsers();
+        selectedProjectId = projectId;
+
+        await collabModal.ShowAsync();
+    }
+
+    private void CloseCollabModal()
+    {
+        collabModal.HideAsync();
+    }
+
+    private async Task LoadProjectUsers()
+    {
+
+        collaborators = new();
+        var response = await Http.GetFromJsonAsync<List<ProjectUser>>("api/projectuser");
+        projectUsers = response ?? new List<ProjectUser>();
+        foreach (ProjectUser pu in projectUsers)
+        {
+            if (pu.UserId == currentUserId)
+            {
+                var responseCollabs = await Http.GetFromJsonAsync<UserFullResponseDto>($"api/user/{currentUserId}");
+                if (responseCollabs != null)
+                {
+                    UserInfo newCollab = new UserInfo();
+                    newCollab.UserId = responseCollabs.Id;
+                    newCollab.Name = responseCollabs.UserName;
+                    newCollab.DailyWorkHours = responseCollabs.UserInfo.DailyWorkHours;
+                    collaborators.Add(newCollab);
+                }
+            }
+        }
+    }
+
+    private async Task LoadUserAssignments(int projectId)
+    {
+        assignments = new();
+        userAssignments = new();
+        var assignmentsResponse = await Http.GetFromJsonAsync<List<Assignment>>("api/assignment");
+        List<Assignment> aList = assignmentsResponse ?? new List<Assignment>();
+        foreach (Assignment a in aList)
+        {
+            if (a.ProjectId == projectId) assignments.Add(a);
+        }
+
+        UserInfoAssignment newUA = new();
+
+        foreach (UserInfo c in collaborators)
+        {
+
+            newUA.userInfo = c;
+            foreach (Assignment a in assignments)
+            {
+                if (c.UserId == a.UserId) newUA.assignments.Add(a);
+            }
+        }
+
+        userAssignments.Add(newUA);
+    }
+
+    private async Task LoadUsers()
+    {
+        users = new();
+        var response = await Http.GetFromJsonAsync<List<UserFullResponseDto>>("api/user");
+        var uList = response ?? new List<UserFullResponseDto>();
+
+
+        foreach (UserFullResponseDto u in uList)
+        {
+            if (u.UserInfo != null && u.UserInfo.UserId != currentUserId)
+            {
+                var newU = new UserInfo
+                        {
+                            UserId = u.UserInfo.UserId,
+                            Name = u.UserInfo.Name,
+                            DailyWorkHours = u.UserInfo.DailyWorkHours,
+                            CreatedAt = u.UserInfo.CreatedAt,
+                            UpdatedAt = u.UserInfo.UpdatedAt
+                        };
+
+                users.Add(newU);
+            }
+        }
+    }
+
+    private async Task SendUserInvitation()
+    {
+        bool validRecipient = true;
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<ProjectUser>>("api/projectuser");
+            var puList = response ?? new List<ProjectUser>();
+
+            var projectusers = new List<ProjectUser>();
+
+            foreach (ProjectUser pu in puList)
+            {
+                if (pu.UserId == selectedUserId && pu.ProjectId == selectedProjectId && pu.Status != Models.Enums.ProjectUserStatus.Rejected)
+                {
+                    validRecipient = false;
+                }
+            }
+
+            if (validRecipient)
+            {
+                ProjectUser newInvitation = new();
+                newInvitation.ProjectId = selectedProjectId;
+                newInvitation.UserId = selectedUserId;
+                newInvitation.InviterId = currentUserId;
+
+                var invitationResponse = await Http.PostAsJsonAsync<ProjectUser>("api/projectuser", newInvitation);
+
+
+
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading project users: {ex.Message}");
+
+        }
+
+    }
+
+
+
 }
