@@ -38,15 +38,15 @@
 
 
 <Grid TItem="Project"
-      Class="table table-hover table-bordered table-striped"
-      Data="@projects"
-      AllowPaging="true"
-      PageSize="10"
-      AllowSorting="true"
-      AllowSelection="false"
-      SelectionMode="GridSelectionMode.Multiple"
-      SelectedItemsChanged="OnSelectedItemsChanged"
-      Responsive="true">
+Class="table table-hover table-bordered table-striped"
+Data="@projects"
+AllowPaging="true"
+PageSize="10"
+AllowSorting="true"
+AllowSelection="false"
+SelectionMode="GridSelectionMode.Multiple"
+SelectedItemsChanged="OnSelectedItemsChanged"
+Responsive="true">
 
     <GridColumns>
         <GridColumn TItem="Project" HeaderText="Name" PropertyName="Name" SortKeySelector="item => item.Name">
@@ -59,16 +59,16 @@
             @context.CustomerId
         </GridColumn>
         <GridColumn TItem="Project" HeaderText="Hourly Rate" PropertyName="HourlyRate" SortKeySelector="item => item.HourlyRate">
-            @context.CustomerId
+            @context.HourlyRate
         </GridColumn>
-        <GridColumn TItem="Project" HeaderText="Actions">
+        <GridColumn TItem="Project" HeaderText="Actions" >
             <button class="btn btn-outline-primary btn-sm" @onclick="() => OpenCollabModal(context.Id)">
                 <Icon Name="IconName.PeopleFill" /> Collaborators
             </button>
             <button class="btn btn-warning btn-sm" @onclick="() => OpenEditModal(context)">
                 <i class="bi bi-pencil-square"></i> Edit
             </button>
-            <button class="btn btn-danger btn-sm" @onclick="() => OpenDeleteModal(context.Id)">
+            <button class="btn btn-danger btn-sm" @onclick="() => OpenDeleteModal(context)">
                 <i class="bi bi-trash"></i> Remove
             </button>
         </GridColumn>
@@ -76,7 +76,7 @@
 </Grid>
 
 <!-- Modal de Edit -->
-<Modal @ref="editModal" Title="Edit Project" ModalType="ModalType.Warning">
+<Modal @ref="editModal" Title="Edit Project" ModalType="ModalType.Primary">
     <BodyTemplate>
         <div class="form-group">
             <label>Name</label>
@@ -85,17 +85,17 @@
 
         <div class="form-group mt-2">
             <label for="description">Description</label>
-            <TextInput @bind-Value="@editingProjectCopy.Name" />
+            <TextInput @bind-Value="@editingProjectCopy.Description" />
         </div>
 
         <div class="form-group mt-2">
             <label for="hourlyRate">Hourly Rate</label>
             <NumberInput TValue="float?"
-                         @bind-Value="editingProjectCopy.HourlyRate"
-                         Placeholder="Hourly rate"
-                         Min="1"
-                         Max="1000"
-                         Step="1" />
+            @bind-Value="editingProjectCopy.HourlyRate"
+            Placeholder="Hourly rate"
+            Min="1"
+            Max="1000"
+            Step="1" />
         </div>
     </BodyTemplate>
 
@@ -106,13 +106,19 @@
 </Modal>
 
 <!-- Modal de delete -->
-<Modal @ref="deleteModal" Title="Confirm Project Removal" ModalType="ModalType.Danger">
+<Modal @ref="deleteModal" Title="Confirm Project Removal" ModalType="ModalType.Danger" Size="ModalSize.Large" IsVerticallyCentered="true" >
     <BodyTemplate>
-        <p>Are you sure you want to remove this project?</p>
+        <p>
+            This action will remove the project "@deletingProject.Name" . You can choose to keep or delete associated assignments.
+        </p>
+        <p>
+            This action cannot be undone.
+        </p>
     </BodyTemplate>
     <FooterTemplate>
         <Button Color="ButtonColor.Secondary" @onclick="OnHideDeleteModalClick">Cancel</Button>
-        <Button Color="ButtonColor.Danger" @onclick="DeleteProject">Remove</Button>
+        <Button Color="ButtonColor.Warning" @onclick="DeleteProjectOnly"><Icon Name="IconName.ShieldCheck" /> Keep Assignments</Button>
+        <Button Color="ButtonColor.Danger" @onclick="DeleteProjectAndAssignments"><Icon Name="IconName.XOctagon" /> Remove Project and Assignments</Button>
     </FooterTemplate>
 </Modal>
 
@@ -173,9 +179,9 @@
         <p></p>
 
         <Grid TItem="UserInfoAssignment"
-              Class="table table-hover border-top"
-              Data="@userAssignments"
-              AllowDetailView="true">
+        Class="table table-hover border-top"
+        Data="@userAssignments"
+        AllowDetailView="true">
 
             <GridColumns>
                 <GridColumn TItem="UserInfoAssignment" HeaderText="User Id" PropertyName="Id">
@@ -226,11 +232,6 @@
 
 
 
-
-
-
-
-
     </BodyTemplate>
     <FooterTemplate>
         <Button Color="ButtonColor.Secondary" @onclick="CloseCollabModal">Close</Button>
@@ -255,6 +256,7 @@
     private Project? editingProject;
     private Project editingProjectCopy = new Project();
     private Project newProject = new Project();
+    private Project? deletingProject;
     private int? deletingProjectId;
 
     private List<ProjectUser> projectUsers = new();
@@ -363,9 +365,10 @@
         }
     }
 
-    private void OpenDeleteModal(int id)
+    private void OpenDeleteModal(Project project)
     {
-        deletingProjectId = id;
+        deletingProjectId = project.Id;
+        deletingProject = project;
         deleteModal.ShowAsync();
     }
 
@@ -374,10 +377,45 @@
         await deleteModal.HideAsync();
     }
 
-    private async Task DeleteProject()
+    private async Task DeleteProjectOnly()
     {
         if (deletingProjectId == null)
             return;
+
+        foreach (Assignment a in deletingProject.Assignments)
+        {
+            a.ProjectId = null;
+        }
+
+        foreach(ProjectUser pu in deletingProject.ProjectUsers)
+        {
+            var result = await Http.DeleteAsync($"api/projectuser/{pu.Id}");
+            int abc = 1;
+        }
+
+        var response = await Http.DeleteAsync($"api/project/{deletingProjectId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadProjects();
+            await deleteModal.HideAsync();
+        }
+    }
+
+    private async Task DeleteProjectAndAssignments()
+    {
+        if (deletingProjectId == null)
+            return;
+
+        foreach(Assignment a in deletingProject.Assignments)
+        {
+            await Http.DeleteAsync($"api/assignment/{a.Id}");
+        }
+
+        foreach (ProjectUser pu in deletingProject.ProjectUsers)
+        {
+            await Http.DeleteAsync($"api/projectuser/{pu.Id}");
+        }
 
         var response = await Http.DeleteAsync($"api/project/{deletingProjectId}");
 
