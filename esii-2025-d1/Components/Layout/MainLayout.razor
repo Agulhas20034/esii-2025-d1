@@ -1,8 +1,4 @@
 ﻿@inherits LayoutComponentBase
-@inject InvitationPollingService PollingService
-@inject AuthenticationStateProvider AuthStateProvider
-
-@using esii_2025_d1.Services
 
 <div class="page">
     <div class="sidebar">
@@ -25,19 +21,3 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
-
-@code {
-    protected override async Task OnInitializedAsync()
-    {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-        PollingService.OnNewInvitationDetected += () =>
-        {
-            Console.WriteLine("New invitation detected!");
-            // Show toast or global indicator here
-        };
-
-        PollingService.StartPolling(currentUserId);
-    }
-}
