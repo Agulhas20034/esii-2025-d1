@@ -12,8 +12,8 @@ using esii_2025_d1.Data;
 namespace esii2025d1.Entities
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250508171628_add_userInfo")]
-    partial class add_userInfo
+    [Migration("20250530120701_Start")]
+    partial class Start
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -230,16 +230,16 @@ namespace esii2025d1.Entities
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("EndDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<float?>("HourlyRate")
                         .HasColumnType("real");
@@ -248,63 +248,23 @@ namespace esii2025d1.Entities
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("StartDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProjectId");
 
                     b.ToTable("Assignments");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2347),
-                            Description = "Test assignment",
-                            EndDate = new DateTime(2025, 5, 15, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2012),
-                            HourlyRate = 20f,
-                            ProjectId = 1,
-                            StartDate = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(1824),
-                            Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2495),
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2793),
-                            Description = "Test assignment2",
-                            EndDate = new DateTime(2025, 5, 14, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2792),
-                            HourlyRate = 20f,
-                            ProjectId = 1,
-                            StartDate = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2791),
-                            Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2794),
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2801),
-                            Description = "Test assignment3",
-                            EndDate = new DateTime(2025, 5, 11, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2800),
-                            HourlyRate = 20f,
-                            ProjectId = 2,
-                            StartDate = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2800),
-                            Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(2801),
-                            UserId = 2
-                        });
                 });
 
             modelBuilder.Entity("esii_2025_d1.Models.Customer", b =>
@@ -316,10 +276,10 @@ namespace esii2025d1.Entities
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -333,31 +293,11 @@ namespace esii2025d1.Entities
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
                     b.ToTable("Customers");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(4387),
-                            Email = "test@gmail.com",
-                            Name = "Test Customer",
-                            PhoneNumber = "123456789",
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(4538)
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(4855),
-                            Email = "test2@gmail.com",
-                            Name = "Test Customer2",
-                            PhoneNumber = "923456789",
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(4855)
-                        });
                 });
 
             modelBuilder.Entity("esii_2025_d1.Models.Jom", b =>
@@ -369,7 +309,7 @@ namespace esii2025d1.Entities
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("IsDone")
                         .HasColumnType("boolean");
@@ -381,29 +321,17 @@ namespace esii2025d1.Entities
                         .HasColumnType("real");
 
                     b.Property<DateTime>("created_at")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("deleted_at")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("updated_at")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
                     b.ToTable("Joms");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Date = new DateTime(2025, 5, 8, 17, 16, 27, 526, DateTimeKind.Utc).AddTicks(6468),
-                            IsDone = false,
-                            Label = "Joms",
-                            TestNumber = 2.5f,
-                            created_at = new DateTime(2025, 5, 8, 17, 16, 27, 526, DateTimeKind.Utc).AddTicks(6990),
-                            updated_at = new DateTime(2025, 5, 8, 17, 16, 27, 526, DateTimeKind.Utc).AddTicks(7155)
-                        });
                 });
 
             modelBuilder.Entity("esii_2025_d1.Models.Log", b =>
@@ -418,7 +346,7 @@ namespace esii2025d1.Entities
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("created_at")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("entity_id")
                         .HasColumnType("integer");
@@ -427,8 +355,9 @@ namespace esii2025d1.Entities
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("user_id")
-                        .HasColumnType("integer");
+                    b.Property<string>("user_id")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -444,10 +373,10 @@ namespace esii2025d1.Entities
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -468,7 +397,7 @@ namespace esii2025d1.Entities
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -477,29 +406,6 @@ namespace esii2025d1.Entities
                     b.HasIndex("ReportId");
 
                     b.ToTable("Media");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(1481),
-                            Name = "test",
-                            Path = "test.jpg",
-                            ProjectId = 1,
-                            Type = "image",
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(1626)
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(1924),
-                            Name = "test2",
-                            Path = "test2.jpg",
-                            ProjectId = 2,
-                            ReportId = 2,
-                            Type = "Report",
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(1925)
-                        });
                 });
 
             modelBuilder.Entity("esii_2025_d1.Models.Project", b =>
@@ -511,7 +417,7 @@ namespace esii2025d1.Entities
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("CustomerId")
                         .HasColumnType("integer");
@@ -520,7 +426,7 @@ namespace esii2025d1.Entities
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -537,57 +443,17 @@ namespace esii2025d1.Entities
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
 
                     b.ToTable("Projects");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(7884),
-                            CustomerId = 1,
-                            DailyWorkHours = 8,
-                            Description = "Test project description",
-                            HourlyRate = 14f,
-                            Name = "Test Project",
-                            Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(8035),
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(8354),
-                            CustomerId = 1,
-                            DailyWorkHours = 4,
-                            Description = "Test project description2",
-                            HourlyRate = 16f,
-                            Name = "Test Project2",
-                            Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(8354),
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(8409),
-                            CustomerId = 1,
-                            DailyWorkHours = 4,
-                            Description = "Test project description3",
-                            HourlyRate = 16f,
-                            Name = "Test Project3",
-                            Status = 0,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(8410),
-                            UserId = 1
-                        });
                 });
 
             modelBuilder.Entity("esii_2025_d1.Models.ProjectUser", b =>
@@ -599,13 +465,14 @@ namespace esii2025d1.Entities
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
-                    b.Property<int>("InviterId")
-                        .HasColumnType("integer");
+                    b.Property<string>("InviterId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("ProjectId")
                         .HasColumnType("integer");
@@ -614,10 +481,11 @@ namespace esii2025d1.Entities
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -633,16 +501,16 @@ namespace esii2025d1.Entities
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("ProjectId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -652,24 +520,6 @@ namespace esii2025d1.Entities
                     b.HasIndex("ProjectId");
 
                     b.ToTable("Reports");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(9592),
-                            ProjectId = 1,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 529, DateTimeKind.Utc).AddTicks(9735),
-                            UserId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(35),
-                            ProjectId = 2,
-                            UpdatedAt = new DateTime(2025, 5, 8, 17, 16, 27, 530, DateTimeKind.Utc).AddTicks(36),
-                            UserId = 2
-                        });
                 });
 
             modelBuilder.Entity("esii_2025_d1.Models.UserInfo", b =>
@@ -681,20 +531,20 @@ namespace esii2025d1.Entities
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("DailyWorkHours")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("UserId")
                         .IsRequired()
