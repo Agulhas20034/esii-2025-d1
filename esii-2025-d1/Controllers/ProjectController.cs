@@ -10,6 +10,7 @@ using esii_2025_d1.Models.Enums;
 using esii_2025_d1.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using esii_2025_d1.Dtos.ProjectUserDtos;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -66,6 +67,14 @@ public class ProjectController : ControllerBase
                         EndDate = a.EndDate,
                         Status = a.Status,
                     }).ToList(),
+                    ProjectUsers = project.ProjectUsers.Select(p => new ProjectUserResponseDto
+                    {
+                        Id = p.Id,
+                        UserId = p.UserId,
+                        ProjectId = p.ProjectId,
+                        InviterId = p.InviterId,
+                        Status = p.Status
+                    }).ToList()
                 })
                 .ToListAsync();
             

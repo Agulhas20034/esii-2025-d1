@@ -12,8 +12,13 @@ using esii_2025_d1.Data;
 namespace esii2025d1.Entities
 {
     [DbContext(typeof(ApplicationDbContext))]
+<<<<<<<< HEAD:esii-2025-d1/Entities/20250530120701_Start.Designer.cs
     [Migration("20250530120701_Start")]
     partial class Start
+========
+    [Migration("20250530130817_Initial")]
+    partial class Initial
+>>>>>>>> develop-TiagoRodrigues:esii-2025-d1/Entities/20250530130817_Initial.Designer.cs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -489,6 +494,8 @@ namespace esii2025d1.Entities
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProjectId");
+
                     b.ToTable("ProjectUsers");
                 });
 
@@ -635,6 +642,15 @@ namespace esii2025d1.Entities
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("esii_2025_d1.Models.ProjectUser", b =>
+                {
+                    b.HasOne("esii_2025_d1.Models.Project", null)
+                        .WithMany("ProjectUsers")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("esii_2025_d1.Models.Report", b =>
                 {
                     b.HasOne("esii_2025_d1.Models.Project", null)
@@ -654,6 +670,8 @@ namespace esii2025d1.Entities
                     b.Navigation("Assignments");
 
                     b.Navigation("Media");
+
+                    b.Navigation("ProjectUsers");
 
                     b.Navigation("Reports");
                 });

@@ -106,6 +106,7 @@ namespace esii2025d1.Entities
                 });
 
             migrationBuilder.CreateTable(
+<<<<<<<< HEAD:esii-2025-d1/Entities/20250530120701_Start.cs
                 name: "ProjectUsers",
                 columns: table => new
                 {
@@ -125,6 +126,8 @@ namespace esii2025d1.Entities
                 });
 
             migrationBuilder.CreateTable(
+========
+>>>>>>>> develop-TiagoRodrigues:esii-2025-d1/Entities/20250530130817_Initial.cs
                 name: "UserInfos",
                 columns: table => new
                 {
@@ -304,6 +307,31 @@ namespace esii2025d1.Entities
                 });
 
             migrationBuilder.CreateTable(
+                name: "ProjectUsers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    ProjectId = table.Column<int>(type: "integer", nullable: false),
+                    InviterId = table.Column<string>(type: "text", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProjectUsers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProjectUsers_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Reports",
                 columns: table => new
                 {
@@ -413,6 +441,11 @@ namespace esii2025d1.Entities
                 name: "IX_Projects_CustomerId",
                 table: "Projects",
                 column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProjectUsers_ProjectId",
+                table: "ProjectUsers",
+                column: "ProjectId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reports_ProjectId",

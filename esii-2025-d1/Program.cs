@@ -10,7 +10,8 @@ using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Components.Authorization; // tr
 using Microsoft.AspNetCore.Components.Server;
-using Microsoft.AspNetCore.Mvc; // tr
+using Microsoft.AspNetCore.Mvc;
+using esii_2025_d1.Interfaces.Invitations;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -114,6 +115,8 @@ builder.Services.AddHttpContextAccessor();
 // design pattern Observer ("hugo Guedes")
 builder.Services.AddScoped<IProjectNotificationService, ProjectNotificationService>();
 
+// Single Responsibility
+builder.Services.AddScoped<IInvitationService, InvitationService>();
 
 var app = builder.Build();
 

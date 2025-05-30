@@ -486,6 +486,8 @@ namespace esii2025d1.Entities
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProjectId");
+
                     b.ToTable("ProjectUsers");
                 });
 
@@ -632,6 +634,15 @@ namespace esii2025d1.Entities
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("esii_2025_d1.Models.ProjectUser", b =>
+                {
+                    b.HasOne("esii_2025_d1.Models.Project", null)
+                        .WithMany("ProjectUsers")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("esii_2025_d1.Models.Report", b =>
                 {
                     b.HasOne("esii_2025_d1.Models.Project", null)
@@ -651,6 +662,8 @@ namespace esii2025d1.Entities
                     b.Navigation("Assignments");
 
                     b.Navigation("Media");
+
+                    b.Navigation("ProjectUsers");
 
                     b.Navigation("Reports");
                 });

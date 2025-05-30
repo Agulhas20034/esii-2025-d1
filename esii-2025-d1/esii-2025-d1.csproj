@@ -17,6 +17,8 @@
 
     <ItemGroup>
       <PackageReference Include="Blazor.Bootstrap" Version="3.3.1" />
+      <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid.EntityFrameworkAdapter" Version="8.0.11" />
+      <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.11" />
       <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.11" />
       <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.11" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
@@ -24,6 +26,8 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.3">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -39,7 +43,6 @@
 
     <ItemGroup>
       <None Include="appsettings.Development.json" />
-      <None Include="appsettings.json" />
     </ItemGroup>
 
 </Project>
