@@ -1,20 +1,31 @@
 using esii_2025_d1.Components;
 using esii_2025_d1.Data;
 using esii_2025_d1.Services;
+using esii_2025_d1.Components.Account;
+using esii_2025_d1.Interfaces.ObserverPattern;
+using Microsoft.AspNetCore.Antiforgery; // tr
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Http;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Components.Authorization; // tr
+using Microsoft.AspNetCore.Components.Server;
+using Microsoft.AspNetCore.Mvc;
+using esii_2025_d1.Interfaces.Invitations;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+// Explicitly set Kestrel to listen on both HTTP and HTTPS
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(5049);  // HTTP
+    options.ListenAnyIP(7185, listenOptions =>
+    {
+        listenOptions.UseHttps(); // HTTPS
+    });
+});
 
-// Add db context
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
-);
 
 // Adicionar BlazorBootstrap
 builder.Services.AddBlazorBootstrap();
@@ -30,7 +41,8 @@ builder.Services.AddScoped<ILogService, LogService>();
 
 // Adicionar HttpClient
 builder.Services.AddHttpClient();
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7185/") });
+
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7185") });
 
 // Adicionar serviços do Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -43,6 +55,68 @@ builder.Services.AddSwaggerGen(c =>
         Description = "API para a aplicação Blazor Sandbox"
     });
 });
+
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddScoped<IdentityUserAccessor>();
+builder.Services.AddScoped<IdentityRedirectManager>();
+builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
+
+builder.Services.AddAuthorization();
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+})
+    .AddIdentityCookies();
+
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true); //para datas UCT
+//builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddSignInManager()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddHttpContextAccessor(); 
+// Regista serviço singleton para uso
+
+builder.Services.AddSingleton<SingletonUserManager>(provider => 
+{
+    var instance = SingletonUserManager.Instance;
+    instance.Initialize(
+        scopeFactory: provider.GetRequiredService<IServiceScopeFactory>(),
+        httpContextAccessor: provider.GetRequiredService<IHttpContextAccessor>()
+    );
+    return instance;
+});
+
+builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+builder.Services.AddHttpClient();
+
+builder.Services.AddAuthorizationCore();
+builder.Services.AddAntiforgery(options => {
+    options.HeaderName = "X-CSRF-TOKEN";
+    options.Cookie.Name = "__Host-CSRF";
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpClient();
+
+builder.Services.AddHttpContextAccessor();
+
+// design pattern Observer ("hugo Guedes")
+builder.Services.AddScoped<IProjectNotificationService, ProjectNotificationService>();
+
+// Single Responsibility
+builder.Services.AddScoped<IInvitationService, InvitationService>();
 
 var app = builder.Build();
 
@@ -67,7 +141,79 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
+app.MapPost("/Account/Logout", async (
+    HttpContext context,
+    [FromServices] SignInManager<ApplicationUser> signInManager) =>
+{
+    // Skip anti-forgery validation for logout
+    await signInManager.SignOutAsync();
+    return Results.LocalRedirect("~/");
+}).DisableAntiforgery();
+
+// tr .net authentication and authorization
+app.UseAuthentication();
+app.UseAuthorization();
+
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
+// Add additional endpoints required by the Identity /Account Razor components.
+app.MapAdditionalIdentityEndpoints(); // tr
+
+
+
+// Certifica-se que base de dados esta criada e conta admin/seeds estao seeded, tambem inicializa serviços registados
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+    var identityManager = app.Services.GetRequiredService<SingletonUserManager>();
+    identityManager.Initialize(
+        services.GetRequiredService<IServiceScopeFactory>(),
+        services.GetRequiredService<IHttpContextAccessor>()
+    );
+    
+    
+    await SeedRolesAndAdmin(roleManager, userManager,identityManager);
+}
+
+
 app.Run();
+
+// ====================================
+// Roles seeded e Conta admin
+// ====================================
+async Task SeedRolesAndAdmin(RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager,SingletonUserManager singletonUserManager)
+{
+    string[] roleNames = { "Admin", "UserManager", "User" };
+    
+    foreach (var role in roleNames)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+
+    // Cria admin default se nao existir
+    string adminEmail = "admin@example.com";
+    string adminPassword = "Aa1234_"; 
+
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    if (adminUser == null)
+    {
+        // Use SingletonUserManager to create the user
+        var (success, error) = await singletonUserManager.CreateUserAsync(
+            email: adminEmail,
+            password: adminPassword,
+            roles: new List<string> { "Admin" });
+    
+        if (!success)
+        {
+            // Log the error if user creation failed
+            Console.WriteLine($"Failed to create admin user: {error}");
+        }
+    }
+}

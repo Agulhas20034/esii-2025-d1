@@ -1,0 +1,758 @@
+﻿@page "/user/projects"
+@inject HttpClient Http
+
+
+@using BlazorBootstrap
+
+@using esii_2025_d1.Dtos.ProjectDtos
+@using esii_2025_d1.Dtos.AssignmentDtos
+@using esii_2025_d1.Dtos.UserInfoDtos
+@using esii_2025_d1.Dtos.UserDtos
+@using esii_2025_d1.Models
+
+@* // acrecentado para obter userID (user em geral) *@
+@using esii_2025_d1.Data;
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
+@using esii_2025_d1.Services
+@using System.Security.Claims
+@inject UserManager<ApplicationUser> AspNetUserManager;
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject RoleManager<IdentityRole> RoleManager
+@inject SingletonUserManager UserManager
+@* // acrecentado para obter userID (user em geral) *@
+@rendermode InteractiveServer
+
+
+<Toasts class="p-3" Messages="messages" />
+
+<PageTitle>My Projects</PageTitle>
+
+
+<div class="d-flex justify-content-between mb-3">
+    <h1>My Projects</h1>
+    <Button Color="ButtonColor.Primary" @onclick="OnShowAddModalClick">
+        <i class="bi bi-plus-circle"></i> Create Project
+    </Button>
+</div>
+
+
+<Grid TItem="Project"
+Class="table table-hover table-bordered table-striped"
+Data="@projects"
+AllowPaging="true"
+PageSize="10"
+AllowSorting="true"
+AllowSelection="false"
+SelectionMode="GridSelectionMode.Multiple"
+SelectedItemsChanged="OnSelectedItemsChanged"
+Responsive="true">
+
+    <GridColumns>
+        <GridColumn TItem="Project" HeaderText="Name" PropertyName="Name" SortKeySelector="item => item.Name">
+            @context.Name
+        </GridColumn>
+        <GridColumn TItem="Project" HeaderText="Description" PropertyName="Description" SortKeySelector="item => item.Description">
+            @context.Description
+        </GridColumn>
+        <GridColumn TItem="Project" HeaderText="CustomerID" PropertyName="CustomerId" SortKeySelector="item => item.CustomerId">
+            @context.CustomerId
+        </GridColumn>
+        <GridColumn TItem="Project" HeaderText="Hourly Rate" PropertyName="HourlyRate" SortKeySelector="item => item.HourlyRate">
+            @context.HourlyRate
+        </GridColumn>
+        <GridColumn TItem="Project" HeaderText="Actions" >
+            <button class="btn btn-outline-primary btn-sm" @onclick="() => OpenCollabModal(context)">
+                <Icon Name="IconName.PeopleFill" /> Collaborators
+            </button>
+            <button class="btn btn-warning btn-sm" @onclick="() => OpenEditModal(context)">
+                <i class="bi bi-pencil-square"></i> Edit
+            </button>
+            <button class="btn btn-danger btn-sm" @onclick="() => OpenDeleteModal(context)">
+                <i class="bi bi-trash"></i> Remove
+            </button>
+        </GridColumn>
+    </GridColumns>
+</Grid>
+
+<!-- Modal de Edit -->
+<Modal @ref="editModal" Title="Edit Project" ModalType="ModalType.Primary">
+    <BodyTemplate>
+        <div class="form-group">
+            <label>Name</label>
+            <TextInput @bind-Value="@editingProjectCopy.Name" />
+        </div>
+
+        <div class="form-group mt-2">
+            <label for="description">Description</label>
+            <TextInput @bind-Value="@editingProjectCopy.Description" />
+        </div>
+
+        <div class="form-group mt-2">
+            <label for="hourlyRate">Hourly Rate</label>
+            <NumberInput TValue="float?"
+            @bind-Value="editingProjectCopy.HourlyRate"
+            Placeholder="Hourly rate"
+            Min="1"
+            Max="1000"
+            Step="1" />
+        </div>
+    </BodyTemplate>
+
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideEditModalClick">Cancel</Button>
+        <Button Color="ButtonColor.Primary" @onclick="SaveEdit">Confirm Changes</Button>
+    </FooterTemplate>
+</Modal>
+
+<!-- Modal de delete -->
+<Modal @ref="deleteModal" Title="Confirm Project Removal" ModalType="ModalType.Danger" Size="ModalSize.Large" IsVerticallyCentered="true" >
+    <BodyTemplate>
+        <p>
+            This action will remove the project "@deletingProject.Name" . You can choose to keep or delete associated assignments.
+        </p>
+        <p>
+            This action cannot be undone.
+        </p>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideDeleteModalClick">Cancel</Button>
+        <Button Color="ButtonColor.Warning" @onclick="DeleteProjectOnly"><Icon Name="IconName.ShieldCheck" /> Keep Assignments</Button>
+        <Button Color="ButtonColor.Danger" @onclick="DeleteProjectAndAssignments"><Icon Name="IconName.XOctagon" /> Remove Project and Assignments</Button>
+    </FooterTemplate>
+</Modal>
+
+<!-- Modal de Store  -->
+<Modal @ref="addModal" Title="Create Project">
+    <BodyTemplate>
+        <div class="form-group">
+            <label for="newName">Name</label>
+            <input type="text" class="form-control" id="newName" @bind="newProject.Name" Placeholder="Name" />
+        </div>
+
+        <div class="form-group mt-2">
+            <label for="newDescription">Description</label>
+            <TextAreaInput @bind-Value="newProject.Description" />
+        </div>
+
+        @*<div class="form-group mt-2">
+            <label for="newCustomer">Customer</label>
+            <NumberInput Tvalue="int" @bind-value="newProject.CustomerId" />
+        </div>*@
+
+        <div class="form-group mt-2">
+            <label for="newHourlyRate">Hourly Rate</label>
+            <NumberInput Tvalue="float?" @bind-Value="newProject.HourlyRate" />
+        </div>
+
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="OnHideAddModalClick">Cancel</Button>
+        <Button Color="ButtonColor.Primary" @onclick="SaveAdd">Create</Button>
+    </FooterTemplate>
+</Modal>
+
+<!-- Modal de collaborators -->
+<Modal @ref="collabModal" Title="List of Project Collaborators" Size="ModalSize.Large" ModalType="ModalType.Primary" IsVerticallyCentered="true">
+    <BodyTemplate>
+
+        <!-- Invite Collaborator -->
+        <div class="row align-items-center g-2">
+            <div class="col">
+                <select class="form-select mb-2" @bind="@selectedUserId" >
+                    <option disabled selected value="">-- Select User --</option>
+                    @foreach (var u in users)
+                    {
+                        <option value="@u.UserId">@u.Name</option>
+                    }
+                </select>
+
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary btn-sm" @onclick="@SendUserInvitation" disabled="@string.IsNullOrEmpty(selectedUserId)">
+                    <Icon Name="IconName.PersonAdd" /> Send Invitation
+                </button>
+            </div>
+        </div>
+
+
+        <p></p>
+
+        <Grid TItem="UserInfoAssignment"
+        Class="table table-hover border-top"
+        Data="@userAssignments"
+        AllowDetailView="true">
+
+            <GridColumns>
+                <GridColumn TItem="UserInfoAssignment" HeaderText="User Id" PropertyName="Id">
+                    @context.userInfo.Id
+                </GridColumn>
+                <GridColumn TItem="UserInfoAssignment" HeaderText="Name" PropertyName="Id">
+                    @context.userInfo.Name
+                </GridColumn>
+                <GridColumn TItem="UserInfoAssignment" Field="@nameof(UserInfoAssignment.userInfo.DailyWorkHours)" HeaderText="Daily Hours">
+                    @context.userInfo.DailyWorkHours
+                </GridColumn>
+                <GridColumn TItem="UserInfoAssignment" HeaderText="Actions">
+                    @if (@context.projectInvitation.Status == Models.Enums.ProjectUserStatus.Accepted)
+                    {
+                        <button class="btn btn-danger btn-sm"
+                        disabled="@(context.userInfo.UserId == currentUserId)"
+                        @onclick="() => ConfirmCollaboratorRemoval(context)">
+                            <Icon Name="IconName.PersonDash" /> Remove
+                        </button>
+                    }
+                    else if (@context.projectInvitation.Status == Models.Enums.ProjectUserStatus.Pending)
+                    {
+                        <button class="btn btn-warning btn-sm"
+                        @onclick="() => ConfirmCancelInvitation(context)">
+                            <Icon Name="IconName.PersonSlash" /> Cancel&nbsp;&nbsp;
+                        </button>
+                    }
+                </GridColumn>
+            </GridColumns>
+
+            <GridDetailView TItem="UserInfoAssignment">
+                @foreach (var assignment in context.assignments)
+                {
+                    <div class="assignment-detail">
+                        <div class="row">
+                            <div class="col-2 fw-bold">Description:</div>
+                            <div class="col">@assignment.Description</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2 fw-bold">Hourly Rate:</div>
+                            <div class="col">@assignment.HourlyRate</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2 fw-bold">Start Date:</div>
+                            <div class="col">@assignment.StartDate</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2 fw-bold">End Date:</div>
+                            <div class="col">@assignment.EndDate</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-2 fw-bold">Status:</div>
+                            <div class="col">@assignment.Status</div>
+                        </div>
+                        <hr class="my-2" />
+                    </div>
+                }
+            </GridDetailView>
+        </Grid>
+
+
+
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="CloseCollabModal">Close</Button>
+    </FooterTemplate>
+</Modal>
+
+
+<!-- Modal Remove Collab -->
+<Modal @ref="removeCollabModal" Title="Confirm Action" ModalType="ModalType.Danger">
+    <BodyTemplate>
+        <p>You are about to remove "@removingCollaborator.userInfo.Name" from this project.</p>
+
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="() => removeCollabModal.HideAsync()">Cancel</Button>
+        <Button Color="ButtonColor.Danger" @onclick="RemoveCollab">Remove Collaborator</Button>
+    </FooterTemplate>
+</Modal>
+
+<!-- Modal Cancel Invite -->
+<Modal @ref="cancelInviteModal" Title="Confirm Action" ModalType="ModalType.Warning">
+    <BodyTemplate>
+        <p>You are about to cancel the request for "@removingCollaborator.userInfo.Name" to join your project..</p>
+
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="() => cancelInviteModal.HideAsync()">Cancel</Button>
+        <Button Color="ButtonColor.Warning" @onclick="CancelInvitation">Cancel Request</Button>
+    </FooterTemplate>
+</Modal>
+
+@code
+{
+    List<ToastMessage> messages = [];
+
+    private string? selectedUserId;
+    private int selectedProjectId;
+
+    private Modal addModal = default!;
+    private Modal editModal = default!;
+    private Modal deleteModal = default!;
+    private Modal collabModal = default!;
+    private Modal removeCollabModal = default!;
+    private Modal cancelInviteModal = default!;
+
+    private List<Project> projects = new();
+    private HashSet<Project> selectedProjects = new();
+
+    private Project? editingProject;
+    private Project editingProjectCopy = new Project();
+    private Project newProject = new Project();
+    private Project? deletingProject;
+    private Project? currentProject = new Project();
+    private int? deletingProjectId;
+
+    private List<ProjectUser> projectUsers = new();
+    private List<UserInfo> collaborators = new();
+
+    private List<Assignment> assignments = new();
+
+    private string? currentUserId;
+
+    private class UserInfoAssignment
+    {
+        public UserInfo userInfo { get; set; } = new();
+        public List<Assignment> assignments { get; set; } = new();
+        public ProjectUser projectInvitation { get; set; } = new ();
+    }
+
+    private List<UserInfoAssignment> userAssignments = new();
+    private UserInfoAssignment removingCollaborator = new();
+
+    private List<UserInfo> users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        await LoadProjects();
+
+    }
+
+    private async Task LoadProjects()
+    {
+        var response = await Http.GetFromJsonAsync<List<Project>>("api/project");
+        foreach(Project p in response)
+        {
+            if (p.UserId == currentUserId) projects.Add(p);
+        }
+    }
+
+    private Task OnSelectedItemsChanged(HashSet<Project> items)
+    {
+        selectedProjects = items is not null && items.Any() ? items : new();
+        return Task.CompletedTask;
+    }
+
+    private async Task OnShowAddModalClick()
+    {
+        newProject = new Project();
+        await addModal.ShowAsync();
+    }
+
+    private async Task OnHideAddModalClick()
+    {
+        await addModal.HideAsync();
+    }
+
+    private async Task SaveAdd()
+    {
+
+        var projectCreateDto = new ProjectCreateDto
+                {
+                    UserId = currentUserId,
+                    Name = newProject.Name,
+                    Description = newProject.Description,
+                    CustomerId = newProject.CustomerId,
+                    HourlyRate = newProject.HourlyRate
+                };
+
+        var response = await Http.PostAsJsonAsync("api/project", projectCreateDto);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadProjects();
+            await addModal.HideAsync();
+        }
+    }
+
+    private void OpenEditModal(Project project)
+    {
+        editingProject = project;
+        editingProjectCopy = new Project
+                {
+                    Name = project.Name,
+                    Description = project.Description,
+                    CustomerId = project.CustomerId,
+                    HourlyRate = project.HourlyRate
+                };
+        editModal.ShowAsync();
+    }
+
+    private async Task OnHideEditModalClick()
+    {
+        await editModal.HideAsync();
+    }
+
+    private async Task SaveEdit()
+    {
+        if (editingProjectCopy == null)
+            return;
+
+        editingProject.Name = editingProjectCopy.Name;
+        editingProject.Description = editingProjectCopy.Description;
+        editingProject.CustomerId = editingProjectCopy.CustomerId;
+        editingProject.HourlyRate = editingProjectCopy.HourlyRate;
+
+        var response = await Http.PutAsJsonAsync($"api/Project/{editingProject.Id}", editingProject);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadProjects();
+            await editModal.HideAsync();
+            ShowToast(ToastType.Success, "Changes Saved!", "Edit Result");
+        }
+    }
+
+    private void OpenDeleteModal(Project project)
+    {
+        deletingProjectId = project.Id;
+        deletingProject = project;
+        deleteModal.ShowAsync();
+    }
+
+    private async Task OnHideDeleteModalClick()
+    {
+        await deleteModal.HideAsync();
+    }
+
+    private async Task DeleteProjectOnly()
+    {
+        if (deletingProjectId == null)
+            return;
+
+        foreach (Assignment a in deletingProject.Assignments)
+        {
+            a.ProjectId = null;
+        }
+
+        foreach(ProjectUser pu in deletingProject.ProjectUsers)
+        {
+            var result = await Http.DeleteAsync($"api/projectuser/{pu.Id}");
+        }
+
+        var response = await Http.DeleteAsync($"api/project/{deletingProjectId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadProjects();
+            await deleteModal.HideAsync();
+            ShowToast(ToastType.Success, "Project removed. All the assignments were kept!", "Removal Result");
+        }
+    }
+
+    private async Task DeleteProjectAndAssignments()
+    {
+        if (deletingProjectId == null)
+            return;
+
+        foreach(Assignment a in deletingProject.Assignments)
+        {
+            await Http.DeleteAsync($"api/assignment/{a.Id}");
+        }
+
+        foreach (ProjectUser pu in deletingProject.ProjectUsers)
+        {
+            await Http.DeleteAsync($"api/projectuser/{pu.Id}");
+        }
+
+        var response = await Http.DeleteAsync($"api/project/{deletingProjectId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadProjects();
+            await deleteModal.HideAsync();
+            ShowToast(ToastType.Success, "Project and assignments removed!", "Removal Result");
+        }
+    }
+
+    private async Task OpenCollabModal(Project project)
+    {
+        selectedUserId = null;
+        currentProject = new();
+        await LoadProjectUsers(project);
+        await LoadUserAssignments(project);
+        await LoadUsers();
+        selectedProjectId = project.Id;
+
+        currentProject = project;
+        await collabModal.ShowAsync();
+    }
+
+    private void CloseCollabModal()
+    {
+        collabModal.HideAsync();
+    }
+
+    private async Task LoadProjectUsers(Project project)
+    {
+
+        collaborators = new();
+        var response = await Http.GetFromJsonAsync<List<ProjectUser>>("api/projectuser");
+        projectUsers = response ?? new List<ProjectUser>();
+
+        var projectOwner = await Http.GetFromJsonAsync<UserFullResponseDto>($"api/user/{project.UserId}");
+        if (projectOwner.UserInfo.UserId != null) collaborators.Add(new UserInfo()
+                {
+                    UserId = projectOwner.UserInfo.UserId,
+                    Name = projectOwner.UserInfo.Name,
+                    DailyWorkHours = projectOwner.UserInfo.DailyWorkHours
+                });
+
+
+        foreach (ProjectUser pu in projectUsers)
+        {
+            if (pu.ProjectId == project.Id) {
+                var responseCollabs = await Http.GetFromJsonAsync<UserFullResponseDto>($"api/user/{pu.UserId}");
+                if (responseCollabs != null)
+                {
+                    UserInfo newCollab = new UserInfo();
+                    newCollab.UserId = responseCollabs.Id;
+                    newCollab.Name = responseCollabs.UserName;
+                    newCollab.DailyWorkHours = responseCollabs.UserInfo.DailyWorkHours;
+                    collaborators.Add(newCollab);
+                }
+            }
+        }
+    }
+
+    private async Task LoadUserAssignments(Project project)
+    {
+        assignments = new();
+        userAssignments = new();
+        var assignmentsResponse = await Http.GetFromJsonAsync<List<Assignment>>("api/assignment");
+        List<Assignment> aList = assignmentsResponse ?? new List<Assignment>();
+
+        var invitationsResponse = await Http.GetFromJsonAsync<List<ProjectUser>>("api/projectuser");
+        List<ProjectUser> invitations = invitationsResponse ?? new List<ProjectUser>();
+        foreach (Assignment a in aList)
+        {
+            if (a.ProjectId == project.Id) assignments.Add(a);
+        }
+
+        foreach (UserInfo c in collaborators)
+        {
+            UserInfoAssignment newUA = new();
+
+            newUA.userInfo = c;
+            foreach (Assignment a in assignments)
+            {
+                if (c.UserId == a.UserId) newUA.assignments.Add(a);
+            }
+
+            foreach(ProjectUser i in invitations)
+            {
+                if(c.UserId == i.UserId && project.Id == i.ProjectId && i.DeletedAt == null && i.Status != Models.Enums.ProjectUserStatus.Rejected)
+                {
+                    newUA.projectInvitation = i;
+                }
+            }
+
+            if (newUA.projectInvitation.UserId == null)
+            {
+                newUA.projectInvitation.Status = Models.Enums.ProjectUserStatus.Accepted;
+            }
+
+            if (newUA.userInfo.UserId != null)
+            {
+                userAssignments.Add(newUA);
+            }
+        }
+
+
+    }
+
+    private async Task LoadUsers()
+    {
+        users = new();
+        var response = await Http.GetFromJsonAsync<List<UserFullResponseDto>>("api/user");
+        var uList = response ?? new List<UserFullResponseDto>();
+
+
+        foreach (UserFullResponseDto u in uList)
+        {
+            if (u.UserInfo != null && u.UserInfo.UserId != currentUserId)
+            {
+                var newU = new UserInfo
+                        {
+                            UserId = u.UserInfo.UserId,
+                            Name = u.UserInfo.Name,
+                            DailyWorkHours = u.UserInfo.DailyWorkHours,
+                            CreatedAt = u.UserInfo.CreatedAt,
+                            UpdatedAt = u.UserInfo.UpdatedAt
+                        };
+
+                users.Add(newU);
+            }
+        }
+    }
+
+    private async Task SendUserInvitation()
+    {
+
+        bool validRecipient = true;
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<ProjectUser>>("api/projectuser");
+            var puList = response ?? new List<ProjectUser>();
+
+            var projectusers = new List<ProjectUser>();
+
+            foreach (ProjectUser pu in puList)
+            {
+                if (pu.UserId == selectedUserId && pu.ProjectId == selectedProjectId && pu.Status != Models.Enums.ProjectUserStatus.Rejected && pu.DeletedAt == null)
+                {
+                    validRecipient = false;
+                }
+            }
+
+            if (validRecipient)
+            {
+                ProjectUser newInvitation = new();
+                newInvitation.ProjectId = selectedProjectId;
+                newInvitation.UserId = selectedUserId;
+                newInvitation.InviterId = currentUserId;
+                try
+                {
+                    var invitationResponse = await Http.PostAsJsonAsync<ProjectUser>("api/projectuser", newInvitation);
+                    if (invitationResponse.IsSuccessStatusCode)
+                    {
+                        ShowToast(ToastType.Success, "Invitation sent successfuly!", "Invitation Result");
+                        await LoadProjectUsers(currentProject);
+                        await LoadUserAssignments(currentProject);
+                        await LoadUsers();
+                    }
+                    else
+                    {
+                        ShowToast(ToastType.Warning, "The user cannot join your project right now.", "Invitation Result");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ShowToast(ToastType.Warning, "The user cannot join your project right now.", "Invitation Result");
+                }
+
+            }
+            else
+            {
+                ShowToast(ToastType.Warning, "The user cannot join your project right now.", "Invitation Result");
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading project users: {ex.Message}");
+
+        }
+
+    }
+
+    private void ConfirmCollaboratorRemoval(UserInfoAssignment userInfoAssignment)
+    {
+        removingCollaborator = userInfoAssignment;
+        removeCollabModal.ShowAsync();
+
+    }
+
+    private void ConfirmCancelInvitation(UserInfoAssignment userInfoAssignment)
+    {
+        removingCollaborator = userInfoAssignment;
+        cancelInviteModal.ShowAsync();
+
+    }
+
+
+    private async Task RemoveCollab()
+    {
+
+        var response = await Http.GetFromJsonAsync<List<ProjectUser>>("api/projectuser");
+
+        ProjectUser invite = new();
+        foreach(ProjectUser pu in response)
+        {
+            if(pu.ProjectId == selectedProjectId && pu.Status == Models.Enums.ProjectUserStatus.Accepted)
+            {
+                invite = pu;
+            }
+        }
+
+        if (invite.Id > 0)
+        {
+            var result = await Http.DeleteAsync($"api/projectuser/{invite.Id}");
+
+            if (result.IsSuccessStatusCode)
+            {
+                await removeCollabModal.HideAsync();
+                await LoadProjectUsers(currentProject);
+                await LoadUserAssignments(currentProject);
+                await LoadUsers();
+                ShowToast(ToastType.Success, "Collaborator removed from project!", "Action Result");
+            }
+        }
+        else
+        {
+            await removeCollabModal.HideAsync();
+            ShowToast(ToastType.Warning, "It was not possible to remove collaborator from the project at this time!", "Action Result");
+        }
+
+    }
+
+
+    private async Task CancelInvitation()
+    {
+
+        var response = await Http.GetFromJsonAsync<List<ProjectUser>>("api/projectuser");
+
+        ProjectUser invite = new();
+        foreach (ProjectUser pu in response)
+        {
+            if (pu.ProjectId == selectedProjectId && pu.Status == Models.Enums.ProjectUserStatus.Pending)
+            {
+                invite = pu;
+            }
+        }
+
+        if (invite.Id > 0)
+        {
+            var result = await Http.DeleteAsync($"api/projectuser/{invite.Id}");
+
+            if (result.IsSuccessStatusCode)
+            {
+                await cancelInviteModal.HideAsync();
+                await LoadProjectUsers(currentProject);
+                await LoadUserAssignments(currentProject);
+                await LoadUsers();
+                ShowToast(ToastType.Success, "Request removed!!", "Action Result");
+            }
+        }
+        else
+        {
+            await cancelInviteModal.HideAsync();
+            ShowToast(ToastType.Warning, "It was not possible to remove the request at this time!", "Action Result");
+        }
+
+    }
+
+
+
+    private void ShowToast(ToastType type, string message, string title) =>
+        messages.Add(
+    new ToastMessage
+            {
+                Type = type,
+                Title = title,
+                Content = @<div>@message <p>@DateTime.Now</p></div>,
+            HelpText = $"{DateTime.Now}",
+            AutoHide = true,
+
+        });
+
+
+}

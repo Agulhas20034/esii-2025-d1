@@ -1,12 +1,14 @@
-namespace esii_2025_d1.Dtos.AssignmentsDtos;
+using esii_2025_d1.Models.Enums;
+
+namespace esii_2025_d1.Dtos.AssignmentDtos;
 
 public class AssignmentResponseDto
 {
     public int Id { get; set; }
 
-    public int UserId { get; set; }
+    public string? UserId { get; set; }
 
-    public int ProjectId { get; set; }
+    public int? ProjectId { get; set; }
 
     public string? Description { get; set; }
 
@@ -15,12 +17,6 @@ public class AssignmentResponseDto
 
     public DateTime? EndDate { get; set; }
 
-    public string Status { get; set; } //TODO: IMPLEMENT ENUM
-
-    public DateTime CreatedAt { get; set; }
-
-    public DateTime UpdatedAt { get; set; }
-
-    public DateTime? DeletedAt { get; set; }
-
+    public AssignmentStatus Status { get; set; } 
+    
 }

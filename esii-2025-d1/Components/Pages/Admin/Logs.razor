@@ -1,0 +1,91 @@
+﻿@page "/Admin/Logs"
+@using Microsoft.AspNetCore.Authorization
+@using esii_2025_d1.Services
+@attribute [Authorize(Roles = "Admin")]
+@inject ILogService LogService
+@rendermode InteractiveServer
+
+<div class="admin-container">
+    <div class="logs-panel mt-3">
+        <h3>Recent System Logs</h3>
+        
+        @if (logs == null)
+        {
+            <p>Loading logs...</p>
+        }
+        else if (!logs.Any())
+        {
+            <p>No logs found</p>
+        }
+        else
+        {
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Entity ID</th>
+                        <th>Entity Name</th>
+                        <th>User ID</th>
+                        <th>Action</th>
+                        <th>Created At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in logs)
+                    {
+                        <tr>
+                            <td>@log.Id</td>
+                            <td>@log.entity_id</td>
+                            <td>@log.entity_name</td>
+                            <td>@log.user_id</td>
+                            <td>@log.action</td>
+                            <td>@log.created_at.ToString("g")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Log> logs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        logs = await LogService.GetRecentLogsAsync();
+    }
+}
+
+<style>
+    .logs-panel {
+        background: white;
+        padding: 1rem;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    
+    .table {
+        font-size: 0.9rem;
+        width: 100%;
+    }
+    
+    .table th {
+        border-top: none;
+        position: sticky;
+        top: 0;
+        background: white;
+    }
+    
+    .table td, .table th {
+        padding: 0.75rem;
+        vertical-align: top;
+        border-top: 1px solid #dee2e6;
+    }
+    
+    .table tbody tr:nth-child(odd) {
+        background-color: rgba(0,0,0,0.02);
+    }
+</style>

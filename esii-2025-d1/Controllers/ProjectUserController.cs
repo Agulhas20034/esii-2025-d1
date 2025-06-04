@@ -1,55 +1,96 @@
+namespace esii_2025_d1.Controllers;
+
 using esii_2025_d1.Data;
-using esii_2025_d1.Dtos.ProjectUserDtos;
 using esii_2025_d1.Models;
+using esii_2025_d1.Dtos.ProjectUserDtos;
+using esii_2025_d1.Models.Enums;
+using esii_2025_d1.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace esii_2025_d1.Controllers
+[ApiController]
+[Route("api/[controller]")]
+public class ProjectUserController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ProjectUserController : ControllerBase
-    {
-        private readonly ApplicationDbContext _context;
+    private readonly ApplicationDbContext _context;
+    private readonly ILogService _logService;
+    protected string Entity = "ProjectUser";
+    private readonly SingletonUserManager _usermanager;
 
-        public ProjectUserController(ApplicationDbContext context)
+
+    public ProjectUserController(ApplicationDbContext context, ILogService logService, SingletonUserManager usermanager)
+    {
+        _context = context;
+        _logService = logService;
+        _usermanager = usermanager;
+    }
+
+    // GET: api/ProjectUser
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<ProjectUserResponseDto>>> GetProjectUsers()
+    {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
         {
-            _context = context;
+            userId = "1";
         }
 
-        // GET: api/ProjectUser
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProjectUsersResponseDto>>> GetProjectUsers()
+        try
         {
             var projectUsers = await _context.ProjectUsers
-                .Select(pu => new ProjectUsersResponseDto
+                .AsNoTracking()
+                .Where(pu => pu.DeletedAt == null)
+                .Select(projectUser => new ProjectUserResponseDto()
                 {
-                    Id = pu.Id,
-                    ProjectId = pu.ProjectId,
-                    UserId = pu.UserId,
-                    InviterId = pu.InviterId,
-                    Status = pu.Status,
-                    CreatedAt = pu.CreatedAt,
-                    UpdatedAt = pu.UpdatedAt,
-                    DeletedAt = pu.DeletedAt
+                    Id = projectUser.Id,
+                    ProjectId = projectUser.ProjectId,
+                    UserId = projectUser.UserId,
+                    InviterId = projectUser.InviterId,
+                    Status = projectUser.Status,
+                    CreatedAt = projectUser.CreatedAt,
+                    UpdatedAt = projectUser.UpdatedAt
                 })
                 .ToListAsync();
 
+            await _logService.CreateLog(new Log
+            {
+                entity_id = null,
+                entity_name = Entity,
+                user_id = userId,
+                action = LogAction.Read
+            });
+
             return Ok(projectUsers);
         }
-
-        // GET: api/ProjectUser/{id}
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ProjectUsersResponseDto>> GetProjectUserById(int id)
+        catch (Exception e)
         {
-            var projectUser = await _context.ProjectUsers.FindAsync(id);
+            Console.Error.WriteLine($"Error fetching ProjectUsers: {e.Message}");
+            return StatusCode(500, "Internal server error");
+        }
+    }
 
-            if (projectUser == null)
-            {
-                return NotFound();
-            }
+    // GET: api/ProjectUser/{id}
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ProjectUserResponseDto>> GetProjectUser(int id)
+    {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
 
-            var projectUserResponse = new ProjectUsersResponseDto
+        var projectUser = await _context.ProjectUsers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(pu => pu.Id == id && pu.DeletedAt == null);
+
+        if (projectUser == null)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            var projectUserResponse = new ProjectUserResponseDto
             {
                 Id = projectUser.Id,
                 ProjectId = projectUser.ProjectId,
@@ -57,23 +98,59 @@ namespace esii_2025_d1.Controllers
                 InviterId = projectUser.InviterId,
                 Status = projectUser.Status,
                 CreatedAt = projectUser.CreatedAt,
-                UpdatedAt = projectUser.UpdatedAt,
-                DeletedAt = projectUser.DeletedAt
+                UpdatedAt = projectUser.UpdatedAt
             };
+
+            await _logService.CreateLog(new Log
+            {
+                entity_id = projectUser.Id,
+                entity_name = Entity,
+                user_id = userId,
+                action = LogAction.Read
+            });
 
             return Ok(projectUserResponse);
         }
-
-        // POST: api/ProjectUser
-        [HttpPost]
-        public async Task<ActionResult<ProjectUsersResponseDto>> PostProjectUser(ProjectUsersCreateDto projectUserCreateDto)
+        catch (Exception e)
         {
+            Console.Error.WriteLine($"Error fetching ProjectUser: {e.Message}");
+            throw;
+        }
+    }
+
+    // POST: api/ProjectUser
+    [HttpPost]
+    public async Task<ActionResult<ProjectUserResponseDto>> PostProjectUser(ProjectUserCreateDto projectUserRequest)
+    {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
+
+        try
+        {
+
+            var userExists = await _context.Users.AnyAsync(u => u.Id == projectUserRequest.UserId);
+            var inviterExists = await _context.Users.AnyAsync(u => u.Id == projectUserRequest.InviterId);
+            var projectExists = await _context.Projects.AnyAsync(p => p.Id == projectUserRequest.ProjectId);
+
+            if (!userExists || !projectExists)
+            {
+                return BadRequest("User, inviter or project not found");
+            }
+
+            /*if (!userExists || !inviterExists || !projectExists)
+            {
+                return BadRequest("User, inviter or project not found");
+            }*/
+
             var projectUser = new ProjectUser
             {
-                ProjectId = projectUserCreateDto.ProjectId,
-                UserId = projectUserCreateDto.UserId,
-                InviterId = projectUserCreateDto.InviterId,
-                Status = projectUserCreateDto.Status,
+                UserId = projectUserRequest.UserId,
+                ProjectId = projectUserRequest.ProjectId,
+                InviterId = projectUserRequest.InviterId,
+                Status = projectUserRequest.Status,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -81,7 +158,7 @@ namespace esii_2025_d1.Controllers
             _context.ProjectUsers.Add(projectUser);
             await _context.SaveChangesAsync();
 
-            var projectUserResponse = new ProjectUsersResponseDto
+            var response = new ProjectUserResponseDto
             {
                 Id = projectUser.Id,
                 ProjectId = projectUser.ProjectId,
@@ -89,56 +166,116 @@ namespace esii_2025_d1.Controllers
                 InviterId = projectUser.InviterId,
                 Status = projectUser.Status,
                 CreatedAt = projectUser.CreatedAt,
-                UpdatedAt = projectUser.UpdatedAt,
-                DeletedAt = projectUser.DeletedAt
+                UpdatedAt = projectUser.UpdatedAt
             };
 
-            return CreatedAtAction(nameof(GetProjectUserById), new { id = projectUser.Id }, projectUserResponse);
+            await _logService.CreateLog(new Log
+            {
+                entity_id = projectUser.Id,
+                entity_name = Entity,
+                user_id = userId,
+                action = LogAction.Create
+            });
+
+            return CreatedAtAction(nameof(GetProjectUser), new { id = projectUser.Id }, response);
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error creating ProjectUser: {e.Message}");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    // PUT: api/ProjectUser/{id}
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutProjectUser(int id, ProjectUserUpdateDto projectUserRequest)
+    {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
         }
 
-        // PUT: api/ProjectUser/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutProjectUser(int id, ProjectUsersUpdateDto projectUserUpdateDto)
-        {
-            var projectUser = await _context.ProjectUsers.FindAsync(id);
+        var projectUser = await _context.ProjectUsers
+            .FirstOrDefaultAsync(pu => pu.Id == id && pu.DeletedAt == null);
 
-            if (projectUser == null)
+        if (projectUser == null)
+            return NotFound();
+
+        try
+        {
+            if (projectUserRequest.ProjectId.HasValue)
+            {
+                if (!await _context.Projects.AnyAsync(p => p.Id == projectUserRequest.ProjectId.Value))
+                    return BadRequest("Project not found");
+
+                projectUser.ProjectId = projectUserRequest.ProjectId.Value;
+            }
+
+            if (!string.IsNullOrEmpty(projectUserRequest.UserId))
+            {
+                if (!await _context.Users.AnyAsync(u => u.Id == projectUserRequest.UserId))
+                    return BadRequest("User not found");
+
+                projectUser.UserId = projectUserRequest.UserId;
+            }
+
+            if (!string.IsNullOrEmpty(projectUserRequest.InviterId))
+            {
+                if (!await _context.Users.AnyAsync(u => u.Id == projectUserRequest.InviterId))
+                    return BadRequest("Inviter not found");
+
+                projectUser.InviterId = projectUserRequest.InviterId;
+            }
+
+            if (projectUserRequest.Status.HasValue)
+                projectUser.Status = projectUserRequest.Status.Value;
+
+            projectUser.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            await _logService.CreateLog(new Log
+            {
+                entity_id = projectUser.Id,
+                entity_name = Entity,
+                user_id = userId,
+                action = LogAction.Update
+            });
+
+            return NoContent();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!_context.ProjectUsers.Any(a => a.Id == id))
             {
                 return NotFound();
             }
 
-            projectUser.ProjectId = projectUserUpdateDto.ProjectId ?? projectUser.ProjectId;
-            projectUser.UserId = projectUserUpdateDto.UserId ?? projectUser.UserId;
-            projectUser.InviterId = projectUserUpdateDto.InviterId ?? projectUser.InviterId;
-            projectUser.Status = projectUserUpdateDto.Status ?? projectUser.Status;
-            projectUser.UpdatedAt = DateTime.UtcNow;
+            throw;
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error updating ProjectUser: {e.Message}");
+            return StatusCode(500, "Internal server error");
+        }
+    }
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.ProjectUsers.Any(pu => pu.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+    // DELETE: api/ProjectUser/{id}
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteProjectUser(int id)
+    {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
         }
 
-        // DELETE: api/ProjectUser/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProjectUser(int id)
+        try
         {
             var projectUser = await _context.ProjectUsers.FindAsync(id);
 
-            if (projectUser == null)
+            if (projectUser == null || projectUser.DeletedAt != null)
             {
                 return NotFound();
             }
@@ -148,7 +285,52 @@ namespace esii_2025_d1.Controllers
 
             await _context.SaveChangesAsync();
 
+            await _logService.CreateLog(new Log
+            {
+                entity_id = projectUser.Id,
+                entity_name = Entity,
+                user_id = userId,
+                action = LogAction.Delete
+            });
+
             return NoContent();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error deleting ProjectUser: {e.Message}");
+            return StatusCode(500, "Internal server error");
         }
     }
 }
+
+
+
+
+
+
+
+
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+
+
+
+    
+    
+    
+    
+    
+    
+    
+
+
+    
+
