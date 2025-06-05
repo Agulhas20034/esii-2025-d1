@@ -70,7 +70,7 @@ public sealed class SingletonUserManager
         }
 
         //Cria novo user
-        var user = new ApplicationUser { UserName = email, Email = email };
+        var user = new ApplicationUser { UserName = email, Email = email, EmailConfirmed = true};
         var createResult = await userManager.CreateAsync(user, password);
 
         if (!createResult.Succeeded)
