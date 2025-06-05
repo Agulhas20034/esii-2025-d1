@@ -173,6 +173,54 @@ public sealed class SingletonUserManager
     
         return result.Succeeded;
     }
+    public async Task<bool> UpdatePersonalAsync(ApplicationUser user)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+        var dbUser = await userManager.FindByIdAsync(user.Id);
+        if (dbUser == null) return false;
+
+        dbUser.UserName = user.UserName;
+        dbUser.Email = user.Email;
+        dbUser.PhoneNumber = user.PhoneNumber;
+        dbUser.NormalizedUserName = user.UserName?.ToUpper();
+        dbUser.NormalizedEmail = user.Email?.ToUpper();
+    
+        dbUser.EmailConfirmed = dbUser.EmailConfirmed; 
+    
+        var result = await userManager.UpdateAsync(dbUser);
+
+        if (result.Succeeded)
+        {
+            _users.AddOrUpdate(user.Id, _ => 
+                {
+                    return new ApplicationUser 
+                    {
+                        Id = dbUser.Id,
+                        Email = dbUser.Email,
+                        UserName = dbUser.UserName,
+                        EmailConfirmed = dbUser.EmailConfirmed,
+                        PhoneNumber = dbUser.PhoneNumber,
+                        NormalizedEmail = dbUser.NormalizedEmail,
+                        NormalizedUserName = dbUser.NormalizedUserName
+                    };
+                }, 
+                (_, existing) => 
+                {
+                    // Update existing instance
+                    existing.Email = dbUser.Email;
+                    existing.UserName = dbUser.UserName;
+                    existing.EmailConfirmed = dbUser.EmailConfirmed;
+                    existing.PhoneNumber = dbUser.PhoneNumber;
+                    existing.NormalizedEmail = dbUser.NormalizedEmail;
+                    existing.NormalizedUserName = dbUser.NormalizedUserName;
+                    return existing;
+                });
+        }
+
+        return result.Succeeded;
+    }
 //Atualiza roles do user
     public async Task<bool> UpdateUserRoleAsync(string userId, string role)
     {
@@ -209,9 +257,42 @@ public sealed class SingletonUserManager
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userId == null) return null;
     
-        // Verify user exists in DB
+        // Verifica se existe na BD
         using var scope = _scopeFactory.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         return await userManager.FindByIdAsync(userId) != null ? userId : null;
+    }
+    public async Task<(bool Success, string ErrorMessage)> ChangePasswordAsync(ApplicationUser user, string currentPassword, string newPassword)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+        // Get a fresh instance of the user from the database
+        var dbUser = await userManager.FindByIdAsync(user.Id);
+        if (dbUser == null)
+        {
+            return (false, "User not found");
+        }
+
+        // Verifica password atual
+        var passwordCheck = await userManager.CheckPasswordAsync(dbUser, currentPassword);
+        if (!passwordCheck)
+        {
+            return (false, "Current password is incorrect");
+        }
+
+        // Atualiza password
+        var result = await userManager.ChangePasswordAsync(dbUser, currentPassword, newPassword);
+
+        if (!result.Succeeded)
+        {
+            var errorDescriptions = result.Errors.Select(e => e.Description).ToList();
+            return (false, string.Join(", ", errorDescriptions));
+        }
+
+        // Atualiza cache em caso de sucesso
+        _users.AddOrUpdate(user.Id, dbUser, (_, _) => dbUser);
+
+        return (true, "Password changed successfully");
     }
 }
