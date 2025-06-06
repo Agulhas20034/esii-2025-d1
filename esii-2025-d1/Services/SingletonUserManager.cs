@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
 using System.Security.Claims;
+using esii_2025_d1.Models;
 
 namespace esii_2025_d1.Services;
 
@@ -208,7 +209,6 @@ public sealed class SingletonUserManager
                 }, 
                 (_, existing) => 
                 {
-                    // Update existing instance
                     existing.Email = dbUser.Email;
                     existing.UserName = dbUser.UserName;
                     existing.EmailConfirmed = dbUser.EmailConfirmed;
@@ -267,7 +267,6 @@ public sealed class SingletonUserManager
         using var scope = _scopeFactory.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-        // Get a fresh instance of the user from the database
         var dbUser = await userManager.FindByIdAsync(user.Id);
         if (dbUser == null)
         {
@@ -294,5 +293,42 @@ public sealed class SingletonUserManager
         _users.AddOrUpdate(user.Id, dbUser, (_, _) => dbUser);
 
         return (true, "Password changed successfully");
+    }
+    public async Task<int> GetDailyWorkHoursAsync(string userId)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    
+        var userSettings = await dbContext.UserInfos
+            .FirstOrDefaultAsync(us => us.UserId == userId);
+    
+        return userSettings?.DailyWorkHours ?? 0; 
+    }
+
+    public async Task<bool> UpdateDailyWorkHoursAsync(string userId, int dailyWorkHours)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    
+        var userSettings = await dbContext.UserInfos
+            .FirstOrDefaultAsync(us => us.UserId == userId);
+        var user = await GetUserByIdAsync(userId);
+        if (userSettings == null)
+        {
+            userSettings = new UserInfo() { UserId = userId,Name = user.UserName };
+            dbContext.UserInfos.Add(userSettings);
+        }
+    
+        userSettings.DailyWorkHours = dailyWorkHours;
+        await dbContext.SaveChangesAsync();
+        return true;
+    }
+    public async Task<bool> IsEmailUniqueAsync(string email, string currentUserId)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    
+        var userWithSameEmail = await userManager.FindByEmailAsync(email);
+        return userWithSameEmail == null || userWithSameEmail.Id == currentUserId;
     }
 }
