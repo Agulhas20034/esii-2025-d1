@@ -1,0 +1,175 @@
+﻿@page "/Admin/Customers"
+@using Microsoft.AspNetCore.Authorization
+@using esii_2025_d1.Services
+@using esii_2025_d1.Data
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Identity
+@using esii_2025_d1.Dtos.CustomersDtos
+@attribute [Authorize(Roles = "Admin")]
+@inject SingletonUserManager UserManager
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject RoleManager<IdentityRole> RoleManager
+@inject UserManager<ApplicationUser> AspNetUserManager
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@rendermode InteractiveServer
+
+<div class="admin-container">
+    <div class="d-flex justify-content-between mb-3">
+        <h3>Customers</h3>
+        <button @onclick="NavigateToCreateCustomer" class="btn btn-success">
+            <span class="oi oi-plus"></span>
+            Create New Customer
+        </button>
+    </div>
+    
+    @if (customers == null)
+    {
+        <p>Loading customers...</p>
+    }
+    else if (!customers.Any())
+    {
+        <p>No customers found</p>
+    }
+    else
+    {
+        <div class="customers-panel">
+            <table class="table table-sm">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Projects</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                    @foreach (var customer in customers)
+                    {
+                        <tr>
+                            <td>@customer.Id</td>
+                            <td>@customer.Name</td>
+                            <td>@customer.Email</td>
+                            <td>@customer.PhoneNumber</td>
+                            <td>@(customer.Projects?.Count ?? 0)</td>
+                            <td>
+                                <button @onclick="() => NavigateToUpdateCustomer(customer.Id)"
+                                        class="btn btn-sm btn-primary mr-2"
+                                        title="Edit customer">
+                                    <span class="oi oi-pencil"></span> Edit
+                                </button>
+
+                                <button @onclick="() => DeleteCustomer(customer.Id)"
+                                        class="btn btn-sm btn-danger"
+                                        title="Delete customer">
+                                    <span class="oi oi-trash"></span> Delete
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<CustomerResponseDto> customers = new();
+    private string? currentUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        await LoadCustomers();
+    }
+
+    private async Task LoadCustomers()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<CustomerResponseDto>>("api/Customer");
+            customers = response ?? new List<CustomerResponseDto>();
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("console.error", $"Error loading customers: {ex.Message}");
+        }
+    }
+
+    private void NavigateToCreateCustomer()
+    {
+        NavigationManager.NavigateTo("/Admin/Customers/Create");
+    }
+
+    private void NavigateToUpdateCustomer(int customerId)
+    {
+        NavigationManager.NavigateTo($"/Admin/Customers/Edit/{customerId}");
+    }
+
+    private async Task DeleteCustomer(int customerId)
+    {
+        var message = $"Are you sure you want to delete this customer?";
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", message);
+        
+        if (confirmed)
+        {
+            var response = await Http.DeleteAsync($"api/Customer/{customerId}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadCustomers();
+                await JSRuntime.InvokeVoidAsync("alert", "Customer deleted successfully");
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Error deleting customer");
+            }
+        }
+    }
+}
+
+<style>
+    .customers-panel {
+        background: white;
+        padding: 1rem;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    
+    .table {
+        font-size: 0.9rem;
+        width: 100%;
+    }
+    
+    .table th {
+        border-top: none;
+        position: sticky;
+        top: 0;
+        background: white;
+    }
+    
+    .table td, .table th {
+        padding: 0.75rem;
+        vertical-align: middle;
+        border-top: 1px solid #dee2e6;
+    }
+    
+    .table tbody tr:nth-child(odd) {
+        background-color: rgba(0,0,0,0.02);
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .mr-2 {
+        margin-right: 0.5rem;
+    }
+</style>

@@ -1,0 +1,262 @@
+﻿@page "/Admin/Customers/Edit/{CustomerId:int}"
+@using esii_2025_d1.Dtos.CustomersDtos
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+@rendermode InteractiveServer
+
+<div class="admin-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>Edit Customer</h3>
+        <button @onclick="NavigateToCustomersList" class="btn btn-outline-secondary">
+            <span class="oi oi-arrow-left"></span> Back to List
+        </button>
+    </div>
+
+    @if (customer == null)
+    {
+        <p>Loading customer data...</p>
+    }
+    else
+    {
+        <EditForm Model="@customerUpdateDto" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group mb-3">
+                <label for="name">Name </label>
+                <InputText id="name" @bind-Value="customerUpdateDto.Name" class="form-control" />
+                <ValidationMessage For="@(() => customerUpdateDto.Name)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="email">Email </label>
+                <InputText id="email" @bind-Value="customerUpdateDto.Email" class="form-control" 
+                         @oninput="ValidateEmail" />
+                <ValidationMessage For="@(() => customerUpdateDto.Email)" />
+                <small class="form-text text-muted">Must contain '@@' and a dot in the domain (e.g., user@@example.com)</small>
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="phone">Phone Number </label>
+                <InputText id="phone" @bind-Value="customerUpdateDto.PhoneNumber" class="form-control" 
+                           @oninput="FormatPhoneNumber" maxlength="9" />
+                <ValidationMessage For="@(() => customerUpdateDto.PhoneNumber)" />
+                <small class="form-text text-muted">Must be exactly 9 digits (no spaces or special characters)</small>
+            </div>
+
+            <div class="form-actions mt-4">
+                <button type="submit" class="btn btn-primary mr-2" disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span class="sr-only">Saving...</span>
+                    }
+                    else
+                    {
+                        <span class="oi oi-check"></span>
+                    }
+                    Save Changes
+                </button>
+                <button type="button" @onclick="NavigateToCustomersList" class="btn btn-secondary">
+                    Cancel
+                </button>
+            </div>
+        </EditForm>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int CustomerId { get; set; }
+
+    private CustomerResponseDto? customer;
+    private CustomerUpdateDto customerUpdateDto = new();
+    private bool isSaving = false;
+    private bool isValidEmail = true;
+
+    public class ValidatedCustomerUpdateDto
+    {
+        [Required(ErrorMessage = "Name is required")]
+        [StringLength(100, ErrorMessage = "Name cannot exceed 100 characters")]
+        public string? Name { get; set; }
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email format. Must contain '@@' and a dot in the domain")]
+        [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", 
+            ErrorMessage = "Email must contain '@@' and a dot in the domain (e.g., user@@example.com)")]
+        [StringLength(100, ErrorMessage = "Email cannot exceed 100 characters")]
+        public string? Email { get; set; }
+
+        [Required(ErrorMessage = "Phone number is required")]
+        [RegularExpression(@"^\d{9}$", ErrorMessage = "Phone must be exactly 9 digits")]
+        public string? PhoneNumber { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCustomer();
+    }
+
+    private async Task LoadCustomer()
+    {
+        try
+        {
+            customer = await Http.GetFromJsonAsync<CustomerResponseDto>($"api/Customer/{CustomerId}");
+            
+            if (customer != null)
+            {
+                customerUpdateDto = new CustomerUpdateDto
+                {
+                    Name = customer.Name,
+                    Email = customer.Email,
+                    PhoneNumber = customer.PhoneNumber
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error loading customer: {ex.Message}");
+        }
+    }
+
+    private void FormatPhoneNumber(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(value))
+        {
+            // Remove all non-digit characters
+            var digits = new string(value.Where(char.IsDigit).ToArray());
+            customerUpdateDto.PhoneNumber = digits.Length > 9 ? digits.Substring(0, 9) : digits;
+        }
+    }
+
+    private void ValidateEmail(ChangeEventArgs e)
+    {
+        var email = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(email))
+        {
+            // Basic validation for @ and . in domain
+            isValidEmail = email.Contains('@') && 
+                         email.IndexOf('@') < email.LastIndexOf('.') && 
+                         email.LastIndexOf('.') > email.IndexOf('@') + 1 &&
+                         email.LastIndexOf('.') < email.Length - 1;
+        }
+    }
+
+    private void NavigateToCustomersList()
+    {
+        NavigationManager.NavigateTo("/Admin/Customers");
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        isSaving = true;
+        
+        try
+        {
+            // Additional client-side validation
+            if (string.IsNullOrWhiteSpace(customerUpdateDto.Name) ||
+                string.IsNullOrWhiteSpace(customerUpdateDto.Email) ||
+                string.IsNullOrWhiteSpace(customerUpdateDto.PhoneNumber))
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "All fields are required");
+                isSaving = false;
+                return;
+            }
+
+            if (!customerUpdateDto.Email.Contains('@') || !customerUpdateDto.Email.Contains('.'))
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Email must contain '@@' and a dot in the domain");
+                isSaving = false;
+                return;
+            }
+
+            if (customerUpdateDto.PhoneNumber?.Length != 9)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Phone number must be exactly 9 digits");
+                isSaving = false;
+                return;
+            }
+
+            var response = await Http.PutAsJsonAsync($"api/Customer/{CustomerId}", customerUpdateDto);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Customer updated successfully!");
+                NavigationManager.NavigateTo("/Admin/Customers");
+            }
+            else
+            {
+                var errorMessage = await response.Content.ReadAsStringAsync();
+                await JSRuntime.InvokeVoidAsync("alert", $"Error updating customer: {errorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"An error occurred: {ex.Message}");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}
+
+<style>
+    .admin-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .mr-2 {
+        margin-right: 0.5rem;
+    }
+
+    label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    label::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .validation-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+    }
+
+    .form-text {
+        font-size: 0.8rem;
+        color: #6c757d !important;
+    }
+
+    .spinner-border {
+        vertical-align: middle;
+    }
+
+    /* Highlight invalid email in real-time */
+    input:invalid {
+        border-color: #dc3545;
+    }
+</style>

@@ -1,0 +1,203 @@
+﻿@page "/Admin/Customers/Create"
+@using esii_2025_d1.Dtos.CustomersDtos
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+@rendermode InteractiveServer
+
+<div class="admin-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>Create New Customer</h3>
+    </div>
+
+    <EditForm Model="@customerCreateDto" OnValidSubmit="@HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group mb-3">
+            <label for="name">Name</label>
+            <InputText id="name" @bind-Value="customerCreateDto.Name" class="form-control" />
+            <ValidationMessage For="@(() => customerCreateDto.Name)" />
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="email">Email</label>
+            <InputText id="email" @bind-Value="customerCreateDto.Email" class="form-control" 
+                     @oninput="ValidateEmail" />
+            <ValidationMessage For="@(() => customerCreateDto.Email)" />
+            <small class="form-text text-muted">Must contain '@@' and a dot in the domain (e.g., user@@example.com)</small>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="phone">Phone Number</label>
+            <InputText id="phone" @bind-Value="customerCreateDto.PhoneNumber" class="form-control" 
+                     @oninput="FormatPhoneNumber" maxlength="9" />
+            <ValidationMessage For="@(() => customerCreateDto.PhoneNumber)" />
+            <small class="form-text text-muted">Must be exactly 9 digits (no spaces or special characters)</small>
+        </div>
+
+        <div class="form-actions mt-4">
+            <button type="submit" class="btn btn-primary mr-2" disabled="@(!IsFormValid() || isSaving)">
+                @if (isSaving)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span class="sr-only">Saving...</span>
+                }
+                else
+                {
+                    <span class="oi oi-check"></span>
+                }
+                Create Customer
+            </button>
+            <button type="button" @onclick="NavigateToCustomersList" class="btn btn-secondary">
+                Cancel
+            </button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private CustomerCreateDto customerCreateDto = new();
+    private bool isSaving = false;
+    private bool isValidEmail = true;
+
+    private bool IsFormValid()
+    {
+        // Check required fields
+        if (string.IsNullOrWhiteSpace(customerCreateDto.Name)) return false;
+        if (string.IsNullOrWhiteSpace(customerCreateDto.Email)) return false;
+        if (string.IsNullOrWhiteSpace(customerCreateDto.PhoneNumber)) return false;
+        
+        // Check email format
+        if (!customerCreateDto.Email.Contains('@') || !customerCreateDto.Email.Contains('.')) return false;
+        
+        // Check phone number format
+        if (customerCreateDto.PhoneNumber.Length != 9 || !customerCreateDto.PhoneNumber.All(char.IsDigit)) return false;
+        
+        return true;
+    }
+
+    private void FormatPhoneNumber(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(value))
+        {
+            // Remove all non-digit characters
+            var digits = new string(value.Where(char.IsDigit).ToArray());
+            customerCreateDto.PhoneNumber = digits.Length > 9 ? digits.Substring(0, 9) : digits;
+        }
+    }
+
+    private void ValidateEmail(ChangeEventArgs e)
+    {
+        var email = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(email))
+        {
+            // Basic validation for @ and . in domain
+            isValidEmail = email.Contains('@') && 
+                         email.IndexOf('@') < email.LastIndexOf('.') && 
+                         email.LastIndexOf('.') > email.IndexOf('@') + 1 &&
+                         email.LastIndexOf('.') < email.Length - 1;
+        }
+    }
+
+    private void NavigateToCustomersList()
+    {
+        NavigationManager.NavigateTo("/Admin/Customers");
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        isSaving = true;
+        
+        try
+        {
+            // Additional client-side validation
+            if (!IsFormValid())
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Please fill all fields with valid data");
+                isSaving = false;
+                return;
+            }
+
+            var response = await Http.PostAsJsonAsync("api/Customer", customerCreateDto);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Customer created successfully!");
+                NavigationManager.NavigateTo("/Admin/Customers");
+            }
+            else
+            {
+                var errorMessage = await response.Content.ReadAsStringAsync();
+                await JSRuntime.InvokeVoidAsync("alert", $"Error creating customer: {errorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"An error occurred: {ex.Message}");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}
+
+<style>
+    .admin-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .mr-2 {
+        margin-right: 0.5rem;
+    }
+
+    label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    label::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .validation-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+    }
+
+    .form-text {
+        font-size: 0.8rem;
+        color: #6c757d !important;
+    }
+
+    .spinner-border {
+        vertical-align: middle;
+    }
+
+    /* Highlight invalid email in real-time */
+    input:invalid {
+        border-color: #dc3545;
+    }
+</style>
