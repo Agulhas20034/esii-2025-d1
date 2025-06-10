@@ -1,0 +1,261 @@
+﻿@page "/Profile/Edit"
+@using Microsoft.AspNetCore.Identity
+@using System.ComponentModel.DataAnnotations
+@using esii_2025_d1.Services
+@using Microsoft.AspNetCore.Authorization
+
+@using esii_2025_d1.Data
+@attribute [Authorize]
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject SingletonUserManager UserManager
+@rendermode InteractiveServer
+
+<div class="profile-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>Edit Profile</h3>
+    </div>
+
+    @if (user == null)
+    {
+        <p>Loading user data...</p>
+    }
+    else
+    {
+        <EditForm Model="@editModel" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="card mb-4">
+                <div class="card-body">
+
+                    <div class="form-group mb-3">
+                        <label for="email">Email </label>
+                        <InputText id="email" @bind-Value="editModel.Email" class="form-control" />
+                        <ValidationMessage For="@(() => editModel.Email)" />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="phone">Phone Number</label>
+                        <InputText id="phone" @bind-Value="editModel.PhoneNumber" class="form-control" />
+                        <ValidationMessage For="@(() => editModel.PhoneNumber)" />
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="currentPassword">Current Password </label>
+                        <InputText id="currentPassword" type="password" @bind-Value="editModel.CurrentPassword" class="form-control" />
+                        <ValidationMessage For="@(() => editModel.CurrentPassword)" />
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="newPassword">New Password</label>
+                        <InputText id="newPassword" type="password" @bind-Value="editModel.NewPassword" class="form-control" />
+                        <ValidationMessage For="@(() => editModel.NewPassword)" />
+                        <small class="text-muted">Leave blank to keep current password</small>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="confirmPassword">Confirm New Password</label>
+                        <InputText id="confirmPassword" type="password" @bind-Value="editModel.ConfirmPassword" class="form-control" />
+                        <ValidationMessage For="@(() => editModel.ConfirmPassword)" />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="dailyWorkHours">Daily Work Hours</label>
+                        <InputNumber id="dailyWorkHours" @bind-Value="editModel.DailyWorkHours" class="form-control" />
+                        <ValidationMessage For="@(() => editModel.DailyWorkHours)" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                        <span> Saving...</span>
+                    }
+                    else
+                    {
+                        <span>Save Changes</span>
+                    }
+                </button>
+                <button type="button" @onclick="Cancel" class="btn btn-secondary ml-2">
+                    Cancel
+                </button>
+            </div>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private ApplicationUser? user;
+    private bool isSaving = false;
+    
+    private EditProfileModel editModel = new();
+
+    public class EditProfileModel
+    {
+        [Required(ErrorMessage = "Username is required")]
+        [StringLength(256, ErrorMessage = "Username is too long")]
+        public string UserName { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email format")]
+        [StringLength(256, ErrorMessage = "Email is too long")]
+        public string Email { get; set; } = string.Empty;
+
+        [Phone(ErrorMessage = "Invalid phone number format")]
+        public string? PhoneNumber { get; set; }
+
+        [Required(ErrorMessage = "Current password is required")]
+        public string CurrentPassword { get; set; } = string.Empty;
+
+        [DataType(DataType.Password)]
+        [MinLength(6, ErrorMessage = "Password must be at least 6 characters")]
+        public string? NewPassword { get; set; }
+
+        [Compare(nameof(NewPassword), ErrorMessage = "Passwords do not match")]
+        public string? ConfirmPassword { get; set; }
+        
+        [Range(1, 24, ErrorMessage = "Daily work hours must be between 1 and 24")]
+        public int DailyWorkHours { get; set; } = 0;
+        
+        public static ValidationResult ValidateEmail(string email, ValidationContext context)
+        {
+            var instance = (EditProfileModel)context.ObjectInstance;
+            var userId = instance.UserId; 
+            return ValidationResult.Success;
+        }
+
+        public string UserId { get; set; } = string.Empty;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userId = await UserManager.GetCurrentUserIdAsync();
+        if (userId != null)
+        {
+            editModel.UserId = userId;
+            user = await UserManager.GetUserByIdAsync(userId);
+            if (user != null)
+            {
+                editModel.UserName = user.UserName ?? string.Empty;
+                editModel.Email = user.Email ?? string.Empty;
+                editModel.PhoneNumber = user.PhoneNumber;
+                editModel.DailyWorkHours = await UserManager.GetDailyWorkHoursAsync(userId);
+            }
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        isSaving = true;
+
+        try
+        {
+            if (user == null) return;
+            if (!await UserManager.IsEmailUniqueAsync(editModel.Email, user.Id))
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "This email is already in use by another account");
+                return;
+            }
+            var updatedUser = new ApplicationUser
+            {
+                Id = user.Id,
+                UserName = editModel.Email,
+                Email = editModel.Email,
+                PhoneNumber = editModel.PhoneNumber,
+                NormalizedUserName = editModel.Email?.ToUpper(),
+                NormalizedEmail = editModel.Email?.ToUpper(),
+                EmailConfirmed = user.EmailConfirmed 
+            };
+
+            if (!string.IsNullOrWhiteSpace(editModel.NewPassword))
+            {
+                var (success, errorMessage) = await UserManager.ChangePasswordAsync(
+                    updatedUser, 
+                    editModel.CurrentPassword, 
+                    editModel.NewPassword);
+        
+                if (!success)
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", $"Password change failed: {errorMessage}");
+                    return;
+                }
+            }
+
+            var updateResult = await UserManager.UpdatePersonalAsync(updatedUser);
+    
+            var workHoursResult = await UserManager.UpdateDailyWorkHoursAsync(user.Id, editModel.DailyWorkHours);
+            if (updateResult && workHoursResult)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Profile updated successfully!");
+                NavigationManager.NavigateTo("/", true);
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Failed to update profile");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+    
+}
+
+<style>
+    .profile-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .ml-2 {
+        margin-left: 0.5rem;
+    }
+
+    label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    label::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .validation-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+    }
+
+    .text-muted {
+        font-size: 0.8rem;
+        color: #6c757d !important;
+    }
+
+    .spinner-border {
+        vertical-align: middle;
+    }
+</style>

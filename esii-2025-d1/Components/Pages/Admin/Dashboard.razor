@@ -10,19 +10,23 @@
 @rendermode InteractiveServer
 
 <div class="admin-container">
-    <!-- Main Content -->
+
     <div class="admin-main">
         <div class="admin-header">
             <h2>Admin Dashboard</h2>
             <div class="admin-actions">
-                <!-- Button Grid -->
+
                 <div class="button-grid">
                     <button @onclick="NavigateToLogs" class="btn btn-primary">
                         <span class="oi oi-list-rich"></span> View System Logs
                     </button>
-                    <!-- Userss Button -->
+                    
                     <button @onclick="NavigateToUsers" class="btn btn-primary">
                         <i class="bi bi-people-fill"></i> Manage Users
+                    </button>
+                   
+                    <button @onclick="NavigateToCustomers" class="btn btn-primary">
+                        <i class="bi bi-people-fill"></i> Manage Customers
                     </button>
                 </div>
             </div>
@@ -41,6 +45,10 @@
     private void NavigateToUsers()
     {
         Navigation.NavigateTo("/Admin/Users");
+    }
+    private void NavigateToCustomers()
+    {
+        Navigation.NavigateTo("/Admin/Customers");
     }
 }
 
