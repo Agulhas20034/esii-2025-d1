@@ -1,15 +1,11 @@
-using esii_2025_d1.Dtos.MediaDtos;
-
-namespace esii_2025_d1.Controllers;
-
-
 using esii_2025_d1.Data;
 using esii_2025_d1.Models;
-using esii_2025_d1.Dtos.ReportDtos;
 using esii_2025_d1.Models.Enums;
 using esii_2025_d1.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using System.Text.Json;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -17,279 +13,151 @@ public class ReportController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogService _logService;
-    protected string Entity = "Report";
     private readonly SingletonUserManager _usermanager;
+    private const string Entity = "Report";
 
-    
-    public ReportController(ApplicationDbContext context, ILogService logService,SingletonUserManager usermanager)
+    public ReportController(ApplicationDbContext context, ILogService logService, SingletonUserManager usermanager,
+        IHttpContextAccessor httpContextAccessor)
     {
         _context = context;
         _logService = logService;
         _usermanager = usermanager;
-
     }
-    
-    // GET: api/Report
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<ReportResponseDto>>> GetReports()
+
+    [HttpGet("monthly")]
+    public async Task<ActionResult<ReportData>> GetPersonalMonthlyReport(
+        [FromQuery] int year,
+        [FromQuery] int month,
+        [FromQuery] bool saveReport = false)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
-        try
-        {
-            var reports = await _context.Reports
-                .AsNoTracking()
-                .Select(report => new ReportResponseDto
-                {
-                    Id = report.Id,
-                    UserId = report.UserId,
-                    ProjectId = report.ProjectId,
-                    Media = report.Media.Select(a => new MediaResponseDto
-                    {
-                        Id = a.Id,
-                        ProjectId = a.ProjectId,
-                        ReportId = a.ReportId,
-                        Name = a.Name,
-                        Type = a.Type,
-                        Path = a.Path,
-                    }).ToList(),
-                    
-                })
-                .ToListAsync();
-            
-            await _logService.CreateLog(new Log
-            {
-                entity_id = null,
-                entity_name = Entity,
-                user_id = userId,
-                action = LogAction.Read
-            });
 
-            return Ok(reports);
-        }
-        catch (Exception e)
-        {
-            Console.Error.WriteLine($"Error fetching Reports: {e.Message}");
-            throw;
-        }
-    }
-    
-    // GET: api/Report/{id}
-    [HttpGet("{id}")]
-    public async Task<ActionResult<ReportResponseDto>> GetReport(int id)
-    {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }        
-        var report = await _context.Reports
-            .Include(r => r.Media)
-            .FirstOrDefaultAsync(r => r.Id == id);
+        var firstDayOfMonth = new DateTime(year, month, 1);
+        var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
-        if (report == null)
+        var existingReport = await _context.Reports
+            .FirstOrDefaultAsync(r => r.UserId == userId &&
+                                      r.StartDate == firstDayOfMonth &&
+                                      r.EndDate == lastDayOfMonth);
+
+        if (existingReport != null && !saveReport)
         {
-            return NotFound();
+            return Ok(JsonSerializer.Deserialize<ReportData>(existingReport.ReportDataJson));
         }
 
-        try
-        {
-            var reportResponse = new ReportResponseDto
-            {
-                Id = report.Id,
-                UserId = report.UserId,
-                ProjectId = report.ProjectId,
-                Media = report.Media.Select(a => new MediaResponseDto
-                {
-                    Id = a.Id,
-                    ProjectId = a.ProjectId,
-                    ReportId = a.ReportId,
-                    Name = a.Name,
-                    Type = a.Type,
-                    Path = a.Path,
-                }).ToList(),
-            };
-            
-            await _logService.CreateLog(new Log
-            {
-                entity_id = report.Id,
-                entity_name = Entity,
-                user_id = userId,
-                action = LogAction.Read
-            });
+        var reportData = await GeneratePersonalReportData(userId, firstDayOfMonth, lastDayOfMonth);
 
-            return Ok(reportResponse);
-        }
-        catch (Exception e)
-        {
-            Console.Error.WriteLine($"Error fetching Report: {e.Message}");
-            throw;
-        }
-    }
-    
-    // POST: api/Report
-    [HttpPost]
-    public async Task<ActionResult<ReportResponseDto>> PostReport(ReportCreateDto reportRequest)
-    {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
-        try
+        if (saveReport)
         {
             var report = new Report
             {
-                UserId = reportRequest.UserId,
-                ProjectId = reportRequest.ProjectId,
+                UserId = userId,
+                StartDate = firstDayOfMonth,
+                EndDate = lastDayOfMonth,
+                Title = $"Report - {CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)} {year}",
+                TotalHours = reportData.TotalHours,
+                TotalAmount = reportData.TotalAmount,
+                ReportDataJson = JsonSerializer.Serialize(reportData),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
-            
-            // Adiciona Media (se existirem IDs)
-            if (reportRequest.MediaIds != null && reportRequest.MediaIds.Any())
-            {
-                var media = await _context.Media
-                    .Where(m => reportRequest.MediaIds.Contains(m.Id))
-                    .ToListAsync();
 
-                report.Media = media;
-            }
-            
             _context.Reports.Add(report);
             await _context.SaveChangesAsync();
-
-            await _logService.CreateLog(new Log
-            {
-                entity_id = report.Id,
-                entity_name = Entity,
-                user_id = userId,
-                action = LogAction.Create
-            });
-
-            return await GetReport(report.Id);
-
         }
-        catch (Exception e)
+
+        return Ok(reportData);
+    }
+
+    private async Task<ReportData> GeneratePersonalReportData(string userId, DateTime startDate, DateTime endDate)
+    {
+        var completedAssignments = await _context.Assignments
+            .Include(a => a.ProjectId)
+            .Where(a => a.UserId == userId &&
+                        a.Status == AssignmentStatus.Completed &&
+                        a.EndDate >= startDate &&
+                        a.EndDate <= endDate)
+            .ToListAsync();
+
+        var reportData = new ReportData();
+
+        var dailyGroups = completedAssignments
+            .GroupBy(a => a.EndDate?.Date)
+            .Where(g => g.Key.HasValue)
+            .OrderBy(g => g.Key);
+
+        foreach (var dayGroup in dailyGroups)
         {
-            Console.Error.WriteLine($"Error creating Report: {e.Message}");
-            throw;
+            var dayReport = new DailyReport { Date = dayGroup.Key.Value };
+
+            foreach (var assignment in dayGroup)
+            {
+                var hours = (assignment.EndDate - assignment.StartDate)?.TotalHours ?? 0;
+                var hourlyRate = assignment.HourlyRate ?? assignment.Project?.HourlyRate;
+                var amount = hourlyRate.HasValue ? (decimal)(hours * (double)hourlyRate.Value) : (decimal?)null;
+
+                dayReport.Tasks.Add(new ReportTask
+                {
+                    AssignmentId = assignment.Id,
+                    ProjectId = assignment.ProjectId,
+                    ProjectName = assignment.Project?.Name ?? "NO Project",
+                    Description = assignment.Description ?? string.Empty,
+                    Hours = hours,
+                    HourlyRate = hourlyRate,
+                    Amount = amount
+                });
+
+                dayReport.DailyHours += hours;
+                if (amount.HasValue)
+                    dayReport.DailyAmount = (dayReport.DailyAmount ?? 0) + amount.Value;
+            }
+
+            var exceeded = dayGroup
+                .Where(a => a.Project?.DailyWorkHours.HasValue == true)
+                .GroupBy(a => a.ProjectId)
+                .Any(g => g.Sum(a => (a.EndDate - a.StartDate)?.TotalHours ?? 0) >
+                          (g.First().Project?.DailyWorkHours ?? 24));
+
+            dayReport.ExceededDailyHours = exceeded;
+            reportData.DailyReports.Add(dayReport);
         }
+
+        reportData.TotalHours = reportData.DailyReports.Sum(d => d.DailyHours);
+        reportData.TotalAmount = reportData.DailyReports.Sum(d => d.DailyAmount);
+
+        return reportData;
     }
     
-    // PUT: api/Report/{id}
-    [HttpPut("{id}")]
-    public async Task<IActionResult> PutReport(int id, ReportUpdateDto reportRequest)
+    [HttpGet("list")]
+    public async Task<ActionResult<List<Report>>> GetUserReports()
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
-        var report = await _context.Reports
-            .Include(r => r.Media) 
-            .FirstOrDefaultAsync(r => r.Id == id);
 
-        if (report == null)
-            return NotFound();
-        try
-        {
-            report.ProjectId = reportRequest.ProjectId ?? report.ProjectId;
-            report.UserId = reportRequest.UserId ?? report.UserId;
-            
-            if (reportRequest.MediaIds != null && reportRequest.MediaIds.Any())
-            {
-                var newMedia = await _context.Media
-                    .Where(m => reportRequest.MediaIds.Contains(m.Id))
-                    .ToListAsync();
-                
-                if (newMedia.Count != reportRequest.MediaIds.Count)
-                {
-                    var missingIds = reportRequest.MediaIds.Except(newMedia.Select(m => m.Id));
-                    return BadRequest($"the media id does not exist: {string.Join(", ", missingIds)}");
-                }
-                
-                report.Media = newMedia;
-            }
-            report.UpdatedAt = DateTime.UtcNow;
-            
-            await _logService.CreateLog(new Log
-            {
-                entity_id = report.Id,
-                entity_name = Entity,
-                user_id = userId,
-                action = LogAction.Update
-            });
+        var reports = await _context.Reports
+            .OrderByDescending(r => r.StartDate)
+            .ToListAsync();
 
-            await _context.SaveChangesAsync();
-            
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!_context.Reports.Any(a => a.Id == id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
-        }
-        return NoContent();
+        return Ok(reports);
     }
-    // DELETE: api/Report/{id}
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteReport(int id)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
+
+        var report = await _context.Reports
+            .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userId && r.DeletedAt == null);
+
+        if (report == null)
         {
-            userId = "1";
+            return NotFound(new { message = "Report not found or already deleted." });
         }
-        try
-        {
-            var report = await _context.Reports.FindAsync(id);
 
-            if (report == null)
-            {
-                return NotFound();
-            }
+        report.DeletedAt = DateTime.UtcNow;
+        report.UpdatedAt = DateTime.UtcNow;
 
-            report.DeletedAt = DateTime.UtcNow;
-            report.UpdatedAt = DateTime.UtcNow;
-
-            await _logService.CreateLog(new Log
-            {
-                entity_id = report.Id,
-                entity_name = Entity,
-                user_id = userId,
-                action = LogAction.Delete
-            });
-
-            await _context.SaveChangesAsync();
-        }
-        catch (Exception e)
-        {
-            Console.Error.WriteLine($"Error deleting Report: {e.Message}");
-            throw;
-        }
+        await _context.SaveChangesAsync();
         return NoContent();
     }
     
 }
-
-
-    
-    
-    
-    
-    
-    
-    
-
-
-    
-

@@ -45,7 +45,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         }
         
         // Seed data
-       /* modelBuilder.Entity<Jom>().HasData(
+        modelBuilder.Entity<Jom>().HasData(
             new Jom 
             { 
                 Id = 1,
@@ -63,7 +63,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             new Assignment
             {
                 Id = 1,
-                UserId = 1,
+                UserId = "aa79112a-9b18-48b9-80db-34439ac69173",
                 ProjectId = 1,
                 Description = "Test assignment",
                 HourlyRate = 20.0f,
@@ -77,26 +77,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             new Assignment
             {
                 Id = 2,
-                UserId = 1,
+                UserId = "aa79112a-9b18-48b9-80db-34439ac69173",
                 ProjectId = 1,
                 Description = "Test assignment2",
                 HourlyRate = 20.0f,
                 StartDate = DateTime.UtcNow,
                 EndDate = DateTime.UtcNow.AddDays(6),
-                Status = AssignmentStatus.Created,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                DeletedAt = null
-            },
-            new Assignment
-            {
-                Id = 3,
-                UserId = 2,
-                ProjectId = 2,
-                Description = "Test assignment3",
-                HourlyRate = 20.0f,
-                StartDate = DateTime.UtcNow,
-                EndDate = DateTime.UtcNow.AddDays(3),
                 Status = AssignmentStatus.Created,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
@@ -131,7 +117,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             new Project
             {
                 Id = 1,
-                UserId = 1,
+                UserId = "aa79112a-9b18-48b9-80db-34439ac69173",
                 CustomerId = 1,
                 Name = "Test Project",
                 Description = "Test project description",
@@ -145,7 +131,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             new Project
             {
                 Id = 2,
-                UserId = 1,
+                UserId = "aa79112a-9b18-48b9-80db-34439ac69173",
                 CustomerId = 1,
                 Name = "Test Project2",
                 Description = "Test project description2",
@@ -159,7 +145,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             new Project
             {
                 Id = 3,
-                UserId = 1,
+                UserId = "aa79112a-9b18-48b9-80db-34439ac69173",
                 CustomerId = 1,
                 Name = "Test Project3",
                 Description = "Test project description3",
@@ -171,54 +157,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 DeletedAt = null,
             }
         );
-        modelBuilder.Entity<Report>().HasData(
-            new Report
-            {
-                Id = 1,
-                ProjectId = 1,
-                UserId = 1,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                DeletedAt = null
-            },
-            new Report
-            {
-                Id = 2,
-                ProjectId = 2,
-                UserId = 2,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                DeletedAt = null
-            }
-        );
-        modelBuilder.Entity<Media>().HasData(
-            new Media
-            {
-                Id = 1,
-                ReportId = null,
-                ProjectId = 1,
-                Name = "test",
-                Type = "image",
-                Path = "test.jpg",
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                DeletedAt = null
-            },
-            new Media
-            {
-                Id = 2,
-                ReportId = 2,
-                ProjectId = 2,
-                Name = "test2",
-                Type = "Report",
-                Path = "test2.jpg",
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                DeletedAt = null
-                    
-            }
-        );
-        */
     }
 
 

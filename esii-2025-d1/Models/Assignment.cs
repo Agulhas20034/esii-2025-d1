@@ -32,4 +32,6 @@ public class Assignment
     
     public DateTime? DeletedAt { get; set; }
     
+    public virtual Project? Project { get; set; }
+    
 }
