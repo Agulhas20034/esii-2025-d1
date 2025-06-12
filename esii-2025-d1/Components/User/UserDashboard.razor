@@ -1,0 +1,629 @@
+﻿@page "/dashboard"
+@inject HttpClient Http
+
+@using esii_2025_d1.Dtos.AssignmentDtos
+@using esii_2025_d1.Dtos.UserInfoDtos
+@using esii_2025_d1.Dtos.UserDtos
+@using esii_2025_d1.Models.Enums
+@using esii_2025_d1.Data
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
+@using esii_2025_d1.Services
+@using System.Security.Claims
+
+@inject UserManager<ApplicationUser> AspNetUserManager;
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject RoleManager<IdentityRole> RoleManager
+@inject SingletonUserManager UserManager
+
+@rendermode InteractiveServer
+
+<PageTitle>Dashboard</PageTitle>
+
+<div class="dashboard-wrapper px-4 py-5">
+    <h2 class="mb-2">Welcome, @currentUser?.Name</h2>
+    <h5 class="text-muted">Here are your assignments organized by project:</h5>
+    <p class="text-muted mb-4">@DateTime.Now.ToString("dddd, dd MMMM yyyy")</p>
+
+    <div class="mb-3 d-flex justify-content-between">
+        <button type="button" class="btn btn-primary" @onclick="ShowAddModal">
+            <i class="bi bi-plus-circle"></i> Create a new assignment
+        </button>
+
+        <div>
+            <label>From: <InputDate @bind-Value="filterStartDate" /></label>
+            <label>To: <InputDate @bind-Value="filterEndDate" /></label>
+            <button class="btn btn-secondary btn-sm" @onclick="FilterAssignments">Filter Finished</button>
+            <button class="btn btn-outline-secondary btn-sm ms-2" @onclick="ClearFilter">Clear Filter</button>
+        </div>
+    </div>
+
+    @if (filteredAssignments.Any())
+    {
+        @foreach (var group in filteredAssignments.GroupBy(a => a.ProjectId))
+        {
+            var projectId = group.Key ?? 0;
+            var projectName = projectDict.ContainsKey(projectId) ? projectDict[projectId] : $"Projeto {projectId}";
+            <div class="mb-4">
+                <h5 class="text-primary">@projectName</h5>
+                <div class="row">
+                    @foreach (var a in group)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100 shadow-sm border-start border-4 border-primary">
+                                <div class="card-body">
+                                    <h5 class="card-title">@a.Description</h5>
+                                    <p><strong>Start:</strong> @a.StartDate?.ToString("yyyy-MM-dd HH:mm")</p>
+                                    <p><strong>End:</strong> @(a.EndDate.HasValue ? a.EndDate?.ToString("yyyy-MM-dd HH:mm") : "In Progress")</p>
+                                    <p><strong>Status:</strong> <span class="badge bg-secondary">@a.Status</span></p>
+                                    <p><strong>Hourly Rate:</strong> @($"{a.HourlyRate:C}")</p>
+                                    <div class="d-flex flex-wrap gap-2 mt-2">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => OpenEditModal(a)">
+                                            <i class="bi bi-pencil-square"></i> Edit
+                                        </button>
+
+                                        @if (a.Status == AssignmentStatus.Created)
+                                        {
+                                            <button class="btn btn-sm btn-outline-success" @onclick="() => StartAssignment(a.Id)">
+                                                <i class="bi bi-play-circle"></i> Start Task
+                                            </button>
+                                        }
+                                        else if (a.Status == AssignmentStatus.InProgress)
+                                        {
+                                            <button class="btn btn-sm btn-outline-success" @onclick="() => CompleteAssignment(a.Id)">
+                                                <i class="bi bi-check-circle"></i> Complete
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => CancelAssignment(a.Id)">
+                                                <i class="bi bi-x-circle"></i> Cancel
+                                            </button>
+                                        }
+                                        else if (a.Status != AssignmentStatus.Cancelled)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => OpenDeleteModal(a.Id)">
+                                                <i class="bi bi-trash"></i> Remove
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <p class="text-muted">No assignments found.</p>
+    }
+</div>
+
+<!-- Add Modal -->
+@if (showAddModal)
+{
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content p-3 shadow-lg">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create new assignment</h5>
+                    <button type="button" class="btn-close" @onclick="HideAddModal"></button>
+                </div>
+                <div class="modal-body">
+
+                    <label>Project</label>
+                    <select class="form-select mb-2"
+                            value="@newAssignment.ProjectId"
+                            @onchange="(e) => OnProjectChangeForAdd(e)">
+                        <option value="0">-- No Project --</option>
+                        @foreach (var p in projects)
+                        {
+                            <option value="@p.Id">@p.Name</option>
+                        }
+                    </select>
+
+                    <label>Start Date and Time</label>
+                    <InputDate class="form-control mb-2" @bind-Value="newAssignment.StartDate" />
+                    <InputText class="form-control mb-2" placeholder="HH:mm (optional)" @bind-Value="newAssignmentStartTime" />
+
+                    <label>End Date and Time (optional)</label>
+                    <InputDate class="form-control mb-2" @bind-Value="newAssignment.EndDate" />
+                    <InputText class="form-control mb-2" placeholder="HH:mm (optional)" @bind-Value="newAssignmentEndTime" />
+
+                    <label>Description</label>
+                    <InputText class="form-control mb-2" placeholder="Assignment description" @bind-Value="newAssignment.Description" />
+
+                    <label>Hourly Rate</label>
+                    <InputNumber class="form-control mb-2" placeholder="Hourly Rate" @bind-Value="newAssignment.HourlyRate" />
+
+                    <label>Status</label>
+                    <select class="form-select mb-2" @bind="newAssignment.Status">
+                        <option disabled value="">-- Select a state --</option>
+                        @foreach (var status in Enum.GetValues<AssignmentStatus>())
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    </select>
+
+                    @if (!string.IsNullOrWhiteSpace(addErrorMessage))
+                    {
+                        <div class="alert alert-danger">@addErrorMessage</div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideAddModal">Cancel</button>
+                    <button type="button" class="btn btn-success" @onclick="SaveAddAssignment">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+
+<!-- Edit Modal -->
+@if (showEditModal)
+{
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content p-3 shadow-lg">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit assignment</h5>
+                    <button type="button" class="btn-close" @onclick="HideEditModal"></button>
+                </div>
+                <div class="modal-body">
+
+                    <select class="form-select mb-2"
+                            value="@selectedAssignment.ProjectId"
+                            @onchange="(e) => OnProjectChangeForEdit(e)">
+                        <option value="0">-- No Project --</option>
+                        @foreach (var p in projects)
+                        {
+                            <option value="@p.Id">@p.Name</option>
+                        }
+                    </select>
+
+                    <InputText class="form-control mb-2" placeholder="Assignment description" @bind-Value="selectedAssignment.Description" />
+
+                    <label>End Date/Time (optional)</label>
+                    <InputDate class="form-control mb-2" @bind-Value="selectedAssignment.EndDate" />
+                    <InputText class="form-control mb-2" placeholder="HH:mm (optional)" @bind-Value="selectedAssignmentEndTime" />
+
+
+
+                    <InputNumber class="form-control mb-2" placeholder="Hourly Rate" @bind-Value="selectedAssignment.HourlyRate" />
+
+                    <select class="form-select mb-2" @bind="selectedAssignment.Status">
+                        <option disabled value="">-- Select a state --</option>
+                        @foreach (var status in Enum.GetValues<AssignmentStatus>())
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideEditModal">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveEditAssignment">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+<!-- End Task Modal -->
+@if (showEndModal)
+{
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content p-3 shadow-lg">
+                <div class="modal-header">
+                    <h5 class="modal-title">End Task</h5>
+                    <button type="button" class="btn-close" @onclick="HideEndModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>End task "<strong>@selectedAssignment.Description</strong>"</p>
+                    <label>End Date/Time (optional)</label>
+                    <InputDate class="form-control mb-2" @bind-Value="endTaskDate" />
+                    <InputText class="form-control mb-2" placeholder="HH:mm (optional)" @bind-Value="endTaskTime" />
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="HideEndModal">Cancel</button>
+                    <button class="btn btn-success" @onclick="SaveEndTask">Finish Task</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+<!-- Delete Modal -->
+@if (showDeleteModal)
+{
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content p-3 shadow-lg">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">Confirm deletion</h5>
+                    <button type="button" class="btn-close" @onclick="HideDeleteModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the assignment "<strong>@selectedAssignment.Description</strong>"?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideDeleteModal">Cancel</button>
+                    <button type="button" class="btn btn-danger" @onclick="DeleteAssignment">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    // ============================
+    // State Variables
+    // ============================
+    List<Assignment> assignments = new();
+    List<Assignment> filteredAssignments = new();
+    List<Project> projects = new();
+    Dictionary<int, string> projectDict = new();
+
+    Assignment newAssignment = new();
+    Assignment selectedAssignment = new();
+
+    bool showAddModal = false;
+    bool showEditModal = false;
+    bool showDeleteModal = false;
+    bool showEndModal = false;
+
+    int assignmentToDeleteId;
+
+    string addErrorMessage = string.Empty;
+
+    UserInfo? currentUser;
+    string? currentUserId;
+
+    string? newAssignmentStartTime;
+    string? newAssignmentEndTime;
+
+    string? selectedAssignmentStartTime;
+    string? selectedAssignmentEndTime;
+
+    string? endTaskTime;
+    DateTime? endTaskDate;
+
+    DateTime? filterStartDate = DateTime.Today.AddDays(-1);
+    DateTime? filterEndDate = DateTime.Today;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine(">> OnInitializedAsync starting");
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        currentUserId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        Console.WriteLine($">> currentUserId: {currentUserId}");
+
+        if (!string.IsNullOrEmpty(currentUserId))
+        {
+            var appUser = await UserManager.GetUserByIdAsync(currentUserId);
+            if (appUser != null)
+            {
+                currentUser = new UserInfo
+                    {
+                        UserId = appUser.Id,
+                        Name = appUser.UserName ?? "Unknown"
+                    };
+                Console.WriteLine($">> currentUser.Name: {currentUser.Name}");
+            }
+        }
+
+        await LoadProjects();
+        await LoadAssignments();
+        ClearFilter();
+    }
+
+
+    // Loading
+
+    async Task LoadProjects()
+    {
+        projects = await Http.GetFromJsonAsync<List<Project>>("api/project") ?? new();
+        projectDict = projects.ToDictionary(p => p.Id, p => p.Name);
+    }
+
+    async Task LoadAssignments()
+    {
+        var allAssignments = await Http.GetFromJsonAsync<List<Assignment>>("api/assignment") ?? new();
+        var allProjects = await Http.GetFromJsonAsync<List<Project>>("api/project") ?? new();
+        var allProjectUsers = await Http.GetFromJsonAsync<List<ProjectUser>>("api/projectuser") ?? new();
+
+        var currentUserId = (await AuthenticationStateProvider.GetAuthenticationStateAsync())
+                                .User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            assignments = new();
+            return;
+        }
+
+        var ownedProjectIds = allProjects
+            .Where(p => p.UserId == currentUserId)
+            .Select(p => p.Id)
+            .ToList();
+
+        var acceptedProjectIds = allProjectUsers
+            .Where(pu => pu.UserId == currentUserId && pu.Status == ProjectUserStatus.Accepted)
+            .Select(pu => pu.ProjectId)
+            .ToList();
+
+        var accessibleProjectIds = ownedProjectIds.Union(acceptedProjectIds).ToHashSet();
+
+        assignments = allAssignments
+            .Where(a => a.ProjectId != null &&
+                accessibleProjectIds.Contains(a.ProjectId.Value) &&
+                a.Status != AssignmentStatus.Cancelled)
+            .ToList();
+
+        ApplyFilter();
+    }
+
+    // Filtering Assignments
+
+    void ApplyFilter()
+    {
+        if (filterStartDate.HasValue && filterEndDate.HasValue)
+        {
+            filteredAssignments = assignments
+                .Where(a => a.EndDate.HasValue &&
+                    a.EndDate.Value.Date >= filterStartDate.Value.Date &&
+                    a.EndDate.Value.Date <= filterEndDate.Value.Date)
+                .OrderByDescending(a => a.EndDate)
+                .ToList();
+        }
+        else
+        {
+            filteredAssignments = assignments.OrderByDescending(a => a.StartDate).ToList();
+        }
+    }
+
+    void FilterAssignments() => ApplyFilter();
+
+    void ClearFilter()
+    {
+        filterStartDate = null;
+        filterEndDate = null;
+        filteredAssignments = assignments.OrderByDescending(a => a.StartDate).ToList();
+    }
+
+    // Add Modal
+
+    void ShowAddModal()
+    {
+        newAssignment = new Assignment
+            {
+                Status = AssignmentStatus.Created,
+                HourlyRate = projects.FirstOrDefault()?.HourlyRate ?? 0,
+                ProjectId = projects.FirstOrDefault()?.Id ?? 0
+            };
+        newAssignmentStartTime = null;
+        newAssignmentEndTime = null;
+        addErrorMessage = string.Empty;
+        showAddModal = true;
+    }
+
+    void HideAddModal() => showAddModal = false;
+
+    async Task SaveAddAssignment()
+    {
+        if (string.IsNullOrWhiteSpace(newAssignment.Description))
+        {
+            addErrorMessage = "Please enter a description.";
+            return;
+        }
+
+        if (newAssignment.StartDate.HasValue && !string.IsNullOrWhiteSpace(newAssignmentStartTime))
+        {
+            if (TimeSpan.TryParse(newAssignmentStartTime, out var startTime))
+                newAssignment.StartDate = newAssignment.StartDate.Value.Date + startTime;
+        }
+
+        if (newAssignment.EndDate.HasValue && !string.IsNullOrWhiteSpace(newAssignmentEndTime))
+        {
+            if (TimeSpan.TryParse(newAssignmentEndTime, out var endTime))
+                newAssignment.EndDate = newAssignment.EndDate.Value.Date + endTime;
+        }
+
+        newAssignment.Id = 0;
+        newAssignment.UserId = currentUserId ?? "";
+        newAssignment.CreatedAt = DateTime.UtcNow;
+        newAssignment.UpdatedAt = DateTime.UtcNow;
+        newAssignment.DeletedAt = null;
+
+        var response = await Http.PostAsJsonAsync("api/assignment", newAssignment);
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadAssignments();
+            HideAddModal();
+        }
+        else
+        {
+            addErrorMessage = "Error saving assignment.";
+        }
+    }
+
+    private void OnProjectChangeForAdd(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString();
+        if (int.TryParse(value, out int projectId))
+        {
+            newAssignment.ProjectId = projectId;
+
+            if (projectId == 0)
+            {
+                newAssignment.HourlyRate = 0;
+            }
+            else
+            {
+                var project = projects.FirstOrDefault(p => p.Id == projectId);
+                newAssignment.HourlyRate = project?.HourlyRate ?? 0;
+            }
+        }
+    }
+
+    // Edit Modal
+
+    void OpenEditModal(Assignment assignment)
+    {
+        selectedAssignment = new Assignment
+            {
+                Id = assignment.Id,
+                Description = assignment.Description,
+                StartDate = assignment.StartDate,
+                EndDate = assignment.EndDate,
+                HourlyRate = assignment.HourlyRate,
+                ProjectId = assignment.ProjectId,
+                Status = assignment.Status,
+                UserId = assignment.UserId
+            };
+
+        selectedAssignmentStartTime = selectedAssignment.StartDate?.ToString("HH:mm");
+        selectedAssignmentEndTime = selectedAssignment.EndDate?.ToString("HH:mm");
+        showEditModal = true;
+    }
+
+    void HideEditModal() => showEditModal = false;
+
+    async Task SaveEditAssignment()
+    {
+        if (string.IsNullOrWhiteSpace(selectedAssignment.Description))
+            return;
+
+        if (selectedAssignment.StartDate.HasValue && !string.IsNullOrWhiteSpace(selectedAssignmentStartTime))
+        {
+            if (TimeSpan.TryParse(selectedAssignmentStartTime, out var startTime))
+                selectedAssignment.StartDate = selectedAssignment.StartDate.Value.Date + startTime;
+        }
+
+        if (selectedAssignment.EndDate.HasValue && !string.IsNullOrWhiteSpace(selectedAssignmentEndTime))
+        {
+            if (TimeSpan.TryParse(selectedAssignmentEndTime, out var endTime))
+                selectedAssignment.EndDate = selectedAssignment.EndDate.Value.Date + endTime;
+        }
+
+        var response = await Http.PutAsJsonAsync("api/assignment", selectedAssignment);
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadAssignments();
+            HideEditModal();
+        }
+    }
+
+    private void OnProjectChangeForEdit(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString();
+        if (int.TryParse(value, out int projectId))
+        {
+            selectedAssignment.ProjectId = projectId;
+
+            if (projectId == 0)
+            {
+                selectedAssignment.HourlyRate = 0;
+            }
+            else
+            {
+                var project = projects.FirstOrDefault(p => p.Id == projectId);
+                selectedAssignment.HourlyRate = project?.HourlyRate ?? 0;
+            }
+        }
+    }
+
+    // End Modal
+
+    void OpenEndModal(Assignment assignment)
+    {
+        selectedAssignment = assignment;
+        endTaskDate = DateTime.Today;
+        endTaskTime = null;
+        showEndModal = true;
+    }
+
+    void HideEndModal() => showEndModal = false;
+
+    async Task SaveEndTask()
+    {
+        if (selectedAssignment == null) return;
+
+        DateTime endDateTime = endTaskDate ?? DateTime.Now.Date;
+        if (!string.IsNullOrWhiteSpace(endTaskTime))
+        {
+            if (TimeSpan.TryParse(endTaskTime, out var parsedTime))
+                endDateTime = endDateTime.Date + parsedTime;
+        }
+        else
+        {
+            endDateTime = DateTime.Now;
+        }
+
+        selectedAssignment.EndDate = endDateTime;
+        selectedAssignment.Status = AssignmentStatus.Completed;
+
+        var response = await Http.PutAsJsonAsync("api/assignment", selectedAssignment);
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadAssignments();
+            HideEndModal();
+        }
+    }
+
+    // Delete Modal
+
+    void OpenDeleteModal(int id)
+    {
+        assignmentToDeleteId = id;
+        selectedAssignment = assignments.FirstOrDefault(a => a.Id == id) ?? new Assignment();
+        showDeleteModal = true;
+    }
+
+    void HideDeleteModal() => showDeleteModal = false;
+
+    async Task DeleteAssignment()
+    {
+        var response = await Http.DeleteAsync($"api/assignment/{assignmentToDeleteId}");
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadAssignments();
+            HideDeleteModal();
+        }
+    }
+
+    // Assignment Actions
+
+    async Task StartAssignment(int assignmentId)
+    {
+        var response = await Http.PostAsync($"api/assignment/{assignmentId}/start", null);
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadAssignments();
+        }
+    }
+
+    async Task CancelAssignment(int assignmentId)
+    {
+        var response = await Http.PostAsync($"api/assignment/{assignmentId}/cancel", null);
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadAssignments();
+        }
+    }
+
+    async Task CompleteAssignment(int assignmentId)
+    {
+        var response = await Http.PostAsync($"api/assignment/{assignmentId}/complete", null);
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadAssignments();
+        }
+    }
+}

@@ -243,4 +243,80 @@ public class AssignmentController : ControllerBase
         }
         return NoContent();
     }
+
+    // POST: api/Assignment/{id}/start
+    [HttpPost("{id}/start")]
+    public async Task<IActionResult> StartAssignment(int id)
+    {
+        string? userId = await _usermanager.GetCurrentUserIdAsync() ?? "1";
+
+        var assignment = await _context.Assignments.FindAsync(id);
+        if (assignment == null) return NotFound();
+
+        if (assignment.Status != AssignmentStatus.Created)
+        {
+            return BadRequest("Assignment can only be started if its status is 'Created'.");
+        }
+
+        assignment.Status = AssignmentStatus.InProgress;
+        assignment.StartDate = DateTime.UtcNow;
+        assignment.UpdatedAt = DateTime.UtcNow;
+
+        await _logService.CreateLog(new Log
+        {
+            entity_id = assignment.Id,
+            entity_name = Entity,
+            user_id = userId,
+            action = LogAction.Update
+        });
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    // POST: api/Assignment/{id}/cancel
+    [HttpPost("{id}/cancel")]
+    public async Task<IActionResult> CancelAssignment(int id)
+    {
+        string? userId = await _usermanager.GetCurrentUserIdAsync() ?? "1";
+
+        var assignment = await _context.Assignments.FindAsync(id);
+        if (assignment == null) return NotFound();
+
+        if (assignment.Status == AssignmentStatus.Cancelled)
+        {
+            return BadRequest("Assignment is already cancelled.");
+        }
+
+        assignment.Status = AssignmentStatus.Cancelled;
+        assignment.DeletedAt = DateTime.UtcNow;
+        assignment.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    // POST: api/Assignment/{id}/complete
+    [HttpPost("{id}/complete")]
+    public async Task<IActionResult> CompleteAssignment(int id)
+    {
+        string? userId = await _usermanager.GetCurrentUserIdAsync() ?? "1";
+
+        var assignment = await _context.Assignments.FindAsync(id);
+        if (assignment == null) return NotFound();
+
+        if (assignment.Status == AssignmentStatus.Completed)
+        {
+            return BadRequest("Assignment is already completed.");
+        }
+
+        assignment.Status = AssignmentStatus.Completed;
+        assignment.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
 }
