@@ -512,7 +512,8 @@
                 selectedAssignment.EndDate = selectedAssignment.EndDate.Value.Date + endTime;
         }
 
-        var response = await Http.PutAsJsonAsync("api/assignment", selectedAssignment);
+
+        var response = await Http.PutAsJsonAsync($"api/assignment/{selectedAssignment.Id}", selectedAssignment);
         if (response.IsSuccessStatusCode)
         {
             await LoadAssignments();
