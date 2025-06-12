@@ -1,1 +1,328 @@
-@page "/Report"
+@page "/user/reports"
+@using System.Text.Json
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+<PageTitle>Reports</PageTitle>
+
+<div class="container mt-4">
+    
+    @if (_reports == null)
+    {
+        <div class="text-center">
+            <Spinner Type="SpinnerType.Grow" Color="SpinnerColor.Primary" />
+            <p>Loading reports...</p>
+        </div>
+    }
+    else if (!_reports.Any())
+    {
+        <div class="alert alert-info">
+            No reports found. Create your first report using the button below.
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Monthly Reports</h2>
+            <Button Color="ButtonColor.Success" @onclick="() => createModal.ShowAsync()" Class="mb-3">
+                <i class="bi bi-plus-lg"></i> Create New Report
+            </Button>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Monthly Reports</h2>
+            <Button Color="ButtonColor.Success" @onclick="() => createModal.ShowAsync()" Class="mb-3">
+                <i class="bi bi-plus-lg"></i> Create New Report
+            </Button>
+        </div>
+        
+        <Grid TItem="ProjectReport"
+              Data="@_reports"
+              Class="table table-striped"
+              PageSize="10"
+              AllowPaging="true"
+              AllowSorting="true"
+              Responsive="true"
+              ShowToolbar="true"
+              ShowExtendButtons="true">
+
+            <GridColumns>
+                <GridColumn TItem="ProjectReport" Field="@nameof(ProjectReport.Id)" Caption="ID" />
+                <GridColumn TItem="ProjectReport" Field="@nameof(ProjectReport.Title)" Caption="Title" />
+                <GridColumn TItem="ProjectReport" Caption="Period">
+                    @context.StartDate.ToString("yyyy-MM-dd") - @context.EndDate.ToString("yyyy-MM-dd")
+                </GridColumn>
+                <GridColumn TItem="ProjectReport" Field="@nameof(ProjectReport.TotalHours)" Caption="Total Hours" />
+                <GridColumn TItem="ProjectReport" Field="@nameof(ProjectReport.TotalAmount)" Caption="Amount (€)">
+                    @context.TotalAmount?.ToString("F2")
+                </GridColumn>
+                <GridColumn TItem="ProjectReport" Caption="Actions" Width="180px">
+                    <div class="d-flex gap-2">
+                        <Button Color="ButtonColor.Info" Size="ButtonSize.Small" @onclick="() => ViewDetails(context)">
+                            <i class="bi bi-eye"></i> View
+                        </Button>
+                        <Button Color="ButtonColor.Danger" Size="ButtonSize.Small" @onclick="() => ConfirmDelete(context)">
+                            <i class="bi bi-trash"></i> Delete
+                        </Button>
+                    </div>
+                </GridColumn>
+            </GridColumns>
+        </Grid>
+    }
+</div>
+
+<!-- View Report Details Modal -->
+<Modal @ref="detailsModal" Title="Report Details">
+    <BodyTemplate>
+        @if (_selectedReport != null && _reportDetails != null)
+        {
+            <h5>@_selectedReport.Title</h5>
+            <p><strong>Period:</strong> @_selectedReport.StartDate.ToShortDateString() - @_selectedReport.EndDate.ToShortDateString()</p>
+            <p><strong>Total Hours:</strong> @_reportDetails.TotalHours.ToString("F1")</p>
+            <p><strong>Total Amount:</strong> @_reportDetails.TotalAmount?.ToString("F2") €</p>
+
+            <h6 class="mt-4">Daily Reports</h6>
+            <div class="daily-reports-container">
+                @foreach (var day in _reportDetails.DailyReports)
+                {
+                    <div class="card mb-3 @(day.ExceededDailyHours ? "border-danger" : "")">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <strong>@day.Date.ToString("dd/MM/yyyy")</strong>
+                            <span>
+                                @day.DailyHours.ToString("F1") h
+                                @if (day.DailyAmount.HasValue)
+                                {
+                                    <span>(@day.DailyAmount.Value.ToString("F2") €)</span>
+                                }
+                                @if (day.ExceededDailyHours)
+                                {
+                                    <span class="badge bg-danger ms-2">Exceeded</span>
+                                }
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                @foreach (var task in day.Tasks)
+                                {
+                                    <li class="mb-2">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <strong>@task.ProjectName:</strong> @task.Description
+                                            </div>
+                                            <div>
+                                                <em>@task.Hours.ToString("F1") h</em>
+                                                @if (task.Amount != null)
+                                                {
+                                                    <span>- @task.Amount.Value.ToString("F2") €</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="() => detailsModal.HideAsync()">Close</Button>
+    </FooterTemplate>
+</Modal>
+
+<!-- Create Report Modal -->
+<Modal @ref="createModal" Title="Create New Report">
+    <BodyTemplate>
+        <div class="mb-3">
+            <label for="year" class="form-label">Year</label>
+            <InputNumber id="year" class="form-control" @bind-Value="_year" min="2000" max="@(DateTime.Now.Year + 1)" />
+        </div>
+        <div class="mb-3">
+            <label for="month" class="form-label">Month</label>
+            <InputNumber id="month" class="form-control" @bind-Value="_month" min="1" max="12" />
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Primary" @onclick="CreateReportAsync">
+            <i class="bi bi-check-lg"></i> Create
+        </Button>
+        <Button Color="ButtonColor.Secondary" @onclick="() => createModal.HideAsync()">Cancel</Button>
+    </FooterTemplate>
+</Modal>
+
+<!-- Delete Confirmation Modal -->
+<Modal @ref="deleteModal" Title="Confirm Deletion">
+    <BodyTemplate>
+        <p>Are you sure you want to delete this report?</p>
+        <p><strong>@_reportToDelete?.Title</strong></p>
+        <p class="text-muted">This action cannot be undone.</p>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Danger" @onclick="DeleteReportAsync">
+            <i class="bi bi-trash"></i> Delete
+        </Button>
+        <Button Color="ButtonColor.Secondary" @onclick="() => deleteModal.HideAsync()">Cancel</Button>
+    </FooterTemplate>
+</Modal>
+
+@code {
+    private List<ProjectReport> _reports = new();
+    private ProjectReport? _selectedReport;
+    private ProjectReport? _reportToDelete;
+    private ReportData? _reportDetails;
+    
+    private Modal detailsModal = default!;
+    private Modal createModal = default!;
+    private Modal deleteModal = default!;
+    
+    private int _year = DateTime.Now.Year;
+    private int _month = DateTime.Now.Month;
+    
+    private string _message = string.Empty;
+    private string _messageType = "success";
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReports();
+    }
+    
+    private async Task LoadReports()
+    {
+        try
+        {
+            _message = string.Empty;
+            var response = await Http.GetFromJsonAsync<List<ProjectReport>>("api/Report/list");
+            
+            _reports = (response ?? new List<ProjectReport>())
+                .OrderByDescending(r => r.StartDate)
+                .ThenByDescending(r => r.EndDate)
+                .ToList();
+                
+            if (!_reports.Any())
+            {
+                _message = "No reports found. Create your first report.";
+                _messageType = "info";
+            }
+        }
+        catch (Exception ex)
+        {
+            _message = $"Error loading reports: {ex.Message}";
+            _messageType = "danger";
+            Console.WriteLine(_message);
+        }
+    }
+    
+    private async Task ViewDetails(ProjectReport report)
+    {
+        _selectedReport = report;
+        
+        if (string.IsNullOrEmpty(report.ReportDataJson))
+        {
+            _message = "Report data is empty or corrupted";
+            _messageType = "warning";
+            return;
+        }
+
+        try
+        {
+            _reportDetails = JsonSerializer.Deserialize<ReportData>(
+                report.ReportDataJson, 
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            
+            await detailsModal.ShowAsync();
+        }
+        catch (Exception ex)
+        {
+            _message = $"Error loading report details: {ex.Message}";
+            _messageType = "danger";
+            Console.WriteLine(_message);
+        }
+    }
+    
+    private async Task CreateReportAsync()
+    {
+        if (_year < 2000 || _year > DateTime.Now.Year + 1)
+        {
+            _message = "Invalid year. Please select a year between 2000 and " + (DateTime.Now.Year + 1);
+            _messageType = "danger";
+            return;
+        }
+
+        if (_month < 1 || _month > 12)
+        {
+            _message = "Invalid month. Please select a month between 1 and 12";
+            _messageType = "danger";
+            return;
+        }
+
+        try
+        {
+            var url = $"api/Report/monthly?year={_year}&month={_month}&saveReport=true";
+            var response = await Http.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _message = "Report created successfully!";
+                _messageType = "success";
+                await LoadReports();
+                await createModal.HideAsync();
+            }
+            else
+            {
+                _message = $"Error creating report: {await response.Content.ReadAsStringAsync()}";
+                _messageType = "danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            _message = $"Error creating report: {ex.Message}";
+            _messageType = "danger";
+        }
+        
+        // Clear message after 5 seconds
+        await Task.Delay(5000);
+        _message = string.Empty;
+        StateHasChanged();
+    }
+    
+    private async Task ConfirmDelete(ProjectReport report)
+    {
+        _reportToDelete = report;
+        await deleteModal.ShowAsync();
+    }
+    
+    private async Task DeleteReportAsync()
+    {
+        if (_reportToDelete == null) return;
+        
+        try
+        {
+            var response = await Http.DeleteAsync($"api/Report/{_reportToDelete.Id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                _message = "Report deleted successfully!";
+                _messageType = "success";
+                await LoadReports();
+                await deleteModal.HideAsync();
+            }
+            else
+            {
+                _message = $"Error deleting report: {await response.Content.ReadAsStringAsync()}";
+                _messageType = "danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            _message = $"Error deleting report: {ex.Message}";
+            _messageType = "danger";
+        }
+        
+        // Clear message after 5 seconds
+        await Task.Delay(5000);
+        _message = string.Empty;
+        StateHasChanged();
+    }
+}

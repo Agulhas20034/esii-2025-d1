@@ -4,7 +4,7 @@ public class MediaCreateDto
 {
     public int ProjectId { get; set; } // Precisa de ter um projeto associado
 
-    public int? ReportId { get; set; } // Precisa de um Report?? associado
+    public int? ReportId { get; set; } // Precisa de um ProjectReport?? associado
 
     public string Name { get; set; }
 

@@ -39,7 +39,7 @@ public class Project
 
     public virtual ICollection<Media> Media { get; set; } = new List<Media>();
     
-    public virtual ICollection<Report> Reports { get; set; } = new List<Report>();
+    public virtual ICollection<ProjectReport> Reports { get; set; } = new List<ProjectReport>();
     
     
     private static readonly List<IProjectObserver> _observers = new();

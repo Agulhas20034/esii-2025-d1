@@ -14,7 +14,7 @@ public class ReportController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly ILogService _logService;
     private readonly SingletonUserManager _usermanager;
-    private const string Entity = "Report";
+    private const string Entity = "ProjectReport";
 
     public ReportController(ApplicationDbContext context, ILogService logService, SingletonUserManager usermanager,
         IHttpContextAccessor httpContextAccessor)
@@ -30,7 +30,7 @@ public class ReportController : ControllerBase
         [FromQuery] int month,
         [FromQuery] bool saveReport = false)
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        string? userId = "f377d4bc-d61e-4d0a-8438-ed89e5cb3476"; //await _usermanager.GetCurrentUserIdAsync();
 
         var firstDayOfMonth = new DateTime(year, month, 1);
         var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
@@ -49,12 +49,12 @@ public class ReportController : ControllerBase
 
         if (saveReport)
         {
-            var report = new Report
+            var report = new ProjectReport
             {
                 UserId = userId,
                 StartDate = firstDayOfMonth,
                 EndDate = lastDayOfMonth,
-                Title = $"Report - {CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)} {year}",
+                Title = $"ProjectReport - {CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)} {year}",
                 TotalHours = reportData.TotalHours,
                 TotalAmount = reportData.TotalAmount,
                 ReportDataJson = JsonSerializer.Serialize(reportData),
@@ -72,11 +72,11 @@ public class ReportController : ControllerBase
     private async Task<ReportData> GeneratePersonalReportData(string userId, DateTime startDate, DateTime endDate)
     {
         var completedAssignments = await _context.Assignments
-            .Include(a => a.ProjectId)
+            .Include(a => a.Project)
             .Where(a => a.UserId == userId &&
                         a.Status == AssignmentStatus.Completed &&
-                        a.EndDate >= startDate &&
-                        a.EndDate <= endDate)
+                        a.StartDate <= endDate &&
+                        a.EndDate >= startDate)
             .ToListAsync();
 
         var reportData = new ReportData();
@@ -129,9 +129,9 @@ public class ReportController : ControllerBase
     }
     
     [HttpGet("list")]
-    public async Task<ActionResult<List<Report>>> GetUserReports()
+    public async Task<ActionResult<List<ProjectReport>>> GetUserReports()
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        string? userId = "f377d4bc-d61e-4d0a-8438-ed89e5cb3476"; //await _usermanager.GetCurrentUserIdAsync();
 
         var reports = await _context.Reports
             .OrderByDescending(r => r.StartDate)
@@ -143,14 +143,14 @@ public class ReportController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteReport(int id)
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        string? userId = "f377d4bc-d61e-4d0a-8438-ed89e5cb3476"; //await _usermanager.GetCurrentUserIdAsync();
 
         var report = await _context.Reports
             .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userId && r.DeletedAt == null);
 
         if (report == null)
         {
-            return NotFound(new { message = "Report not found or already deleted." });
+            return NotFound(new { message = "ProjectReport not found or already deleted." });
         }
 
         report.DeletedAt = DateTime.UtcNow;

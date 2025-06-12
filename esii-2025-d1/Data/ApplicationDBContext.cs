@@ -8,27 +8,28 @@ namespace esii_2025_d1.Data;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    : IdentityDbContext<ApplicationUser>(options)
 {
-    
+
     public DbSet<Jom> Joms { get; set; } = null!;
     public DbSet<Log> logs { get; set; } = null!;
     public DbSet<Customer> Customers { get; set; } = null!;
     public DbSet<Media> Media { get; set; } = null!;
     public DbSet<Project> Projects { get; set; } = null!;
     public DbSet<ProjectUser> ProjectUsers { get; set; } = null!;
-    public DbSet<Report> Reports { get; set; } = null!;
+    public DbSet<ProjectReport> Reports { get; set; } = null!;
     public DbSet<Assignment> Assignments { get; set; } = null!;
-    
+
     public DbSet<UserInfo> UserInfos { get; set; } = null!;
-    
-    
-    
+
+
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {   
-        
+    {
+
         base.OnModelCreating(modelBuilder);
-        
+
         // Soft delete
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
@@ -43,121 +44,5 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 modelBuilder.Entity(entityType.ClrType).HasQueryFilter(filter);
             }
         }
-        
-        // Seed data
-        modelBuilder.Entity<Jom>().HasData(
-            new Jom 
-            { 
-                Id = 1,
-                Label = "Joms", 
-                Date = DateTime.UtcNow, 
-                IsDone = false, 
-                TestNumber = 2.5f, 
-                created_at = DateTime.UtcNow, 
-                updated_at = DateTime.UtcNow,
-                deleted_at = null
-            }
-        );
-        
-        modelBuilder.Entity<Assignment>().HasData(
-            new Assignment
-            {
-                Id = 1,
-                UserId = "aa79112a-9b18-48b9-80db-34439ac69173",
-                ProjectId = 1,
-                Description = "Test assignment",
-                HourlyRate = 20.0f,
-                StartDate = DateTime.UtcNow,
-                EndDate = DateTime.UtcNow.AddDays(7),
-                Status = AssignmentStatus.Created,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                DeletedAt = null
-            },
-            new Assignment
-            {
-                Id = 2,
-                UserId = "aa79112a-9b18-48b9-80db-34439ac69173",
-                ProjectId = 1,
-                Description = "Test assignment2",
-                HourlyRate = 20.0f,
-                StartDate = DateTime.UtcNow,
-                EndDate = DateTime.UtcNow.AddDays(6),
-                Status = AssignmentStatus.Created,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                DeletedAt = null
-            }
-        );
-        
-        modelBuilder.Entity<Customer>().HasData(
-            new Customer
-            {
-                Id = 1,
-                Name = "Test Customer",
-                Email = "test@gmail.com",
-                PhoneNumber = "123456789",
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                DeletedAt = null,
-            },
-            new Customer
-            {
-                Id = 2,
-                Name = "Test Customer2",
-                Email = "test2@gmail.com",
-                PhoneNumber = "923456789",
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                DeletedAt = null,
-            }
-        );
-        
-        modelBuilder.Entity<Project>().HasData(
-            new Project
-            {
-                Id = 1,
-                UserId = "aa79112a-9b18-48b9-80db-34439ac69173",
-                CustomerId = 1,
-                Name = "Test Project",
-                Description = "Test project description",
-                HourlyRate = 14.0f,
-                DailyWorkHours = 8,
-                Status = ProjectStatus.Created,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                DeletedAt = null,
-            },
-            new Project
-            {
-                Id = 2,
-                UserId = "aa79112a-9b18-48b9-80db-34439ac69173",
-                CustomerId = 1,
-                Name = "Test Project2",
-                Description = "Test project description2",
-                HourlyRate = 16.0f,
-                DailyWorkHours = 4,
-                Status = ProjectStatus.Created,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                DeletedAt = null,
-            },
-            new Project
-            {
-                Id = 3,
-                UserId = "aa79112a-9b18-48b9-80db-34439ac69173",
-                CustomerId = 1,
-                Name = "Test Project3",
-                Description = "Test project description3",
-                HourlyRate = 16.0f,
-                DailyWorkHours = 4,
-                Status = ProjectStatus.Created,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                DeletedAt = null,
-            }
-        );
     }
-
-
 }

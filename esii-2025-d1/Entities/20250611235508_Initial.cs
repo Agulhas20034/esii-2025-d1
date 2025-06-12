@@ -4,8 +4,6 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
-
 namespace esii2025d1.Entities
 {
     /// <inheritdoc />
@@ -287,6 +285,32 @@ namespace esii2025d1.Entities
                 });
 
             migrationBuilder.CreateTable(
+                name: "Media",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ProjectId = table.Column<int>(type: "integer", nullable: false),
+                    ReportId = table.Column<int>(type: "integer", nullable: true),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Type = table.Column<string>(type: "text", nullable: false),
+                    Path = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Media", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Media_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ProjectUsers",
                 columns: table => new
                 {
@@ -317,8 +341,15 @@ namespace esii2025d1.Entities
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    UserId = table.Column<int>(type: "integer", nullable: false),
-                    ProjectId = table.Column<int>(type: "integer", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    ProjectId = table.Column<int>(type: "integer", nullable: true),
+                    StartDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    Title = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
+                    TotalHours = table.Column<double>(type: "double precision", nullable: false),
+                    TotalAmount = table.Column<decimal>(type: "numeric", nullable: true),
+                    ReportDataJson = table.Column<string>(type: "text", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     DeletedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
@@ -330,81 +361,7 @@ namespace esii2025d1.Entities
                         name: "FK_Reports_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Media",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ProjectId = table.Column<int>(type: "integer", nullable: false),
-                    ReportId = table.Column<int>(type: "integer", nullable: true),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    Type = table.Column<string>(type: "text", nullable: false),
-                    Path = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
-                    DeletedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Media", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Media_Projects_ProjectId",
-                        column: x => x.ProjectId,
-                        principalTable: "Projects",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Media_Reports_ReportId",
-                        column: x => x.ReportId,
-                        principalTable: "Reports",
                         principalColumn: "Id");
-                });
-
-            migrationBuilder.InsertData(
-                table: "Customers",
-                columns: new[] { "Id", "CreatedAt", "DeletedAt", "Email", "Name", "PhoneNumber", "UpdatedAt" },
-                values: new object[,]
-                {
-                    { 1, new DateTime(2025, 6, 11, 14, 22, 43, 415, DateTimeKind.Utc).AddTicks(892), null, "test@gmail.com", "Test Customer", "123456789", new DateTime(2025, 6, 11, 14, 22, 43, 415, DateTimeKind.Utc).AddTicks(1092) },
-                    { 2, new DateTime(2025, 6, 11, 14, 22, 43, 415, DateTimeKind.Utc).AddTicks(1427), null, "test2@gmail.com", "Test Customer2", "923456789", new DateTime(2025, 6, 11, 14, 22, 43, 415, DateTimeKind.Utc).AddTicks(1428) }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Joms",
-                columns: new[] { "Id", "Date", "IsDone", "Label", "TestNumber", "created_at", "deleted_at", "updated_at" },
-                values: new object[] { 1, new DateTime(2025, 6, 11, 14, 22, 43, 412, DateTimeKind.Utc).AddTicks(1830), false, "Joms", 2.5f, new DateTime(2025, 6, 11, 14, 22, 43, 412, DateTimeKind.Utc).AddTicks(2355), null, new DateTime(2025, 6, 11, 14, 22, 43, 412, DateTimeKind.Utc).AddTicks(2528) });
-
-            migrationBuilder.InsertData(
-                table: "Projects",
-                columns: new[] { "Id", "CreatedAt", "CustomerId", "DailyWorkHours", "DeletedAt", "Description", "HourlyRate", "Name", "Status", "UpdatedAt", "UserId" },
-                values: new object[,]
-                {
-                    { 1, new DateTime(2025, 6, 11, 14, 22, 43, 415, DateTimeKind.Utc).AddTicks(4453), 1, 8, null, "Test project description", 14f, "Test Project", 0, new DateTime(2025, 6, 11, 14, 22, 43, 415, DateTimeKind.Utc).AddTicks(4591), "aa79112a-9b18-48b9-80db-34439ac69173" },
-                    { 2, new DateTime(2025, 6, 11, 14, 22, 43, 415, DateTimeKind.Utc).AddTicks(4900), 1, 4, null, "Test project description2", 16f, "Test Project2", 0, new DateTime(2025, 6, 11, 14, 22, 43, 415, DateTimeKind.Utc).AddTicks(4901), "aa79112a-9b18-48b9-80db-34439ac69173" },
-                    { 3, new DateTime(2025, 6, 11, 14, 22, 43, 415, DateTimeKind.Utc).AddTicks(4904), 1, 4, null, "Test project description3", 16f, "Test Project3", 0, new DateTime(2025, 6, 11, 14, 22, 43, 415, DateTimeKind.Utc).AddTicks(4904), "aa79112a-9b18-48b9-80db-34439ac69173" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Assignments",
-                columns: new[] { "Id", "CreatedAt", "DeletedAt", "Description", "EndDate", "HourlyRate", "ProjectId", "StartDate", "Status", "UpdatedAt", "UserId" },
-                values: new object[,]
-                {
-                    { 1, new DateTime(2025, 6, 11, 14, 22, 43, 414, DateTimeKind.Utc).AddTicks(8775), null, "Test assignment", new DateTime(2025, 6, 18, 14, 22, 43, 414, DateTimeKind.Utc).AddTicks(8424), 20f, 1, new DateTime(2025, 6, 11, 14, 22, 43, 414, DateTimeKind.Utc).AddTicks(8240), 0, new DateTime(2025, 6, 11, 14, 22, 43, 414, DateTimeKind.Utc).AddTicks(8928), "aa79112a-9b18-48b9-80db-34439ac69173" },
-                    { 2, new DateTime(2025, 6, 11, 14, 22, 43, 414, DateTimeKind.Utc).AddTicks(9245), null, "Test assignment2", new DateTime(2025, 6, 17, 14, 22, 43, 414, DateTimeKind.Utc).AddTicks(9244), 20f, 1, new DateTime(2025, 6, 11, 14, 22, 43, 414, DateTimeKind.Utc).AddTicks(9244), 0, new DateTime(2025, 6, 11, 14, 22, 43, 414, DateTimeKind.Utc).AddTicks(9246), "aa79112a-9b18-48b9-80db-34439ac69173" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Reports",
-                columns: new[] { "Id", "CreatedAt", "DeletedAt", "ProjectId", "UpdatedAt", "UserId" },
-                values: new object[,]
-                {
-                    { 1, new DateTime(2025, 6, 11, 14, 22, 43, 415, DateTimeKind.Utc).AddTicks(6074), null, 1, new DateTime(2025, 6, 11, 14, 22, 43, 415, DateTimeKind.Utc).AddTicks(6219), 1 },
-                    { 2, new DateTime(2025, 6, 11, 14, 22, 43, 415, DateTimeKind.Utc).AddTicks(6524), null, 2, new DateTime(2025, 6, 11, 14, 22, 43, 415, DateTimeKind.Utc).AddTicks(6525), 2 }
                 });
 
             migrationBuilder.CreateIndex(
@@ -453,11 +410,6 @@ namespace esii2025d1.Entities
                 name: "IX_Media_ProjectId",
                 table: "Media",
                 column: "ProjectId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Media_ReportId",
-                table: "Media",
-                column: "ReportId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_CustomerId",
@@ -509,6 +461,9 @@ namespace esii2025d1.Entities
                 name: "ProjectUsers");
 
             migrationBuilder.DropTable(
+                name: "Reports");
+
+            migrationBuilder.DropTable(
                 name: "UserInfos");
 
             migrationBuilder.DropTable(
@@ -516,9 +471,6 @@ namespace esii2025d1.Entities
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
-
-            migrationBuilder.DropTable(
-                name: "Reports");
 
             migrationBuilder.DropTable(
                 name: "Projects");

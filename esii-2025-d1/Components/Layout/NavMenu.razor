@@ -19,7 +19,14 @@
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
-       <AuthorizeView Roles="Admin,UserManager,User">
+        
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="user/reports">
+                <span class="" aria-hidden="true"><Icon Name="IconName.File" /></span>&nbsp;&nbsp;&nbsp;&nbsp;My Reports
+            </NavLink>
+        </div>
+        
+        <AuthorizeView Roles="Admin,UserManager,User">
            <Authorized Context="authContext">
                
 @*                <div class="nav-item px-3">
@@ -58,8 +65,14 @@
                     </NavLink>
                 </div>
                 
+                @* <div class="nav-item px-3"> *@
+                @*     <NavLink class="nav-link" href="user/reports"> *@
+                @*         <span class="" aria-hidden="true"><Icon Name="IconName.File" /></span>&nbsp;&nbsp;&nbsp;&nbsp;My Reports *@
+                @*     </NavLink> *@
+                @* </div> *@
+                
 
-               <div class="nav-item px-3">
+                <div class="nav-item px-3">
                    <NavLink class="nav-link" href="dashboard">
                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> JomDashBoard
                    </NavLink>

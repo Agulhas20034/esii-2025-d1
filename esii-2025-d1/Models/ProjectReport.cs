@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace esii_2025_d1.Models;
 
-public class Report
+public class ProjectReport
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

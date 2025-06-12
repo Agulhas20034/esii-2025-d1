@@ -175,7 +175,7 @@ using (var scope = app.Services.CreateScope())
         services.GetRequiredService<IHttpContextAccessor>()
     );
     
-    
+    await ApplicationDbContextSeeder.SeedAsync(services);
     await SeedRolesAndAdmin(roleManager, userManager,identityManager);
 }
 
