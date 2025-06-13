@@ -17,6 +17,7 @@ public class JomController : ControllerBase
     private readonly ILogService _logService;
     protected string Entity = "Jom";
     private readonly SingletonUserManager _usermanager;
+    private string userId = "Undefined";
 
     public JomController(
         ApplicationDbContext context,
@@ -35,10 +36,6 @@ public class JomController : ControllerBase
     public async Task<ActionResult<IEnumerable<JomResponseDto>>> GetJoms()
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var joms = await _context.Joms
@@ -76,10 +73,6 @@ public class JomController : ControllerBase
     public async Task<ActionResult<JomResponseDto>> GetJom(int id)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         var jom = await _context.Joms.FindAsync(id);
     
         if (jom == null)
@@ -114,10 +107,6 @@ public class JomController : ControllerBase
     public async Task<ActionResult<JomCreateDto>> PostJom(JomCreateDto jomRequest)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         var jom = new Jom
         {
             Label = jomRequest.Label,
@@ -147,10 +136,6 @@ public class JomController : ControllerBase
     public async Task<IActionResult> PutJom(int id, JomUpdateDto jom)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         var existingJom = await _context.Joms.FindAsync(id);
         
         if (existingJom == null)
@@ -196,10 +181,6 @@ public class JomController : ControllerBase
     public async Task<IActionResult> DeleteJom(int id)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         var jom = await _context.Joms.FindAsync(id);
         if (jom == null)
         {

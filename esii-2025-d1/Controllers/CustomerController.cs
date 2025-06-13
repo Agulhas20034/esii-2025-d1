@@ -16,6 +16,7 @@ public class CustomerController : ControllerBase
     private readonly ILogService _logService;
     protected string Entity = "Customer";
     private readonly SingletonUserManager _usermanager;
+    private string userId = "Undefined";
     
     public CustomerController(ApplicationDbContext context, ILogService logService,SingletonUserManager usermanager)
     {
@@ -29,10 +30,6 @@ public class CustomerController : ControllerBase
     public async Task<ActionResult<IEnumerable<CustomerResponseDto>>> GetCustomers()
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var customers = await _context.Customers
@@ -80,8 +77,6 @@ public class CustomerController : ControllerBase
         {
             userId = "1";
         }
-        // todo: se for necessario mais dados do projeto, criar um DTO
-        
         var customer = await _context.Customers
             .Include(r => r.Projects)
             .FirstOrDefaultAsync(r => r.Id == id);
@@ -130,10 +125,6 @@ public class CustomerController : ControllerBase
     public async Task<ActionResult<CustomerResponseDto>> PostCustomer(CustomerCreateDto customerRequest)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var customer = new Customer
@@ -145,7 +136,6 @@ public class CustomerController : ControllerBase
                 UpdatedAt = DateTime.UtcNow
             };
             
-            // Adiciona Project (se existirem IDs)
             if (customerRequest.ProjectIds != null && customerRequest.ProjectIds.Any())
             {
                 var project = await _context.Projects
@@ -181,14 +171,9 @@ public class CustomerController : ControllerBase
     public async Task<IActionResult> PutCustomer(int id, CustomerUpdateDto customerRequest)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         var customer = await _context.Customers
             .Include(p => p.Projects) 
             .FirstOrDefaultAsync(c => c.Id == id);
-
         if (customer == null)
             return NotFound();
         try
@@ -243,10 +228,6 @@ public class CustomerController : ControllerBase
     public async Task<IActionResult> DeleteCustomer(int id)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var customer = await _context.Customers.FindAsync(id);

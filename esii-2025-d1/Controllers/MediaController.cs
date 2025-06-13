@@ -16,6 +16,7 @@ public class MediaController : ControllerBase
     private readonly ILogService _logService;
     protected string Entity = "Media";
     private readonly SingletonUserManager _usermanager;
+    private string userId = "Undefined";
 
     public MediaController(ApplicationDbContext context, ILogService logService,SingletonUserManager usermanager)
     {
@@ -30,10 +31,6 @@ public class MediaController : ControllerBase
     public async Task<ActionResult<IEnumerable<MediaResponseDto>>> GetMedias()
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var medias = await _context.Media
@@ -70,10 +67,6 @@ public class MediaController : ControllerBase
     public async Task<ActionResult<MediaResponseDto>> GetMedia(int id)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         var media = await _context.Media.FindAsync(id);
 
         if (media == null)
@@ -115,10 +108,6 @@ public class MediaController : ControllerBase
     public async Task<ActionResult<MediaResponseDto>> PostMedia(MediaCreateDto mediaRequest)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var media = new Media
@@ -158,10 +147,6 @@ public class MediaController : ControllerBase
     public async Task<IActionResult> PutMedia(int id, MediaUpdateDto mediaRequest)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         var media = await _context.Media.FindAsync(id);
 
         if (media == null)
@@ -205,10 +190,6 @@ public class MediaController : ControllerBase
     public async Task<IActionResult> DeleteMedia(int id)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var media = await _context.Media.FindAsync(id);

@@ -17,6 +17,7 @@ public class AssignmentController : ControllerBase
     private readonly ILogService _logService;
     protected string Entity = "Assignment";
     private readonly SingletonUserManager _usermanager;
+    private string userId = "Undefined";
     
     public AssignmentController(ApplicationDbContext context, ILogService logService,SingletonUserManager usermanager)
     {
@@ -29,10 +30,6 @@ public class AssignmentController : ControllerBase
     public async Task<ActionResult<IEnumerable<AssignmentResponseDto>>> GetAssignments()
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var assignments = await _context.Assignments
@@ -73,10 +70,6 @@ public class AssignmentController : ControllerBase
     {
         var assignment = await _context.Assignments.FindAsync(id);
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         if (assignment == null)
         {
             return NotFound();
@@ -118,10 +111,6 @@ public class AssignmentController : ControllerBase
     public async Task<ActionResult<AssignmentResponseDto>> PostAssignment(AssignmentCreateDto assignmentRequest)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var assignment = new Assignment
@@ -162,10 +151,6 @@ public class AssignmentController : ControllerBase
     public async Task<IActionResult> PutAssignment(int id, AssignmentUpdateDto assignmentRequest)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         var assignment = await _context.Assignments.FindAsync(id);
 
         if (assignment == null)
@@ -210,10 +195,6 @@ public class AssignmentController : ControllerBase
     public async Task<IActionResult> DeleteAssignment(int id)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var assignment = await _context.Assignments.FindAsync(id);

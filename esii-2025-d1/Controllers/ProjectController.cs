@@ -21,6 +21,7 @@ public class ProjectController : ControllerBase
     private readonly IProjectObserver _projectObserver;
     private readonly SingletonUserManager _usermanager;
     protected string Entity = "Project";
+    private string userId = "Undefined";
     
     public ProjectController(ApplicationDbContext context, ILogService logService,SingletonUserManager usermanager)
     {
@@ -36,10 +37,6 @@ public class ProjectController : ControllerBase
     public async Task<ActionResult<IEnumerable<ProjectResponseDto>>> GetProjects()
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var projects = await _context.Projects
@@ -100,10 +97,6 @@ public class ProjectController : ControllerBase
     public async Task<ActionResult<ProjectResponseDto>> GetProject(int id)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         var project = await _context.Projects.FindAsync(id);
 
         if (project == null)
@@ -158,10 +151,6 @@ public class ProjectController : ControllerBase
     public async Task<ActionResult<ProjectResponseDto>> PostProject(ProjectCreateDto projectRequest)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var project = new Project
@@ -203,10 +192,6 @@ public class ProjectController : ControllerBase
     public async Task<IActionResult> PutProject(int id, ProjectUpdateDto projectRequest)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         var project = await _context.Projects.FindAsync(id);
 
         if (project == null)
@@ -252,10 +237,6 @@ public class ProjectController : ControllerBase
     public async Task<IActionResult> DeleteProject(int id)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
         try
         {
             var project = await _context.Projects.FindAsync(id);

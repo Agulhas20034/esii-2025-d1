@@ -15,6 +15,7 @@ public class ReportController : ControllerBase
     private readonly ILogService _logService;
     private readonly SingletonUserManager _usermanager;
     private const string Entity = "ProjectReport";
+    private string userId = "Undefined";
 
     public ReportController(ApplicationDbContext context, ILogService logService, SingletonUserManager usermanager,
         IHttpContextAccessor httpContextAccessor)
@@ -30,8 +31,7 @@ public class ReportController : ControllerBase
         [FromQuery] int month,
         [FromQuery] bool saveReport = false)
     {
-        string? userId = "f377d4bc-d61e-4d0a-8438-ed89e5cb3476"; //await _usermanager.GetCurrentUserIdAsync();
-
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
         var firstDayOfMonth = new DateTime(year, month, 1);
         var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
@@ -71,7 +71,9 @@ public class ReportController : ControllerBase
 
     private async Task<ReportData> GeneratePersonalReportData(string userId, DateTime startDate, DateTime endDate)
     {
-        var completedAssignments = await _context.Assignments
+        try
+        {
+            var completedAssignments = await _context.Assignments
             .Include(a => a.Project)
             .Where(a => a.UserId == userId &&
                         a.Status == AssignmentStatus.Completed &&
@@ -79,16 +81,16 @@ public class ReportController : ControllerBase
                         a.EndDate >= startDate)
             .ToListAsync();
 
-        var reportData = new ReportData();
+            var reportData = new ReportData();
 
-        var dailyGroups = completedAssignments
-            .GroupBy(a => a.EndDate?.Date)
-            .Where(g => g.Key.HasValue)
-            .OrderBy(g => g.Key);
+            var dailyGroups = completedAssignments
+                .GroupBy(a => a.EndDate?.Date)
+                .Where(g => g.Key.HasValue)
+                .OrderBy(g => g.Key);
 
-        foreach (var dayGroup in dailyGroups)
-        {
-            var dayReport = new DailyReport { Date = dayGroup.Key.Value };
+            foreach (var dayGroup in dailyGroups)
+            {
+                var dayReport = new DailyReport { Date = dayGroup.Key.Value };
 
             foreach (var assignment in dayGroup)
             {
@@ -120,43 +122,90 @@ public class ReportController : ControllerBase
 
             dayReport.ExceededDailyHours = exceeded;
             reportData.DailyReports.Add(dayReport);
+            }
+
+            reportData.TotalHours = reportData.DailyReports.Sum(d => d.DailyHours);
+            reportData.TotalAmount = reportData.DailyReports.Sum(d => d.DailyAmount);
+        
+            await _logService.CreateLog(new Log
+            {
+                entity_id = null ,
+                entity_name = Entity,
+                user_id = userId,
+                action = LogAction.Read
+            });
+
+            return reportData;
         }
-
-        reportData.TotalHours = reportData.DailyReports.Sum(d => d.DailyHours);
-        reportData.TotalAmount = reportData.DailyReports.Sum(d => d.DailyAmount);
-
-        return reportData;
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error generating report data: {e.Message}");
+            throw;
+        }
+        
     }
     
     [HttpGet("list")]
     public async Task<ActionResult<List<ProjectReport>>> GetUserReports()
     {
-        string? userId = "f377d4bc-d61e-4d0a-8438-ed89e5cb3476"; //await _usermanager.GetCurrentUserIdAsync();
-
-        var reports = await _context.Reports
-            .OrderByDescending(r => r.StartDate)
-            .ToListAsync();
-
-        return Ok(reports);
+        try
+        {
+            var reports = await _context.Reports
+                .OrderByDescending(r => r.StartDate)
+                .ToListAsync();
+            
+            await _logService.CreateLog(new Log
+            {
+                entity_id = null ,
+                entity_name = Entity,
+                user_id = userId,
+                action = LogAction.Read
+            });
+            
+            return Ok(reports);
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error fetching user reports: {e.Message}");
+            throw;
+        }
+        
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteReport(int id)
     {
-        string? userId = "f377d4bc-d61e-4d0a-8438-ed89e5cb3476"; //await _usermanager.GetCurrentUserIdAsync();
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
 
-        var report = await _context.Reports
-            .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userId && r.DeletedAt == null);
-
-        if (report == null)
+        try
         {
-            return NotFound(new { message = "ProjectReport not found or already deleted." });
+            var report = await _context.Reports
+                .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userId && r.DeletedAt == null);
+
+            if (report == null)
+            {
+                return NotFound(new { message = "ProjectReport not found or already deleted." });
+            }
+
+            report.DeletedAt = DateTime.UtcNow;
+            report.UpdatedAt = DateTime.UtcNow;
+            
+            await _logService.CreateLog(new Log
+            {
+                entity_id = report.Id,
+                entity_name = Entity,
+                user_id = userId,
+                action = LogAction.Delete
+            });
+
+            await _context.SaveChangesAsync();
         }
-
-        report.DeletedAt = DateTime.UtcNow;
-        report.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error deleting Report: {e.Message}");
+            throw;
+        }
+            
         return NoContent();
     }
     
