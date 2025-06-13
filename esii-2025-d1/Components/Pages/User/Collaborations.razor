@@ -104,14 +104,14 @@
             <Content>
                 <div>
                     <Grid TItem="Invitation"
-                    Class="table table-hover table-bordered table-striped"
-                    Data="@invitations"
-                    AllowPaging="true"
-                    PageSize="10"
-                    AllowSorting="true"
-                    AllowSelection="false"
-                    SelectionMode="GridSelectionMode.Multiple"
-                    Responsive="true">
+                          Class="table table-hover table-bordered table-striped"
+                          Data="@invitations"
+                          AllowPaging="true"
+                          PageSize="10"
+                          AllowSorting="true"
+                          AllowSelection="false"
+                          SelectionMode="GridSelectionMode.Multiple"
+                          Responsive="true">
 
                         <GridColumns>
                             <GridColumn TItem="Invitation" HeaderText="Inviter"  SortKeySelector="item => item.userInfo.Name">
@@ -136,7 +136,7 @@
                             </GridColumn>
                         </GridColumns>
                     </Grid>
-                </div
+                </div>
             </Content>
         </Tab>
     </Tabs>
