@@ -1,0 +1,144 @@
+﻿@page "/Register"
+@using System.ComponentModel.DataAnnotations
+@using esii_2025_d1.Services
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject SingletonUserManager UserManager
+@rendermode InteractiveServer
+
+<div class="auth-container">
+    <div class="auth-card">
+        <h3 class="text-center mb-4">Create Account</h3>
+
+        <EditForm Model="@registerModel" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group mb-3">
+                <label for="email">Email</label>
+                <InputText id="email" @bind-Value="registerModel.Email" class="form-control" />
+                <ValidationMessage For="@(() => registerModel.Email)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="password">Password</label>
+                <InputText id="password" type="password" @bind-Value="registerModel.Password" class="form-control" />
+                <ValidationMessage For="@(() => registerModel.Password)" />
+            </div>
+
+            <div class="form-group mb-4">
+                <label for="confirmPassword">Confirm Password</label>
+                <InputText id="confirmPassword" type="password" @bind-Value="registerModel.ConfirmPassword" class="form-control" />
+                <ValidationMessage For="@(() => registerModel.ConfirmPassword)" />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100" disabled="@isProcessing">
+                @if (isProcessing)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                    <span> Creating Account...</span>
+                }
+                else
+                {
+                    <span>Register</span>
+                }
+            </button>
+        </EditForm>
+
+        <div class="text-center mt-3">
+            <a href="/Login" class="text-muted">Already have an account? Sign In</a>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool isProcessing = false;
+    
+    private RegisterModel registerModel = new();
+
+    public class RegisterModel
+    {
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email format")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Password is required")]
+        [DataType(DataType.Password)]
+        [MinLength(6, ErrorMessage = "Password must be at least 6 characters")]
+        public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Please confirm your password")]
+        [Compare(nameof(Password), ErrorMessage = "Passwords do not match")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        isProcessing = true;
+
+        try
+        {
+
+            var result = await UserManager.CreateUserAsync(
+                registerModel.Email,
+                registerModel.Password,
+                new List<string> { "User" });
+
+            if (result.Success)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Registration successful!");
+                NavigationManager.NavigateTo("/Account/Login", true);
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", $"Registration failed: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+}
+
+<style>
+    .auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .auth-card {
+        width: 100%;
+        max-width: 400px;
+        padding: 2rem;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .validation-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+    }
+
+    .spinner-border {
+        vertical-align: middle;
+    }
+</style>
