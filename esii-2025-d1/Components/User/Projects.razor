@@ -45,7 +45,6 @@ PageSize="10"
 AllowSorting="true"
 AllowSelection="false"
 SelectionMode="GridSelectionMode.Multiple"
-SelectedItemsChanged="OnSelectedItemsChanged"
 Responsive="true">
 
     <GridColumns>
@@ -335,11 +334,7 @@ Responsive="true">
         }
     }
 
-    private Task OnSelectedItemsChanged(HashSet<Project> items)
-    {
-        selectedProjects = items is not null && items.Any() ? items : new();
-        return Task.CompletedTask;
-    }
+
 
     private async Task OnShowAddModalClick()
     {
@@ -744,7 +739,7 @@ Responsive="true">
 
     private void ShowToast(ToastType type, string message, string title) =>
         messages.Add(
-    new ToastMessage
+        new ToastMessage
             {
                 Type = type,
                 Title = title,
@@ -752,7 +747,7 @@ Responsive="true">
             HelpText = $"{DateTime.Now}",
             AutoHide = true,
 
-        });
+    });
 
 
 }

@@ -110,6 +110,56 @@ public class ProjectUserController : ControllerBase
         }
     }
 
+    // GET: api/ProjectUser/ByUserId/{id}
+    [HttpGet("ByUserId/{id}")]
+    public async Task<ActionResult<IEnumerable<ProjectUserResponseDto>>> GetProjectUserByUserId(string id)
+    {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+        if (userId is null)
+        {
+            userId = "1";
+        }
+
+        var projectUsers = await _context.ProjectUsers
+            .AsNoTracking()
+            .Where(pu => pu.UserId == id && pu.DeletedAt == null)
+            .ToListAsync();
+
+        if (projectUsers == null)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            var projectUserResponse = projectUsers.Select(pu => new ProjectUserResponseDto
+            {
+                Id = pu.Id,
+                ProjectId = pu.ProjectId,
+                UserId = pu.UserId,
+                InviterId = pu.InviterId,
+                Status = pu.Status,
+                CreatedAt = pu.CreatedAt,
+                UpdatedAt = pu.UpdatedAt
+            }).ToList();
+
+            await _logService.CreateLog(new Log
+            {
+                entity_id = null,
+                entity_name = Entity,
+                user_id = userId,
+                action = LogAction.Read
+            });
+
+            return Ok(projectUserResponse);
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error fetching ProjectUser: {e.Message}");
+            throw;
+        }
+    }
+
     // POST: api/ProjectUser
     [HttpPost]
     public async Task<ActionResult<ProjectUserResponseDto>> PostProjectUser(ProjectUserCreateDto projectUserRequest)

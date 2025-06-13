@@ -26,9 +26,10 @@ namespace esii_2025_d1.Services
 
             foreach (var r in response)
             {
+                if (r == null) continue;
                 if (r.UserId == currentUserId && r.Status == Models.Enums.ProjectUserStatus.Pending && r.DeletedAt == null)
                 {
-                    var info = users.FirstOrDefault(u => u.UserInfo.UserId == currentUserId)?.UserInfo;
+                    var info = users.FirstOrDefault(u => u.UserInfo.UserId == r.InviterId)?.UserInfo;
                     var invitation = new Invitation
                     {
                         invite = r,
