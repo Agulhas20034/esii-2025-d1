@@ -113,6 +113,53 @@ public class AssignmentController : ControllerBase
         }
     }
 
+    // GET: api/Assignment/ByUser{id}
+    [HttpGet("ByUserId/{id}")]
+    public async Task<ActionResult<IEnumerable<AssignmentResponseDto>>> GetAssignmentsByUserId(string id)
+    {
+        string? currentUserId = await _usermanager.GetCurrentUserIdAsync();
+        if (currentUserId is null)
+        {
+            currentUserId = "1";
+        }
+
+        try
+        {
+            var assignments = await _context.Assignments
+                .Where(a => a.UserId == id)
+                .Select(assignment => new AssignmentResponseDto
+                {
+                    Id = assignment.Id,
+                    UserId = assignment.UserId,
+                    ProjectId = assignment.ProjectId,
+                    Description = assignment.Description,
+                    HourlyRate = assignment.HourlyRate,
+                    StartDate = assignment.StartDate,
+                    EndDate = assignment.EndDate,
+                    Status = assignment.Status
+                })
+                .ToListAsync();
+
+            if (!assignments.Any())
+                return NotFound();
+
+            await _logService.CreateLog(new Log
+            {
+                entity_id = null,
+                entity_name = Entity,
+                user_id = currentUserId,
+                action = LogAction.Read
+            });
+
+            return Ok(assignments);
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error fetching Assignments for user {id}: {e.Message}");
+            throw;
+        }
+    }
+
     // POST: api/Assignment
     [HttpPost]
     public async Task<ActionResult<AssignmentResponseDto>> PostAssignment(AssignmentCreateDto assignmentRequest)
