@@ -110,12 +110,8 @@ public class AssignmentController : ControllerBase
     [HttpGet("ByUserId/{id}")]
     public async Task<ActionResult<IEnumerable<AssignmentResponseDto>>> GetAssignmentsByUserId(string id)
     {
-        string? currentUserId = await _usermanager.GetCurrentUserIdAsync();
-        if (currentUserId is null)
-        {
-            currentUserId = "1";
-        }
-
+        string? UserId = await _usermanager.GetCurrentUserIdAsync();
+        
         try
         {
             var assignments = await _context.Assignments
@@ -140,7 +136,7 @@ public class AssignmentController : ControllerBase
             {
                 entity_id = null,
                 entity_name = Entity,
-                user_id = currentUserId,
+                user_id = UserId,
                 action = LogAction.Read
             });
 
