@@ -157,7 +157,7 @@ public class AssignmentController : ControllerBase
             return NotFound();
         try
         {
-            assignment.ProjectId = assignmentRequest.ProjectId ?? assignment.ProjectId;
+            assignment.ProjectId = assignmentRequest.ProjectId;
             assignment.Description = assignmentRequest.Description ?? assignment.Description;
             assignment.HourlyRate = assignmentRequest.HourlyRate ?? assignment.HourlyRate;
             assignment.StartDate = assignmentRequest.StartDate ?? assignment.StartDate;
@@ -229,7 +229,7 @@ public class AssignmentController : ControllerBase
     [HttpPost("{id}/start")]
     public async Task<IActionResult> StartAssignment(int id)
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync() ?? "1";
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
 
         var assignment = await _context.Assignments.FindAsync(id);
         if (assignment == null) return NotFound();

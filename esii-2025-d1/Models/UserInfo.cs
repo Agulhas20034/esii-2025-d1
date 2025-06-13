@@ -5,7 +5,10 @@ using Microsoft.AspNetCore.Identity;
 namespace esii_2025_d1.Models;
 
 public class UserInfo
+
 {
+    
+    //todo: foreign key to projects;
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
