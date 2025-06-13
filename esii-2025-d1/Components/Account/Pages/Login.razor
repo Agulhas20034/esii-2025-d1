@@ -103,13 +103,9 @@
             {
                 RedirectManager.RedirectTo("/Admin/Dashboard");
             }
-            else if (roles.Contains("Manager"))
-            {
-                RedirectManager.RedirectTo("/Manager/Overview");
-            }
             else // Default role (e.g., "User")
             {
-                RedirectManager.RedirectTo(ReturnUrl ?? "/Account/Manage");
+                RedirectManager.RedirectTo(ReturnUrl ?? "/");
             }
         }
         else if (result.RequiresTwoFactor)

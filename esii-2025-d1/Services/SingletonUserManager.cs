@@ -331,4 +331,13 @@ public sealed class SingletonUserManager
         var userWithSameEmail = await userManager.FindByEmailAsync(email);
         return userWithSameEmail == null || userWithSameEmail.Id == currentUserId;
     }
+    
+    public async Task<bool> IsEmailUniqueAsync2(string email)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    
+        var userWithSameEmail = await userManager.FindByEmailAsync(email);
+        return userWithSameEmail.Email == email;
+    }
 }
