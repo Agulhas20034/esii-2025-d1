@@ -104,14 +104,14 @@
             <Content>
                 <div>
                     <Grid TItem="Invitation"
-                          Class="table table-hover table-bordered table-striped"
-                          Data="@invitations"
-                          AllowPaging="true"
-                          PageSize="10"
-                          AllowSorting="true"
-                          AllowSelection="false"
-                          SelectionMode="GridSelectionMode.Multiple"
-                          Responsive="true">
+                    Class="table table-hover table-bordered table-striped"
+                    Data="@invitations"
+                    AllowPaging="true"
+                    PageSize="10"
+                    AllowSorting="true"
+                    AllowSelection="false"
+                    SelectionMode="GridSelectionMode.Multiple"
+                    Responsive="true">
 
                         <GridColumns>
                             <GridColumn TItem="Invitation" HeaderText="Inviter"  SortKeySelector="item => item.userInfo.Name">
@@ -390,18 +390,35 @@
     private async Task LoadAssignments()
     {
         assignments.Clear();
-        var response = await Http.GetFromJsonAsync<List<Assignment>>($"api/assignment/byuserid/{currentUserId}");
+        try { 
+            var response = await Http.GetFromJsonAsync<List<AssignmentResponseDto>>($"api/assignment/ByUserId/{currentUserId}");
 
-        foreach (Assignment a in response)
-        {
-            assignments.Add(a);
-             if (a.StartDate.HasValue && !a.EndDate.HasValue)
+            foreach (AssignmentResponseDto a in response)
             {
-                totalSpentTime += DateTime.UtcNow - a.StartDate.Value;
+                assignments.Add(
+                new Assignment
+                {
+                    Id = a.Id,
+                    UserId = a.UserId,
+                    ProjectId = a.ProjectId,
+                    Description = a.Description,
+                    HourlyRate = a.HourlyRate,
+                    StartDate = a.StartDate,
+                    EndDate = a.EndDate,
+                    Status = a.Status
+                }
+                );
+                if (a.StartDate.HasValue && !a.EndDate.HasValue)
+                {
+                    totalSpentTime += DateTime.UtcNow - a.StartDate.Value;
+                }
+
             }
-
         }
-
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Exception loading assignments: {e.Message}");
+        }
 
     }
 
