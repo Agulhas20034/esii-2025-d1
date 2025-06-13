@@ -6,6 +6,7 @@
 
 @using esii_2025_d1.Dtos.ProjectDtos
 @using esii_2025_d1.Dtos.AssignmentDtos
+@using esii_2025_d1.Dtos.ProjectUserDtos
 @using esii_2025_d1.Dtos.UserInfoDtos
 @using esii_2025_d1.Dtos.UserDtos
 @using esii_2025_d1.ViewModels
@@ -25,22 +26,145 @@
 @* // acrecentado para obter userID (user em geral) *@
 @rendermode InteractiveServer
 
-<h3>Collaborations</h3>
+<div>
+    <Tabs EnableFadeEffect="true" TabChanged="OnTabChanged">
+        <Tab Active="true">
+            <TitleTemplate>
+                <Icon Name="IconName.Passport" /> Projects
+            </TitleTemplate>
+            <Content>
+                <div>
+                    <Grid TItem="Project"
+                    Class="table table-hover table-bordered table-striped"
+                    Data="@projects"
+                    AllowPaging="true"
+                    PageSize="10"
+                    AllowSorting="true"
+                    AllowSelection="false"
+                    SelectionMode="GridSelectionMode.Multiple"
+                    Responsive="true">
 
-@if (invitations.Count == 0)
-{
-    <Spinner Type="SpinnerType.Dots" Class="me-3" Color="SpinnerColor.Primary" />
-}
-else
-{
-    @foreach (Invitation inv in invitations)
-    {
-        <p>@inv.userInfo.Name</p>
-        <p>@inv.invite.InviterId</p>
-        <p>@inv.project.Name</p>
-    }
-}
+                        <GridColumns>
+                            <GridColumn TItem="Project" HeaderText="Name"  SortKeySelector="item => item.Name">
+                                @context?.Name
+                            </GridColumn>
+                            <GridColumn TItem="Project" HeaderText="Description" SortKeySelector="item => item.Description">
+                                @context?.Description
+                            </GridColumn>
+                            <GridColumn TItem="Project" HeaderText="Hourly Rate"  SortKeySelector="item => item.HourlyRate">
+                                @context?.HourlyRate
+                            </GridColumn>
+                        </GridColumns>
+                    </Grid>
+                </div>
+            </Content>
+        </Tab>
+        <Tab>
+            <TitleTemplate>
+                <Icon Name="IconName.Pass" /> Assignments
+            </TitleTemplate>
+            <Content>
+                <div>
+                    <h5>
+                        Total Time Spent:
+                        @($"{totalSpentTime.Days} days, {totalSpentTime.Hours} hours, {totalSpentTime.Minutes} minutes")
+                    </h5>
+                    <Grid TItem="Assignment"
+                    Class="table table-hover table-bordered table-striped"
+                    Data="@assignments"
+                    AllowPaging="true"
+                    PageSize="10"
+                    AllowSorting="true"
+                    AllowSelection="false"
+                    SelectionMode="GridSelectionMode.Multiple"
+                    Responsive="true">
 
+                        <GridColumns>
+                            <GridColumn TItem="Assignment" HeaderText="Description"  SortKeySelector="item => item.Description">
+                                @context?.Description
+                            </GridColumn>
+                            <GridColumn TItem="Assignment" HeaderText="Hourly Rate" SortKeySelector="item => item.HourlyRate">
+                                @context?.HourlyRate
+                            </GridColumn>
+                            <GridColumn TItem="Assignment" HeaderText="Start Date"  SortKeySelector="item => item.StartDate">
+                                @context?.StartDate
+                            </GridColumn>
+                            <GridColumn TItem="Assignment" HeaderText="End Date"  SortKeySelector="item => item.EndDate">
+                                @context?.EndDate
+                            </GridColumn>
+                        </GridColumns>
+                    </Grid>
+                </div>
+            </Content>
+        </Tab>
+        <Tab Id="invitations">
+            <TitleTemplate>
+                <Icon Name="IconName.PersonFill" /> Invitations
+            </TitleTemplate>
+            <Content>
+                <div>
+                    <Grid TItem="Invitation"
+                    Class="table table-hover table-bordered table-striped"
+                    Data="@invitations"
+                    AllowPaging="true"
+                    PageSize="10"
+                    AllowSorting="true"
+                    AllowSelection="false"
+                    SelectionMode="GridSelectionMode.Multiple"
+                    Responsive="true">
+
+                        <GridColumns>
+                            <GridColumn TItem="Invitation" HeaderText="Inviter"  SortKeySelector="item => item.userInfo.Name">
+                                @context.userInfo?.Name
+                            </GridColumn>
+                            <GridColumn TItem="Invitation" HeaderText="Project Name" SortKeySelector="item => item.project.Name">
+                                @context.project?.Name
+                            </GridColumn>
+                            <GridColumn TItem="Invitation" HeaderText="Project Description"  SortKeySelector="item => item.project.Description">
+                                @context.project?.Description
+                            </GridColumn>
+                            <GridColumn TItem="Invitation" HeaderText="Hourly Rate"  SortKeySelector="item => item.project.HourlyRate">
+                                @context.project?.HourlyRate
+                            </GridColumn>
+                            <GridColumn TItem="Invitation" HeaderText="Actions">
+                                <button class="btn btn-success btn-sm" @onclick="() => ConfirmAcceptInvitation(context)">
+                                    <Icon Name="IconName.Check2Circle" /> Accept
+                                </button>
+                                <button class="btn btn-warning btn-sm" @onclick="() => ConfirmRejectInvitation(context)">
+                                    <Icon Name="IconName.XCircle" /> Reject
+                                </button>
+                            </GridColumn>
+                        </GridColumns>
+                    </Grid>
+                </div
+            </Content>
+        </Tab>
+    </Tabs>
+</div> 
+
+<!-- Modal Accept Invite -->
+<Modal @ref="confirmAcceptInviteModal" Title="Confirm Action" ModalType="ModalType.Success">
+    <BodyTemplate>
+        <p>You are about to accept @pendingInvite.userInfo.Name's request to join project "@pendingInvite.project.Name".</p>
+
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="() => confirmAcceptInviteModal.HideAsync()">Cancel</Button>
+        <Button Color="ButtonColor.Success" @onclick="AcceptInvitation">Accept Request</Button>
+    </FooterTemplate>
+</Modal>
+
+<!-- Modal Reject Invite -->
+<Modal @ref="confirmRejectInviteModal" Title="Confirm Action" ModalType="ModalType.Warning">
+    <BodyTemplate>
+        <p>You are about to reject @pendingInvite.userInfo.Name's request to join project "@pendingInvite.project.Name".</p>
+
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" @onclick="() => confirmRejectInviteModal.HideAsync()">Cancel</Button>
+        <Button Color="ButtonColor.Warning" @onclick="RejectInvitation">Cancel Request</Button>
+    </FooterTemplate>
+</Modal>
 
 @code {
 
@@ -58,9 +182,17 @@ else
 
     List<ToastMessage> messages = [];
 
+    private Modal confirmAcceptInviteModal = default!;
+    private Modal confirmRejectInviteModal = default!;
 
 
     private List<Invitation> invitations = new();
+    private Invitation pendingInvite = new();
+
+    private List<Project> projects = new();
+    private List<Assignment> assignments = new();
+
+    TimeSpan totalSpentTime = TimeSpan.Zero;
 
     protected override async Task OnInitializedAsync()
     {
@@ -91,8 +223,8 @@ else
         }
 
         await LoadInvitations();
-        
-        //await LoadData();
+        await LoadProjects();
+        await LoadAssignments();
     }
 
     @* // acrecentado para obter userID (user em geral) *@
@@ -119,8 +251,16 @@ else
     private async Task LoadInvitations()
     {
         invitations = await InvitationService.GetPendingInvitations(currentUserId);
-        StateHasChanged();
     }
+
+    private async Task OnTabChanged(Tab selectedTab)
+    {
+        if (selectedTab.Title == "Invitations")
+        {
+            await LoadInvitations();
+        }
+    }
+
 
     private void ShowToast(ToastType type, string message, string title) =>
     messages.Add(
@@ -133,5 +273,136 @@ else
         AutoHide = true,
 
     });
+
+
+    private void ConfirmAcceptInvitation(Invitation invitation)
+    {
+        pendingInvite = new Invitation
+            {
+                invite = invitation.invite,
+                project = invitation.project,
+                userInfo = invitation.userInfo
+            };
+        confirmAcceptInviteModal.ShowAsync();
+
+    }
+
+    private void ConfirmRejectInvitation(Invitation invitation)
+    {
+        pendingInvite = new Invitation
+            {
+                invite = invitation.invite,
+                project = invitation.project,
+                userInfo = invitation.userInfo
+            };
+        confirmRejectInviteModal.ShowAsync();
+
+    }
+
+    private async Task RejectInvitation()
+    {
+
+        var canceledInvite = new ProjectUserUpdateDto
+        {
+            ProjectId = pendingInvite.project.Id,
+            UserId = pendingInvite.invite.UserId,
+            InviterId = pendingInvite.invite.InviterId,
+            Status = Models.Enums.ProjectUserStatus.Rejected
+        };
+
+
+        var result = await Http.PutAsJsonAsync($"api/projectuser/{pendingInvite.invite.Id}", canceledInvite);
+
+        if (result.IsSuccessStatusCode)
+        {
+            await LoadInvitations();
+            ShowToast(ToastType.Success, "Invitation rejected!", "Action Result");
+        }
+        else
+        {
+            ShowToast(ToastType.Warning, "It was not possible to reject the request at this time!", "Action Result");
+        }
+        pendingInvite = new();
+
+        await confirmRejectInviteModal.HideAsync();
+
+    }
+
+    private async Task AcceptInvitation()
+    {
+
+        var acceptedInvite = new ProjectUserUpdateDto
+        {
+            ProjectId = pendingInvite.project.Id,
+                    UserId = pendingInvite.invite.UserId,
+                    InviterId = pendingInvite.invite.InviterId,
+            Status = Models.Enums.ProjectUserStatus.Accepted
+        };
+
+        var result = await Http.PutAsJsonAsync($"api/projectuser/{pendingInvite.invite.Id}", acceptedInvite);
+
+        if (result.IsSuccessStatusCode)
+        {
+            await LoadInvitations();
+            ShowToast(ToastType.Success, "Invitation Accepted!", "Action Result");
+        }
+        else
+        {
+            ShowToast(ToastType.Warning, "It was not possible to accept the request at this time!", "Action Result");
+        }
+        pendingInvite = new();
+        await confirmAcceptInviteModal.HideAsync();
+
+    }
+
+    private async Task LoadProjects()
+    {
+        projects.Clear();
+        var response = await Http.GetFromJsonAsync<List<ProjectUser>>($"api/projectuser/byuserid/{currentUserId}");
+
+        List<ProjectUser> items = new();
+
+        if (response != null)
+        {
+            foreach (ProjectUser p in response)
+            {
+                if (p.Status == Models.Enums.ProjectUserStatus.Accepted) items.Add(p);
+            }
+        }
+
+        var result = await Http.GetFromJsonAsync<List<Project>>("api/project");
+
+        if (result != null)
+        {
+            var acceptedProjectIds = items.Select(i => i.ProjectId).ToHashSet();
+
+            foreach (Project p in result)
+            {
+                if (acceptedProjectIds.Contains(p.Id))
+                {
+                    projects.Add(p);
+                }
+            }
+        }
+
+    }
+
+    private async Task LoadAssignments()
+    {
+        assignments.Clear();
+        var response = await Http.GetFromJsonAsync<List<Assignment>>($"api/assignment/byuserid/{currentUserId}");
+
+        foreach (Assignment a in response)
+        {
+            assignments.Add(a);
+             if (a.StartDate.HasValue && !a.EndDate.HasValue)
+            {
+                totalSpentTime += DateTime.UtcNow - a.StartDate.Value;
+            }
+
+        }
+
+
+    }
 
 }

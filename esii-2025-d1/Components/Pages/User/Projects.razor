@@ -45,7 +45,6 @@ PageSize="10"
 AllowSorting="true"
 AllowSelection="false"
 SelectionMode="GridSelectionMode.Multiple"
-SelectedItemsChanged="OnSelectedItemsChanged"
 Responsive="true">
 
     <GridColumns>
@@ -142,7 +141,7 @@ Responsive="true">
 
         <div class="form-group mt-2">
             <label for="newHourlyRate">Hourly Rate</label>
-            <NumberInput Tvalue="integer" @bind-Value="newProject.HourlyRate" />
+            <NumberInput Tvalue="float?" @bind-Value="newProject.HourlyRate" />
         </div>
 
     </BodyTemplate>
@@ -335,11 +334,7 @@ Responsive="true">
         }
     }
 
-    private Task OnSelectedItemsChanged(HashSet<Project> items)
-    {
-        selectedProjects = items is not null && items.Any() ? items : new();
-        return Task.CompletedTask;
-    }
+
 
     private async Task OnShowAddModalClick()
     {
@@ -744,7 +739,7 @@ Responsive="true">
 
     private void ShowToast(ToastType type, string message, string title) =>
         messages.Add(
-    new ToastMessage
+        new ToastMessage
             {
                 Type = type,
                 Title = title,
@@ -752,7 +747,7 @@ Responsive="true">
             HelpText = $"{DateTime.Now}",
             AutoHide = true,
 
-        });
+    });
 
 
 }
