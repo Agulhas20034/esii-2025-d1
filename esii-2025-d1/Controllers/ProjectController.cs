@@ -1,4 +1,5 @@
 using esii_2025_d1.Dtos.AssignmentDtos;
+using esii_2025_d1.Dtos.CustomersDtos;
 using esii_2025_d1.Interfaces.ObserverPattern;
 
 namespace esii_2025_d1.Controllers;
@@ -265,6 +266,66 @@ public class ProjectController : ControllerBase
             throw;
         }
         return NoContent();
+    }
+    
+    // GET: api/Project/{id}/customer
+    [HttpGet("{id}/customer")]
+    public async Task<ActionResult<CustomerResponseDto>> GetProjectCustomer(int id)
+    {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
+    
+        try
+        {
+            // Primeiro verifica se o projeto existe
+            var project = await _context.Projects.FindAsync(id);
+            if (project == null)
+            {
+                return NotFound("Project not found");
+            }
+
+            // Busca o customer associado ao projeto com seus projetos relacionados
+            var customer = await _context.Customers
+                .Where(c => c.Id == project.CustomerId)
+                .Select(c => new CustomerResponseDto
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    Email = c.Email,
+                    PhoneNumber = c.PhoneNumber,
+                    Projects = c.Projects
+                        .Where(p => p.DeletedAt == null) // Opcional: filtrar projetos não deletados
+                        .Select(p => new ProjectSimpleDto
+                        {
+                            Id = p.Id,
+                            Name = p.Name,
+                            Status = p.Status,
+                            // Adicione outros campos necessários do ProjectSimpleDto
+                        })
+                        .ToList()
+                })
+                .FirstOrDefaultAsync();
+
+            if (customer == null)
+            {
+                return NotFound("Customer not found for this project");
+            }
+
+            await _logService.CreateLog(new Log
+            {
+                entity_id = project.Id,
+                entity_name = Entity,
+                user_id = userId,
+                action = LogAction.Read,
+                
+            });
+
+            return Ok(customer);
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Error fetching Project Customer: {e.Message}");
+            return StatusCode(500, "An error occurred while fetching the customer");
+        }
     }
 }
     

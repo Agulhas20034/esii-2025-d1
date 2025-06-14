@@ -1,5 +1,8 @@
 @page "/user/reports"
+@using System.Security.Claims
 @using System.Text.Json
+@using esii_2025_d1.Data
+@using Microsoft.AspNetCore.Identity
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
 @rendermode InteractiveServer
@@ -8,21 +11,12 @@
 
 <div class="container mt-4">
     
-    @if (_reports == null)
-    {
-        <div class="text-center">
-            <Spinner Type="SpinnerType.Grow" Color="SpinnerColor.Primary" />
-            <p>Loading reports...</p>
-        </div>
-    }
-    else if (!_reports.Any())
+    @if (!_reports.Any())
     {
         <div class="alert alert-info">
             No reports found. Create your first report using the button below.
         </div>
-        
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2>Monthly Reports</h2>
             <Button Color="ButtonColor.Success" @onclick="() => createModal.ShowAsync()" Class="mb-3">
                 <i class="bi bi-plus-lg"></i> Create New Report
             </Button>
@@ -168,6 +162,8 @@
 </Modal>
 
 @code {
+    [Inject] 
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; }
     private List<ProjectReport> _reports = new();
     private ProjectReport? _selectedReport;
     private ProjectReport? _reportToDelete;
@@ -182,10 +178,35 @@
     
     private string _message = string.Empty;
     private string _messageType = "success";
+    private string _userId;
     
     protected override async Task OnInitializedAsync()
     {
         await LoadReports();
+        await GetUserIdFromSession();
+    }
+    
+    private async Task GetUserIdFromSession()
+    {
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            
+            if (user.Identity.IsAuthenticated)
+            {
+                _userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                Console.WriteLine($"User ID from session: {_userId}");
+            }
+            else
+            {
+                Console.WriteLine("User is not authenticated");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting user ID: {ex.Message}");
+        }
     }
     
     private async Task LoadReports()
@@ -193,8 +214,7 @@
         try
         {
             _message = string.Empty;
-            var response = await Http.GetFromJsonAsync<List<ProjectReport>>("api/Report/list");
-            
+            var response = await Http.GetFromJsonAsync<List<ProjectReport>>($"api/Report/list?userId={_userId}");
             _reports = (response ?? new List<ProjectReport>())
                 .OrderByDescending(r => r.StartDate)
                 .ThenByDescending(r => r.EndDate)

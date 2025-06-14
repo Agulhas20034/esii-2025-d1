@@ -9,5 +9,5 @@ public class CustomerResponseDto
     public string? Email { get; set; }
     public string? PhoneNumber { get; set; }
     
-    public virtual List<ProjectSimpleDto> Projects { get; set; } = new List<ProjectSimpleDto>();
+    public virtual List<ProjectSimpleDto>? Projects { get; set; } = new List<ProjectSimpleDto>();
 }

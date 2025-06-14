@@ -11,7 +11,7 @@ public class Project
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
 
-    public string UserId { get; set; }
+    public string UserId { get; set; } // owner of the project, Key User
 
     public int CustomerId { get; set; }
     
