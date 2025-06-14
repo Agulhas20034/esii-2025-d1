@@ -69,7 +69,8 @@ builder.Services.AddAuthentication(options =>
 })
     .AddIdentityCookies();
 
-
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -217,3 +218,4 @@ async Task SeedRolesAndAdmin(RoleManager<IdentityRole> roleManager, UserManager<
         }
     }
 }
+public partial class Program { }
