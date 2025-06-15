@@ -51,7 +51,6 @@ public static class ApplicationDbContextSeeder
                 new Project
                 {
                     Id = 1,
-                    UserId = userId,
                     CustomerId = 1,
                     Name = "Test Project",
                     Description = "Test project description",
@@ -65,7 +64,6 @@ public static class ApplicationDbContextSeeder
                 new Project
                 {
                     Id = 2,
-                    UserId = userId,
                     CustomerId = 1,
                     Name = "Test Project2",
                     Description = "Test project description2",
@@ -79,7 +77,6 @@ public static class ApplicationDbContextSeeder
                 new Project
                 {
                     Id = 3,
-                    UserId = userId,
                     CustomerId = 1,
                     Name = "Test Project3",
                     Description = "Test project description3",

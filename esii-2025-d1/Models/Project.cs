@@ -11,7 +11,7 @@ public class Project
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
 
-    public string UserId { get; set; }
+    public string UserId { get; set; } // owner of the project, Key User
 
     public int CustomerId { get; set; }
     
@@ -32,6 +32,8 @@ public class Project
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     
     public DateTime? DeletedAt { get; set; }
+    
+    public Customer? Customer { get; set; }
     
     public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
 

@@ -146,11 +146,18 @@ public class ReportController : ControllerBase
     }
     
     [HttpGet("list")]
-    public async Task<ActionResult<List<ProjectReport>>> GetUserReports()
+    public async Task<ActionResult<List<ProjectReport>>> GetUserReports(
+        [FromQuery] string userId)
     {
+        if (string.IsNullOrEmpty(userId))
+        {
+            userId = await _usermanager.GetCurrentUserIdAsync();
+        }
+
         try
         {
             var reports = await _context.Reports
+                .Where(r => r.UserId == userId)
                 .OrderByDescending(r => r.StartDate)
                 .ToListAsync();
             
@@ -180,7 +187,7 @@ public class ReportController : ControllerBase
         try
         {
             var report = await _context.Reports
-                .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userId && r.DeletedAt == null);
+                .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userId);
 
             if (report == null)
             {

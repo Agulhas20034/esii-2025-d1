@@ -11,7 +11,6 @@ public sealed class SingletonUserManager
 {
     private static readonly Lazy<SingletonUserManager> _instance = 
         new(() => new SingletonUserManager());
-    
     private readonly ConcurrentDictionary<string, ApplicationUser> _users = new();
     private IServiceScopeFactory _scopeFactory;
     private IHttpContextAccessor _httpContextAccessor;
