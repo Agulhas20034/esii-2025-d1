@@ -33,6 +33,8 @@ public class Project
     
     public DateTime? DeletedAt { get; set; }
     
+    public Customer? Customer { get; set; }
+    
     public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
 
     public virtual ICollection<ProjectUser> ProjectUsers { get; set; } = new List<ProjectUser>();

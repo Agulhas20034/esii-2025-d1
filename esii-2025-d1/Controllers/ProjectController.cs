@@ -98,20 +98,34 @@ public class ProjectController : ControllerBase
     public async Task<ActionResult<ProjectResponseDto>> GetProject(int id)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        var project = await _context.Projects.FindAsync(id);
-
-        if (project == null)
-        {
-            return NotFound();
-        }
 
         try
         {
+            var project = await _context.Projects
+                .Include(p => p.Assignments)
+                .Include(p => p.Media)
+                .Include(p => p.Reports)
+                .Include(p => p.ProjectUsers)
+                .Include(p => p.Customer)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (project == null)
+            {
+                return NotFound();
+            }
+
             var projectResponse = new ProjectResponseDto
             {
                 Id = project.Id,
                 UserId = project.UserId,
                 CustomerId = project.CustomerId,
+                Customer = project.Customer == null ? null : new CustomerResponseDto
+                {
+                    Id = project.Customer.Id,
+                    Name = project.Customer.Name,
+                    Email = project.Customer.Email,
+                    PhoneNumber = project.Customer.PhoneNumber
+                },
                 Name = project.Name,
                 Description = project.Description,
                 HourlyRate = project.HourlyRate,
@@ -128,8 +142,16 @@ public class ProjectController : ControllerBase
                     EndDate = a.EndDate,
                     Status = a.Status,
                 }).ToList(),
+                ProjectUsers = project.ProjectUsers.Select(pu => new ProjectUserResponseDto
+                {
+                    Id = pu.Id,
+                    UserId = pu.UserId,
+                    ProjectId = pu.ProjectId,
+                    InviterId = pu.InviterId,
+                    Status = pu.Status
+                }).ToList()
             };
-            
+
             await _logService.CreateLog(new Log
             {
                 entity_id = project.Id,
@@ -146,6 +168,7 @@ public class ProjectController : ControllerBase
             throw;
         }
     }
+
     
     // POST: api/Project
     [HttpPost]

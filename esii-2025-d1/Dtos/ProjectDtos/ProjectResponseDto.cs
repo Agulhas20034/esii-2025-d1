@@ -1,4 +1,5 @@
 using esii_2025_d1.Dtos.AssignmentDtos;
+using esii_2025_d1.Dtos.CustomersDtos;
 using esii_2025_d1.Dtos.MediaDtos;
 using esii_2025_d1.Dtos.ProjectUserDtos;
 using esii_2025_d1.Dtos.ReportDtos;
@@ -14,6 +15,8 @@ public class ProjectResponseDto
         public string? UserId { get; set; }
         
         public int CustomerId { get; set; }
+        
+        public CustomerResponseDto? Customer { get; set; }
         
         public string Name { get; set; }
         
@@ -32,5 +35,7 @@ public class ProjectResponseDto
         public virtual ICollection<MediaResponseDto>? Media { get; set; } = new List<MediaResponseDto>();
         
         public virtual ICollection<ReportResponseDto>? Reports { get; set; } = new List<ReportResponseDto>();
+        
 }
+
 
