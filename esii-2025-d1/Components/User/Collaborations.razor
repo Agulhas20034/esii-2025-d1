@@ -71,7 +71,7 @@
                     </h5>
                     <Grid TItem="Assignment"
                     Class="table table-hover table-bordered table-striped"
-                    Data="@assignments"
+                    Data="@assignments.Where(a => a.ProjectId.HasValue)"
                     AllowPaging="true"
                     PageSize="10"
                     AllowSorting="true"
@@ -253,14 +253,6 @@
         invitations = await InvitationService.GetPendingInvitations(currentUserId);
     }
 
-    private async Task OnTabChanged(Tab selectedTab)
-    {
-        if (selectedTab.Title == "Invitations")
-        {
-            await LoadInvitations();
-        }
-    }
-
 
     private void ShowToast(ToastType type, string message, string title) =>
     messages.Add(
@@ -313,15 +305,15 @@
 
         var result = await Http.PutAsJsonAsync($"api/projectuser/{pendingInvite.invite.Id}", canceledInvite);
 
-        if (result.IsSuccessStatusCode)
-        {
-            await LoadInvitations();
-            ShowToast(ToastType.Success, "Invitation rejected!", "Action Result");
-        }
-        else
-        {
-            ShowToast(ToastType.Warning, "It was not possible to reject the request at this time!", "Action Result");
-        }
+        //if (result.IsSuccessStatusCode)
+        //{
+        await LoadInvitations();
+        ShowToast(ToastType.Success, "Invitation rejected!", "Action Result");
+        // }
+        //else
+        //{
+        //    ShowToast(ToastType.Warning, "It was not possible to reject the request at this time!", "Action Result");
+        // }
         pendingInvite = new();
 
         await confirmRejectInviteModal.HideAsync();
@@ -341,17 +333,19 @@
 
         var result = await Http.PutAsJsonAsync($"api/projectuser/{pendingInvite.invite.Id}", acceptedInvite);
 
-        if (result.IsSuccessStatusCode)
-        {
-            await LoadInvitations();
-            ShowToast(ToastType.Success, "Invitation Accepted!", "Action Result");
-        }
-        else
-        {
-            ShowToast(ToastType.Warning, "It was not possible to accept the request at this time!", "Action Result");
-        }
-        pendingInvite = new();
         await confirmAcceptInviteModal.HideAsync();
+
+        // if (result.IsSuccessStatusCode)
+        //{
+        await LoadInvitations();
+        ShowToast(ToastType.Success, "Invitation Accepted!", "Action Result");
+        // }
+        // else
+        // {
+        //     ShowToast(ToastType.Warning, "It was not possible to accept the request at this time!", "Action Result");
+        // }
+        // pendingInvite = new();
+
 
     }
 
