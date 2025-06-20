@@ -52,6 +52,7 @@ public static class ApplicationDbContextSeeder
                 {
                     Id = 1,
                     CustomerId = 1,
+                    UserId = userId,
                     Name = "Test Project",
                     Description = "Test project description",
                     HourlyRate = 14.0f,
@@ -65,6 +66,7 @@ public static class ApplicationDbContextSeeder
                 {
                     Id = 2,
                     CustomerId = 1,
+                    UserId = userId,
                     Name = "Test Project2",
                     Description = "Test project description2",
                     HourlyRate = 16.0f,
@@ -78,6 +80,7 @@ public static class ApplicationDbContextSeeder
                 {
                     Id = 3,
                     CustomerId = 1,
+                    UserId = userId,
                     Name = "Test Project3",
                     Description = "Test project description3",
                     HourlyRate = 16.0f,
