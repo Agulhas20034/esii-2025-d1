@@ -11,8 +11,7 @@ using Microsoft.EntityFrameworkCore;
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
     : IdentityDbContext<ApplicationUser>(options)
 {
-
-    public DbSet<Jom> Joms { get; set; } = null!;
+    
     public DbSet<Log> logs { get; set; } = null!;
     public DbSet<Customer> Customers { get; set; } = null!;
     public DbSet<Media> Media { get; set; } = null!;

@@ -277,15 +277,6 @@ public class ProjectUserController : ControllerBase
 
             return NoContent();
         }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!_context.ProjectUsers.Any(a => a.Id == id))
-            {
-                return NotFound();
-            }
-
-            throw;
-        }
         catch (Exception e)
         {
             Console.Error.WriteLine($"Error updating ProjectUser: {e.Message}");

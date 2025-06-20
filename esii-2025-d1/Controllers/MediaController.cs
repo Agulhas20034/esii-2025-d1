@@ -171,16 +171,10 @@ public class MediaController : ControllerBase
             await _context.SaveChangesAsync();
             
         }
-        catch (DbUpdateConcurrencyException)
+        catch (Exception e)
         {
-            if (!_context.Media.Any(a => a.Id == id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
+            Console.Error.WriteLine($"Error updating Media: {e.Message}");
+            throw;
         }
         return NoContent();
     }

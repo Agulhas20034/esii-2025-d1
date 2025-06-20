@@ -219,16 +219,10 @@ public class ProjectController : ControllerBase
             await _context.SaveChangesAsync();
             
         }
-        catch (DbUpdateConcurrencyException)
+        catch (Exception e)
         {
-            if (!_context.Projects.Any(a => a.Id == id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
+            Console.Error.WriteLine($"Error updating Project: {e.Message}");
+            throw;
         }
         return NoContent();
     }
@@ -276,14 +270,12 @@ public class ProjectController : ControllerBase
     
         try
         {
-            // Primeiro verifica se o projeto existe
             var project = await _context.Projects.FindAsync(id);
             if (project == null)
             {
                 return NotFound("Project not found");
             }
-
-            // Busca o customer associado ao projeto com seus projetos relacionados
+            
             var customer = await _context.Customers
                 .Where(c => c.Id == project.CustomerId)
                 .Select(c => new CustomerResponseDto
@@ -293,13 +285,12 @@ public class ProjectController : ControllerBase
                     Email = c.Email,
                     PhoneNumber = c.PhoneNumber,
                     Projects = c.Projects
-                        .Where(p => p.DeletedAt == null) // Opcional: filtrar projetos não deletados
+                        .Where(p => p.DeletedAt == null) 
                         .Select(p => new ProjectSimpleDto
                         {
                             Id = p.Id,
                             Name = p.Name,
-                            Status = p.Status,
-                            // Adicione outros campos necessários do ProjectSimpleDto
+                            Status = p.Status
                         })
                         .ToList()
                 })
