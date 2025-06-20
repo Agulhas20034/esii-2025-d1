@@ -73,10 +73,7 @@ public class CustomerController : ControllerBase
     public async Task<ActionResult<CustomerResponseDto>> GetCustomer(int id)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
-        if (userId is null)
-        {
-            userId = "1";
-        }
+        
         var customer = await _context.Customers
             .Include(r => r.Projects)
             .FirstOrDefaultAsync(r => r.Id == id);
@@ -171,6 +168,7 @@ public class CustomerController : ControllerBase
     public async Task<IActionResult> PutCustomer(int id, CustomerUpdateDto customerRequest)
     {
         string? userId = await _usermanager.GetCurrentUserIdAsync();
+        
         var customer = await _context.Customers
             .Include(p => p.Projects) 
             .FirstOrDefaultAsync(c => c.Id == id);
@@ -209,16 +207,10 @@ public class CustomerController : ControllerBase
             await _context.SaveChangesAsync();
             
         }
-        catch (DbUpdateConcurrencyException)
+        catch (Exception e)
         {
-            if (!_context.Customers.Any(a => a.Id == id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
+            Console.Error.WriteLine($"Error updating Customer: {e.Message}");
+            throw;
         }
         return NoContent();
     }

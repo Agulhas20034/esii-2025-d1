@@ -5,28 +5,20 @@
 @using Microsoft.AspNetCore.Identity
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
+@using esii_2025_d1.Services
+@inject UserManager<ApplicationUser> AspNetUserManager;
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject RoleManager<IdentityRole> RoleManager
+@inject SingletonUserManager UserManager
 @rendermode InteractiveServer
 
 <PageTitle>Reports</PageTitle>
 
 <div class="container mt-4">
     
-    @if (!_reports.Any())
-    {
-        <div class="alert alert-info">
-            No reports found. Create your first report using the button below.
-        </div>
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <Button Color="ButtonColor.Success" @onclick="() => createModal.ShowAsync()" Class="mb-3">
-                <i class="bi bi-plus-lg"></i> Create New Report
-            </Button>
-        </div>
-    }
-    else
-    {
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2>Monthly Reports</h2>
-            <Button Color="ButtonColor.Success" @onclick="() => createModal.ShowAsync()" Class="mb-3">
+            <Button id="create-report-button" Color="ButtonColor.Success" @onclick="() => createModal.ShowAsync()" Class="mb-3">
                 <i class="bi bi-plus-lg"></i> Create New Report
             </Button>
         </div>
@@ -53,21 +45,20 @@
                 </GridColumn>
                 <GridColumn TItem="ProjectReport" Caption="Actions" Width="180px">
                     <div class="d-flex gap-2">
-                        <Button Color="ButtonColor.Info" Size="ButtonSize.Small" @onclick="() => ViewDetails(context)">
+                        <Button class="report-row" Color="ButtonColor.Info" Size="ButtonSize.Small" @onclick="() => ViewDetails(context)">
                             <i class="bi bi-eye"></i> View
                         </Button>
-                        <Button Color="ButtonColor.Danger" Size="ButtonSize.Small" @onclick="() => ConfirmDelete(context)">
+                        <Button class="delete-report-button" Color="ButtonColor.Danger" Size="ButtonSize.Small" @onclick="() => ConfirmDelete(context)">
                             <i class="bi bi-trash"></i> Delete
                         </Button>
                     </div>
                 </GridColumn>
             </GridColumns>
         </Grid>
-    }
 </div>
 
 <!-- View Report Details Modal -->
-<Modal @ref="detailsModal" Title="Report Details">
+<Modal id="report-details-modal" @ref="detailsModal" Title="Report Details">
     <BodyTemplate>
         @if (_selectedReport != null && _reportDetails != null)
         {
@@ -139,31 +130,17 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <Button Color="ButtonColor.Primary" @onclick="CreateReportAsync">
+        <Button id="submit-report" Color="ButtonColor.Primary" @onclick="CreateReportAsync">
             <i class="bi bi-check-lg"></i> Create
         </Button>
         <Button Color="ButtonColor.Secondary" @onclick="() => createModal.HideAsync()">Cancel</Button>
     </FooterTemplate>
 </Modal>
 
-<!-- Delete Confirmation Modal -->
-<Modal @ref="deleteModal" Title="Confirm Deletion">
-    <BodyTemplate>
-        <p>Are you sure you want to delete this report?</p>
-        <p><strong>@_reportToDelete?.Title</strong></p>
-        <p class="text-muted">This action cannot be undone.</p>
-    </BodyTemplate>
-    <FooterTemplate>
-        <Button Color="ButtonColor.Danger" @onclick="DeleteReportAsync">
-            <i class="bi bi-trash"></i> Delete
-        </Button>
-        <Button Color="ButtonColor.Secondary" @onclick="() => deleteModal.HideAsync()">Cancel</Button>
-    </FooterTemplate>
-</Modal>
+
 
 @code {
-    [Inject] 
-    private AuthenticationStateProvider AuthenticationStateProvider { get; set; }
+    
     private List<ProjectReport> _reports = new();
     private ProjectReport? _selectedReport;
     private ProjectReport? _reportToDelete;
@@ -171,7 +148,6 @@
     
     private Modal detailsModal = default!;
     private Modal createModal = default!;
-    private Modal deleteModal = default!;
     
     private int _year = DateTime.Now.Year;
     private int _month = DateTime.Now.Month;
@@ -182,31 +158,9 @@
     
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         await LoadReports();
-        await GetUserIdFromSession();
-    }
-    
-    private async Task GetUserIdFromSession()
-    {
-        try
-        {
-            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            var user = authState.User;
-            
-            if (user.Identity.IsAuthenticated)
-            {
-                _userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                Console.WriteLine($"User ID from session: {_userId}");
-            }
-            else
-            {
-                Console.WriteLine("User is not authenticated");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error getting user ID: {ex.Message}");
-        }
     }
     
     private async Task LoadReports()
@@ -279,7 +233,7 @@
 
         try
         {
-            var url = $"api/Report/monthly?year={_year}&month={_month}&saveReport=true";
+            var url = $"api/Report/monthly?year={_year}&month={_month}&saveReport=true&userId={_userId}";
             var response = await Http.GetAsync(url);
 
             if (response.IsSuccessStatusCode)
@@ -301,7 +255,6 @@
             _messageType = "danger";
         }
         
-        // Clear message after 5 seconds
         await Task.Delay(5000);
         _message = string.Empty;
         StateHasChanged();
@@ -310,13 +263,14 @@
     private async Task ConfirmDelete(ProjectReport report)
     {
         _reportToDelete = report;
-        await deleteModal.ShowAsync();
-    }
     
-    private async Task DeleteReportAsync()
-    {
-        if (_reportToDelete == null) return;
-        
+        if (_reportToDelete == null)
+            return;
+
+        var confirm = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete the report \"{_reportToDelete.Title}\"?");
+        if (!confirm)
+            return;
+
         try
         {
             var response = await Http.DeleteAsync($"api/Report/{_reportToDelete.Id}");
@@ -325,12 +279,12 @@
             {
                 _message = "Report deleted successfully!";
                 _messageType = "success";
-                await LoadReports();
-                await deleteModal.HideAsync();
+                _reports.Remove(_reportToDelete);
             }
             else
             {
-                _message = $"Error deleting report: {await response.Content.ReadAsStringAsync()}";
+                var errorMsg = await response.Content.ReadAsStringAsync();
+                _message = $"Error deleting report: {errorMsg}";
                 _messageType = "danger";
             }
         }
@@ -339,10 +293,9 @@
             _message = $"Error deleting report: {ex.Message}";
             _messageType = "danger";
         }
-        
-        // Clear message after 5 seconds
-        await Task.Delay(5000);
-        _message = string.Empty;
+
+        _reportToDelete = null;
         StateHasChanged();
     }
+    
 }

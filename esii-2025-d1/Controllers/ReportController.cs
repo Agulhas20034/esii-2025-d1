@@ -29,9 +29,15 @@ public class ReportController : ControllerBase
     public async Task<ActionResult<ReportData>> GetPersonalMonthlyReport(
         [FromQuery] int year,
         [FromQuery] int month,
-        [FromQuery] bool saveReport = false)
+        [FromQuery] bool saveReport = false,
+        [FromQuery] string? userId = null) 
     {
-        string? userId = await _usermanager.GetCurrentUserIdAsync();
+       
+        userId ??= await _usermanager.GetCurrentUserIdAsync();
+    
+        if (string.IsNullOrEmpty(userId))
+            return BadRequest("User ID not provided and no authenticated user found.");
+
         var firstDayOfMonth = new DateTime(year, month, 1);
         var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
@@ -182,38 +188,45 @@ public class ReportController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteReport(int id)
     {
+        
         string? userId = await _usermanager.GetCurrentUserIdAsync();
+    
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized(new { message = "User not authenticated." });
+        }
 
         try
         {
             var report = await _context.Reports
-                .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userId);
+                .FirstOrDefaultAsync(r => r.Id == id);
 
             if (report == null)
             {
                 return NotFound(new { message = "ProjectReport not found or already deleted." });
             }
 
+            
             report.DeletedAt = DateTime.UtcNow;
             report.UpdatedAt = DateTime.UtcNow;
-            
+        
             await _logService.CreateLog(new Log
             {
-                entity_id = report.Id,
+                entity_id = null ,
                 entity_name = Entity,
                 user_id = userId,
                 action = LogAction.Delete
             });
-
+        
             await _context.SaveChangesAsync();
+        
+            return NoContent();
         }
         catch (Exception e)
         {
             Console.Error.WriteLine($"Error deleting Report: {e.Message}");
-            throw;
+            return StatusCode(500, new { message = "An error occurred while deleting the report." });
         }
-            
-        return NoContent();
     }
     
 }

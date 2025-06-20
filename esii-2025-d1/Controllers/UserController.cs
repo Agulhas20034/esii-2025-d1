@@ -17,6 +17,7 @@ public class UserController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ApplicationDbContext _context;
+    private readonly SingletonUserManager _usermanager;
     private readonly ILogService _logService;
     protected string Entity = "User";
 
@@ -34,6 +35,7 @@ public class UserController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<UserFullResponseDto>>> GetUsers()
     {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
         try
         {
             var users = await _userManager.Users
@@ -61,7 +63,7 @@ public class UserController : ControllerBase
             {
                 entity_id = null,
                 entity_name = Entity,
-                user_id = "1",
+                user_id = userId,
                 action = LogAction.Read
             });
 
@@ -78,6 +80,7 @@ public class UserController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<UserFullResponseDto>> GetUser(string id)
     {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
         var user = await _userManager.FindByIdAsync(id);
         if (user == null) return NotFound();
 
@@ -106,7 +109,7 @@ public class UserController : ControllerBase
         {
             entity_id = null,
             entity_name = Entity,
-            user_id = "1",
+            user_id = userId,
             action = LogAction.Read
         });
 
@@ -130,7 +133,8 @@ public class UserController : ControllerBase
         {
             entity_id = 1,
             entity_name = Entity,
-            user_id = userInfoRequest.UserId
+            user_id = userInfoRequest.UserId,
+            action = LogAction.Create
         });
 
         return Ok(Response);
@@ -268,6 +272,7 @@ public class UserController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(string id)
     {
+        string? userId = await _usermanager.GetCurrentUserIdAsync();
         var user = await _userManager.FindByIdAsync(id);
         if (user == null) return NotFound();
 
@@ -286,7 +291,7 @@ public class UserController : ControllerBase
         {
             entity_id = null,
             entity_name = Entity,
-            user_id = "1",
+            user_id = userId,
             action = LogAction.Delete
         });
 
