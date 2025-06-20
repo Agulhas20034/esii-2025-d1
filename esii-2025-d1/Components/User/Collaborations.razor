@@ -71,7 +71,7 @@
                     </h5>
                     <Grid TItem="Assignment"
                     Class="table table-hover table-bordered table-striped"
-                    Data="@assignments"
+                    Data="@assignments.Where(a => a.ProjectId.HasValue)"
                     AllowPaging="true"
                     PageSize="10"
                     AllowSorting="true"
@@ -104,14 +104,14 @@
             <Content>
                 <div>
                     <Grid TItem="Invitation"
-                          Class="table table-hover table-bordered table-striped"
-                          Data="@invitations"
-                          AllowPaging="true"
-                          PageSize="10"
-                          AllowSorting="true"
-                          AllowSelection="false"
-                          SelectionMode="GridSelectionMode.Multiple"
-                          Responsive="true">
+                    Class="table table-hover table-bordered table-striped"
+                    Data="@invitations"
+                    AllowPaging="true"
+                    PageSize="10"
+                    AllowSorting="true"
+                    AllowSelection="false"
+                    SelectionMode="GridSelectionMode.Multiple"
+                    Responsive="true">
 
                         <GridColumns>
                             <GridColumn TItem="Invitation" HeaderText="Inviter"  SortKeySelector="item => item.userInfo.Name">
@@ -253,14 +253,6 @@
         invitations = await InvitationService.GetPendingInvitations(currentUserId);
     }
 
-    private async Task OnTabChanged(Tab selectedTab)
-    {
-        if (selectedTab.Title == "Invitations")
-        {
-            await LoadInvitations();
-        }
-    }
-
 
     private void ShowToast(ToastType type, string message, string title) =>
     messages.Add(
@@ -313,15 +305,15 @@
 
         var result = await Http.PutAsJsonAsync($"api/projectuser/{pendingInvite.invite.Id}", canceledInvite);
 
-        if (result.IsSuccessStatusCode)
-        {
-            await LoadInvitations();
-            ShowToast(ToastType.Success, "Invitation rejected!", "Action Result");
-        }
-        else
-        {
-            ShowToast(ToastType.Warning, "It was not possible to reject the request at this time!", "Action Result");
-        }
+        //if (result.IsSuccessStatusCode)
+        //{
+        await LoadInvitations();
+        ShowToast(ToastType.Success, "Invitation rejected!", "Action Result");
+        // }
+        //else
+        //{
+        //    ShowToast(ToastType.Warning, "It was not possible to reject the request at this time!", "Action Result");
+        // }
         pendingInvite = new();
 
         await confirmRejectInviteModal.HideAsync();
@@ -341,17 +333,19 @@
 
         var result = await Http.PutAsJsonAsync($"api/projectuser/{pendingInvite.invite.Id}", acceptedInvite);
 
-        if (result.IsSuccessStatusCode)
-        {
-            await LoadInvitations();
-            ShowToast(ToastType.Success, "Invitation Accepted!", "Action Result");
-        }
-        else
-        {
-            ShowToast(ToastType.Warning, "It was not possible to accept the request at this time!", "Action Result");
-        }
-        pendingInvite = new();
         await confirmAcceptInviteModal.HideAsync();
+
+        // if (result.IsSuccessStatusCode)
+        //{
+        await LoadInvitations();
+        ShowToast(ToastType.Success, "Invitation Accepted!", "Action Result");
+        // }
+        // else
+        // {
+        //     ShowToast(ToastType.Warning, "It was not possible to accept the request at this time!", "Action Result");
+        // }
+        // pendingInvite = new();
+
 
     }
 
@@ -390,18 +384,35 @@
     private async Task LoadAssignments()
     {
         assignments.Clear();
-        var response = await Http.GetFromJsonAsync<List<Assignment>>($"api/assignment/byuserid/{currentUserId}");
+        try { 
+            var response = await Http.GetFromJsonAsync<List<AssignmentResponseDto>>($"api/assignment/ByUserId/{currentUserId}");
 
-        foreach (Assignment a in response)
-        {
-            assignments.Add(a);
-             if (a.StartDate.HasValue && !a.EndDate.HasValue)
+            foreach (AssignmentResponseDto a in response)
             {
-                totalSpentTime += DateTime.UtcNow - a.StartDate.Value;
+                assignments.Add(
+                new Assignment
+                {
+                    Id = a.Id,
+                    UserId = a.UserId,
+                    ProjectId = a.ProjectId,
+                    Description = a.Description,
+                    HourlyRate = a.HourlyRate,
+                    StartDate = a.StartDate,
+                    EndDate = a.EndDate,
+                    Status = a.Status
+                }
+                );
+                if (a.StartDate.HasValue && !a.EndDate.HasValue)
+                {
+                    totalSpentTime += DateTime.UtcNow - a.StartDate.Value;
+                }
+
             }
-
         }
-
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Exception loading assignments: {e.Message}");
+        }
 
     }
 

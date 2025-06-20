@@ -398,12 +398,11 @@ Responsive="true">
 
         var response = await Http.PutAsJsonAsync($"api/Project/{editingProject.Id}", editingProject);
 
-        if (response.IsSuccessStatusCode)
-        {
-            await LoadProjects();
-            await editModal.HideAsync();
-            ShowToast(ToastType.Success, "Changes Saved!", "Edit Result");
-        }
+
+        await LoadProjects();
+        await editModal.HideAsync();
+        ShowToast(ToastType.Success, "Changes Saved!", "Edit Result");
+
     }
 
     private void OpenDeleteModal(Project project)

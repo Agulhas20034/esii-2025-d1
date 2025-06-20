@@ -2,6 +2,7 @@
 @inject HttpClient Http
 
 @using esii_2025_d1.Dtos.AssignmentDtos
+@using esii_2025_d1.Dtos.ProjectUserDtos
 @using esii_2025_d1.Dtos.UserInfoDtos
 @using esii_2025_d1.Dtos.UserDtos
 @using esii_2025_d1.Models.Enums
@@ -40,14 +41,14 @@
 
     @if (filteredAssignments.Any())
     {
-        @foreach (var group in filteredAssignments.GroupBy(a => a.ProjectId))
+        @foreach (var p in projects.Where(p => filteredAssignments.Select(a => a.ProjectId).Contains(p.Id)))
         {
-            var projectId = group.Key ?? 0;
-            var projectName = projectDict.ContainsKey(projectId) ? projectDict[projectId] : $"Projeto {projectId}";
+            //var projectId = group.Key ?? 0;
+            //var projectName = projectDict.ContainsKey(projectId) ? projectDict[projectId] : $"Projeto {projectId}";
             <div class="mb-4">
-                <h5 class="text-primary">@projectName</h5>
+                <h5 class="text-primary">@p.Name [ID @p.Id]</h5>
                 <div class="row">
-                    @foreach (var a in group)
+                    @foreach (var a in filteredAssignments.Where(a => a.ProjectId.HasValue && a.ProjectId.Value == p.Id))
                     {
                         <div class="col-md-6 col-lg-4 mb-3">
                             <div class="card h-100 shadow-sm border-start border-4 border-primary">
@@ -112,8 +113,8 @@
 
                     <label>Project</label>
                     <select class="form-select mb-2"
-                            value="@newAssignment.ProjectId"
-                            @onchange="(e) => OnProjectChangeForAdd(e)">
+                    value="@newAssignment.ProjectId"
+                    @onchange="(e) => OnProjectChangeForAdd(e)">
                         <option value="0">-- No Project --</option>
                         @foreach (var p in projects)
                         {
@@ -173,8 +174,8 @@
                 <div class="modal-body">
 
                     <select class="form-select mb-2"
-                            value="@selectedAssignment.ProjectId"
-                            @onchange="(e) => OnProjectChangeForEdit(e)">
+                    value="@selectedAssignment.ProjectId"
+                    @onchange="(e) => OnProjectChangeForEdit(e)">
                         <option value="0">-- No Project --</option>
                         @foreach (var p in projects)
                         {
@@ -329,42 +330,104 @@
 
     async Task LoadProjects()
     {
-        projects = await Http.GetFromJsonAsync<List<Project>>("api/project") ?? new();
-        projectDict = projects.ToDictionary(p => p.Id, p => p.Name);
+
+        var response = await Http.GetFromJsonAsync<List<ProjectUser>>($"api/projectuser/byuserid/{currentUserId}");
+
+        List<ProjectUser> items = new();
+
+        if (response != null)
+        {
+            foreach (ProjectUser p in response)
+            {
+                if (p.Status == Models.Enums.ProjectUserStatus.Accepted) items.Add(p);
+            }
+        }
+
+        var result = await Http.GetFromJsonAsync<List<Project>>("api/project");
+
+        if (result != null)
+        {
+            var acceptedProjectIds = items.Select(i => i.ProjectId).ToHashSet();
+
+            foreach (Project p in result)
+            {
+                if (acceptedProjectIds.Contains(p.Id) || p.UserId == currentUserId)
+                {
+                    projects.Add(p);
+                }
+            }
+        }
+
+        // projects = await Http.GetFromJsonAsync<List<Project>>("api/project") ?? new();
+        // projectDict = projects.ToDictionary(p => p.Id, p => p.Name);
     }
 
     async Task LoadAssignments()
     {
+
+        /*
         var allAssignments = await Http.GetFromJsonAsync<List<Assignment>>("api/assignment") ?? new();
         var allProjects = await Http.GetFromJsonAsync<List<Project>>("api/project") ?? new();
         var allProjectUsers = await Http.GetFromJsonAsync<List<ProjectUser>>("api/projectuser") ?? new();
 
-        var currentUserId = (await AuthenticationStateProvider.GetAuthenticationStateAsync())
-                                .User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+        // var currentUserId = (await AuthenticationStateProvider.GetAuthenticationStateAsync())
+        //                         .User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
         if (string.IsNullOrEmpty(currentUserId))
         {
             assignments = new();
             return;
-        }
+            }
 
         var ownedProjectIds = allProjects
-            .Where(p => p.UserId == currentUserId)
-            .Select(p => p.Id)
-            .ToList();
+        .Where(p => p.UserId == currentUserId)
+        .Select(p => p.Id)
+        .ToList();
 
         var acceptedProjectIds = allProjectUsers
-            .Where(pu => pu.UserId == currentUserId && pu.Status == ProjectUserStatus.Accepted)
-            .Select(pu => pu.ProjectId)
-            .ToList();
+        .Where(pu => pu.UserId == currentUserId && pu.Status == ProjectUserStatus.Accepted)
+        .Select(pu => pu.ProjectId)
+        .ToList();
 
         var accessibleProjectIds = ownedProjectIds.Union(acceptedProjectIds).ToHashSet();
 
         assignments = allAssignments
-            .Where(a => a.ProjectId != null &&
-                accessibleProjectIds.Contains(a.ProjectId.Value) &&
-                a.Status != AssignmentStatus.Cancelled)
-            .ToList();
+        .Where(a => (a.ProjectId != null &&
+        (accessibleProjectIds.Contains(a.ProjectId.Value) || ownedProjectIds.Contains(a.ProjectId.Value))) &&
+        a.Status != AssignmentStatus.Cancelled)
+        .ToList();
+
+        */
+
+
+                assignments.Clear();
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<AssignmentResponseDto>>($"api/assignment/ByUserId/{currentUserId}");
+
+            foreach (AssignmentResponseDto a in response)
+            {
+                assignments.Add(
+                new Assignment
+                    {
+                        Id = a.Id,
+                        UserId = a.UserId,
+                        ProjectId = a.ProjectId,
+                        Description = a.Description,
+                        HourlyRate = a.HourlyRate,
+                        StartDate = a.StartDate,
+                        EndDate = a.EndDate,
+                        Status = a.Status
+                    }
+                );
+
+            }
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Exception loading assignments: {e.Message}");
+        }
+
 
         ApplyFilter();
     }
@@ -440,6 +503,7 @@
         newAssignment.CreatedAt = DateTime.UtcNow;
         newAssignment.UpdatedAt = DateTime.UtcNow;
         newAssignment.DeletedAt = null;
+        if (newAssignment.ProjectId == 0) newAssignment.ProjectId = null;
 
         var response = await Http.PostAsJsonAsync("api/assignment", newAssignment);
         if (response.IsSuccessStatusCode)
@@ -512,6 +576,7 @@
                 selectedAssignment.EndDate = selectedAssignment.EndDate.Value.Date + endTime;
         }
 
+        if(selectedAssignment.ProjectId == 0) selectedAssignment.ProjectId = null;
 
         var response = await Http.PutAsJsonAsync($"api/assignment/{selectedAssignment.Id}", selectedAssignment);
         if (response.IsSuccessStatusCode)
